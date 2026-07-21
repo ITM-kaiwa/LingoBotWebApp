@@ -34,23 +34,23 @@
     // UI Dictionaries
     const UI_DICT = {
       'bilingual': {
-        subtitle: 'Luyện tập giao tiếp AI (Tự học) / AI会話練習（自習用）：ネイティブの音声でリアルタイム返答',
-        playVoice: '🔊 音声再生 / Nghe',
-        stopVoice: '⏹ 停止 / Dừng',
-        downloadMp3: '⬇️ MP3ダウンロード / Tải MP3',
-        endLesson: '🛑 レッスン終了 / Kết thúc',
-        chatTab: '💬 相互会話 / Giao tiếp AI',
-        shadowingTab: '🎯 発音分析 / Phát âm',
-        send: '✈️ 送信 / Gửi',
-        micOn: '🎙️ 話しかける / Nói',
-        micOff: '🛑 停止 / Dừng',
-        inputPlaceholder: 'メッセージを入力またはマイクで話しかける... / Nhập tin nhắn hoặc nói bằng micro...',
-        generating: '⏳ 音声生成中... / Đang tạo...',
-        uiLangLabel: '使用言語 / Ngôn ngữ',
-        targetLangLabel: '目標言語 / Mục tiêu',
-        pdfTitle: 'Bài học tóm tắt / レッスン要約レポート',
-        print: '🖨️ 印刷 / In',
-        downloadPdf: '📥 PDFダウンロード / Tải PDF'
+        subtitle: 'Luyện tập giao tiếp AI (Tự học)',
+        playVoice: '🔊 Nghe',
+        stopVoice: '⏹ Dừng',
+        downloadMp3: '⬇️ Tải MP3',
+        endLesson: '🛑 Kết thúc',
+        chatTab: '💬 Giao tiếp',
+        shadowingTab: '🎯 Phát âm',
+        send: '✈️ Gửi',
+        micOn: '🎙️ Nói',
+        micOff: '🛑 Dừng',
+        inputPlaceholder: 'Nhập tin nhắn hoặc nói bằng micro...',
+        generating: '⏳ Đang tạo...',
+        uiLangLabel: 'Sử dụng',
+        targetLangLabel: 'Mục tiêu',
+        pdfTitle: 'Báo cáo tóm tắt bài học',
+        print: '🖨️ In',
+        downloadPdf: '📥 Tải PDF'
       },
       'ja-JP': {
         subtitle: 'AIとの会話練習（自習用）：ネイティブの音声でリアルタイム返答',
@@ -760,10 +760,10 @@
 
             <div class="header-controls-sm">
               <span class="badge-sm badge-edge">
-                {dict.uiLangLabel}: {LANG_META[uiLang]?.flag} {LANG_META[uiLang]?.name}
+                {dict.uiLangLabel}: 🇻🇳 Tiếng Việt
               </span>
               <span class="badge-sm badge-sage">
-                {dict.targetLangLabel}: {LANG_META[targetLang]?.flag} {LANG_META[targetLang]?.name}
+                {dict.targetLangLabel}: {targetLang === 'vi-VN' ? '🇻🇳 Tiếng Việt' : targetLang === 'ja-JP' ? '🇯🇵 日本語' : '🇺🇸 English'}
               </span>
               {activeConnectedModel && (
                 <span class="badge-sm badge-sage" style={{ background: 'var(--accent-terracotta)', color: 'white' }}>
@@ -776,7 +776,7 @@
                 onClick={handleResetChat}
                 title="Reset Chat & Clear History"
               >
-                🔄 Reset Chat
+                🔄 Đặt lại
               </button>
               <button
                 class="btn-end-lesson-sm"
