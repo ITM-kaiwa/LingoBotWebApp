@@ -245,6 +245,9 @@
       const currentSentence = SAMPLE_SENTENCES[currentSentenceIdx];
       const dict = UI_DICT[uiLang] || UI_DICT['ja-JP'];
 
+      // Render.com Backend API URL configuration for GitHub Pages deployment
+      const RENDER_BACKEND_URL = window.location.hostname.includes('github.io') ? 'https://lingobotwebapp.onrender.com' : '';
+
       // Edge TTS Player
       const playEdgeTts = async (id, text, language) => {
         if (playingId === id) {
@@ -259,7 +262,7 @@
         if (!blobUrl) {
           setLoadingId(id);
           try {
-            const res = await fetch('/api/tts', {
+            const res = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ text, language })
@@ -452,58 +455,110 @@
         setChatMessages(prev => [...prev, userMsg]);
         scrollToBottom();
 
-        try {
-          const res = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: userText,
-              history: chatMessages,
-              uiLang: uiLang,
-              targetLang: targetLang,
-              apiKey: geminiApiKey,
-              model: geminiModel
-            })
-          });
+        let replyText = '';
 
-          if (!res.ok) throw new Error(`Chat API error ${res.status}`);
-          const chatData = await res.json();
-          const replyText = chatData.reply || "Let's keep practicing conversation!";
+        // 1. Direct Browser-to-Gemini REST API Call (Supports GitHub Pages & Static Hosts)
+        if (geminiApiKey && geminiApiKey.trim()) {
+          try {
+            const cleanModel = geminiModel.replace('gemini-3.5-flash', 'gemini-1.5-flash');
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${encodeURIComponent(geminiApiKey.trim())}`;
 
-          const aiMsg = {
-            id: 'ai-' + Date.now(),
-            sender: 'ai',
-            lang: targetLang,
-            text: replyText,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
+            const uiName = LANG_META[uiLang]?.name || 'Japanese';
+            const targetName = LANG_META[targetLang]?.name || 'English';
 
-          setChatMessages(prev => [...prev, aiMsg]);
-          scrollToBottom();
-          focusTextInput();
+            const systemPrompt = `You are LingoBot, a warm, encouraging AI conversation partner in LingoBotWebApp. ` +
+              `The user's interface language is ${uiName} and their target learning language is ${targetName}. ` +
+              `Always reply naturally, interactively, and concisely (1 to 3 sentences) in ${targetName} so the user can practice listening and speaking. ` +
+              `If the user orders food, requests pizza/drinks, or asks for a scenario, roleplay as a friendly conversation partner in that scenario!`;
 
-          setTimeout(() => {
-            playEdgeTts(aiMsg.id, aiMsg.text, targetLang);
-          }, 300);
-        } catch (err) {
-          console.error('Chat error:', err);
-          const fallbackText = targetLang.startsWith('en')
-            ? "I understand! Consistent conversation practice is key. What else would you like to discuss?"
-            : targetLang.startsWith('ja')
-            ? "なるほど！毎日会話を練習することが一番大切ですね。他にはどんなことをお話ししますか？"
-            : "Rất hay! Luyện tập giao tiếp thường xuyên là chìa khóa thành công. Bạn muốn nói về điều gì tiếp theo?";
+            const contents = [
+              { role: 'user', parts: [{ text: systemPrompt }] },
+              { role: 'model', parts: [{ text: `Understood! I am ready to be your AI conversation partner in ${targetName}.` }] }
+            ];
 
-          const aiMsg = {
-            id: 'ai-' + Date.now(),
-            sender: 'ai',
-            lang: targetLang,
-            text: fallbackText,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-          setChatMessages(prev => [...prev, aiMsg]);
-          scrollToBottom();
-          focusTextInput();
+            chatMessages.slice(-6).forEach(m => {
+              if (m.text && !m.type) {
+                contents.push({
+                  role: m.sender === 'user' ? 'user' : 'model',
+                  parts: [{ text: m.text }]
+                });
+              }
+            });
+
+            contents.push({ role: 'user', parts: [{ text: userText }] });
+
+            const geminiRes = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: contents,
+                generationConfig: {
+                  temperature: 0.7,
+                  maxOutputTokens: 250
+                }
+              })
+            });
+
+            if (geminiRes.ok) {
+              const geminiData = await geminiRes.json();
+              if (geminiData.candidates && geminiData.candidates[0]?.content?.parts[0]?.text) {
+                replyText = geminiData.candidates[0].content.parts[0].text.trim();
+              }
+            }
+          } catch (directErr) {
+            console.warn('Direct Gemini API call error:', directErr);
+          }
         }
+
+        // 2. Fallback to Render Backend /api/chat if direct call wasn't used or failed
+        if (!replyText) {
+          try {
+            const res = await fetch(`${RENDER_BACKEND_URL}/api/chat`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                message: userText,
+                history: chatMessages,
+                uiLang: uiLang,
+                targetLang: targetLang,
+                apiKey: geminiApiKey,
+                model: geminiModel
+              })
+            });
+
+            if (res.ok) {
+              const chatData = await res.json();
+              replyText = chatData.reply;
+            }
+          } catch (backendErr) {
+            console.warn('Backend Chat API fallback error:', backendErr);
+          }
+        }
+
+        // 3. Fallback static reply if both failed
+        if (!replyText) {
+          replyText = targetLang.startsWith('en')
+            ? `That sounds interesting! Tell me more about '${userText}'. What would you like to discuss next?`
+            : targetLang.startsWith('ja')
+            ? `『${userText}』ですね！とても面白い話題です。`
+            : `Rất thú vị về '${userText}'!`;
+        }
+
+        const aiMsg = {
+          id: 'ai-' + Date.now(),
+          sender: 'ai',
+          lang: targetLang,
+          text: replyText,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        setChatMessages(prev => [...prev, aiMsg]);
+        scrollToBottom();
+        focusTextInput();
+
+        setTimeout(() => {
+          playEdgeTts(aiMsg.id, aiMsg.text, targetLang);
+        }, 300);
       };
 
       // STT Speech Recognition Toggle
