@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LingoBotWebApp - Luyện nói AI & Shadowing (Microsoft Edge TTS)</title>
+  <title>LingoBotWebApp</title>
 
   <!-- Stylesheets (Soft Warm Beige Theme) -->
   <link rel="stylesheet" href="styles/main.css" />
@@ -24,9 +24,9 @@
     const { useState, useEffect, useRef } = React;
 
     const VOICE_CONFIG = {
-      'en-US': { name: 'en-US-AriaNeural (Tiếng Anh / US English)', flag: '🇺🇸', label: 'US English' },
-      'ja-JP': { name: 'ja-JP-NanamiNeural (Tiếng Nhật / Japanese)', flag: '🇯🇵', label: 'Japanese' },
-      'vi-VN': { name: 'vi-VN-HoaiMyNeural (Tiếng Việt / Vietnamese)', flag: '🇻🇳', label: 'Vietnamese' }
+      'en-US': { name: 'Aria (US English)', flag: '🇺🇸', label: 'US English' },
+      'ja-JP': { name: 'Nanami (日本語)', flag: '🇯🇵', label: 'Japanese' },
+      'vi-VN': { name: 'Hoài Mỹ (Tiếng Việt)', flag: '🇻🇳', label: 'Vietnamese' }
     };
 
     const SAMPLE_SENTENCES = [
@@ -52,18 +52,18 @@
         id: 3,
         category: 'ja-daily',
         lang: 'ja-JP',
-        text: "Microsoft Edgeの無料ニューラル音声（Nanamiボイス）を活用して、自然なスピーキング練習を行いましょう。",
-        phonetic: "みくろそふと えっじの むりょう にゅーらる おんせい を かつようして、しぜんな すぴーきんぐ れんしゅう を おこないましょう。",
-        translation: "Hãy luyện tập nói tự nhiên bằng giọng đọc AI Microsoft Edge miễn phí.",
+        text: "ネイティブの音声ボイスを活用して、自然なスピーキング会話練習を行いましょう。",
+        phonetic: "ねぃてぃぶ の おんせい を かつようして、しぜんな すぴーきんぐ かいわ れんしゅう を おこないましょう。",
+        translation: "Hãy luyện tập nói tự nhiên bằng giọng đọc AI chuẩn native.",
         difficulty: "Trung cấp / Intermediate"
       },
       {
         id: 4,
         category: 'vi-daily',
         lang: 'vi-VN',
-        text: "Công nghệ giọng nói Microsoft Edge TTS mang lại âm thanh vô cùng tự nhiên và mượt mà.",
-        phonetic: "Cong nghe giong noi Microsoft Edge TTS mang lai am thanh vo cung tu nhien va muot ma",
-        translation: "Microsoft Edge TTS voice technology delivers extremely natural and smooth audio.",
+        text: "Chào mừng bạn đến với LingoBotWebApp! Hãy bắt đầu luyện tập hội thoại ngay hôm nay.",
+        phonetic: "Chao mung ban den voi LingoBotWebApp! Hay bat dau luyen tap hoi thoai ngay hom nay.",
+        translation: "Welcome to LingoBotWebApp! Start practicing conversation today.",
         difficulty: "Trung cấp / Intermediate"
       }
     ];
@@ -116,6 +116,7 @@
 
     // MAIN LINGOBOT WEB APP
     function App() {
+      // Main screen default is 'chat' for conversation practice
       const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'shadowing'
       const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
       const [isRecording, setIsRecording] = useState(false);
@@ -136,7 +137,7 @@
           id: 'chat-init',
           sender: 'ai',
           lang: 'vi-VN',
-          text: 'Xin chào! Tôi là LingoBotWebApp. Bạn muốn luyện tập giao tiếp bằng tiếng Anh hay tiếng Nhật hôm nay?',
+          text: 'Xin chào! Tôi là LingoBotWebApp. Bạn muốn cùng tôi luyện tập hội thoại tự học bằng tiếng Anh, tiếng Nhật hay tiếng Việt hôm nay?',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -169,7 +170,7 @@
             setLoadingId(null);
           } catch (err) {
             setLoadingId(null);
-            alert(`Lỗi Edge TTS: ${err.message}`);
+            alert(`Lỗi phát âm thanh: ${err.message}`);
             return;
           }
         }
@@ -277,17 +278,19 @@
         const lower = userText.toLowerCase();
 
         if (lower.includes('hello') || lower.includes('hi') || lower.includes('xin chào') || lower.includes('chào')) {
-          aiReplyText = "Xin chào bạn! Tôi rất vui được đồng hành cùng bạn luyện nói hôm nay. Bạn có trải nghiệm thế nào?";
+          aiReplyText = "Xin chào bạn! Tôi rất vui được đồng hành cùng bạn luyện tập hội thoại tự học hôm nay. Bạn muốn trao đổi chủ đề gì?";
         } else if (lower.includes('english') || lower.includes('tiếng anh')) {
-          aiReplyText = "Great! Let's practice English together using Microsoft Edge Aria Neural voice!";
+          aiReplyText = "Great! Let's practice English together with natural native audio responses!";
+        } else if (lower.includes('japanese') || lower.includes('tiếng nhật') || lower.includes('日本語')) {
+          aiReplyText = "素晴らしいですね！日本語の会話練習を始めましょう。何か質問はありますか？";
         } else {
-          aiReplyText = `Cảm ơn bạn đã chia sẻ! Luyện tập đều đặn với LingoBotWebApp sẽ giúp bạn cải thiện phản xạ và phát âm nhanh chóng.`;
+          aiReplyText = `Cảm ơn bạn đã chia sẻ! Việc chủ động nói chuyện và lắng nghe phản hồi phát âm chuẩn sẽ giúp bạn tiến bộ vô cùng nhanh chóng.`;
         }
 
         const aiMsg = {
           id: 'ai-' + Date.now(),
           sender: 'ai',
-          lang: lower.includes('english') ? 'en-US' : 'vi-VN',
+          lang: lower.includes('english') ? 'en-US' : lower.includes('japanese') || lower.includes('日本語') ? 'ja-JP' : 'vi-VN',
           text: aiReplyText,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -324,11 +327,9 @@
               <div>
                 <div class="brand-title">
                   LingoBotWebApp
-                  <span class="badge badge-edge">Microsoft Edge TTS</span>
-                  <span class="badge badge-stt">Web Speech STT</span>
                 </div>
                 <div class="brand-subtitle">
-                  Luyện nói AI & Shadowing đa ngôn ngữ / AI Voice Practice & Shadowing App
+                  AIとの会話練習（自習用）：ネイティブの音声でリアルタイム返答
                 </div>
               </div>
             </div>
@@ -348,27 +349,24 @@
           </header>
 
           {/* Navigation Tabs */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <nav class="nav-tabs">
               <button
                 class={`nav-tab ${activeTab === 'chat' ? 'active' : ''}`}
                 onClick={() => setActiveTab('chat')}
               >
-                💬 Trò chuyện với AI / Interactive AI Chat
+                💬 Trò chuyện AI (Hội thoại) / 相互会話
               </button>
               <button
                 class={`nav-tab ${activeTab === 'shadowing' ? 'active' : ''}`}
                 onClick={() => setActiveTab('shadowing')}
               >
-                🎯 Luyện Shadowing & Phát âm / Shadowing & Pronunciation
+                🎯 Luyện phát âm / 発音分析
               </button>
             </nav>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>
-              Voices: Aria (US), Nanami (JA), Hoài Mỹ (VI)
-            </div>
           </div>
 
-          {/* AI VOICE CHAT MODE */}
+          {/* MAIN CONVERSATION PRACTICE SCREEN (Default Screen) */}
           {activeTab === 'chat' && (
             <div class="glass-panel chat-container">
               <div class="chat-messages">
@@ -379,7 +377,7 @@
                     <div key={msg.id} class={`chat-bubble ${msg.sender}`}>
                       <div>{msg.text}</div>
                       <div class="chat-bubble-meta">
-                        <span>{msg.sender === 'ai' ? '🤖 LingoBot (Edge TTS)' : '👤 Bạn / You (Web Speech STT)'}</span>
+                        <span>{msg.sender === 'ai' ? '🤖 LingoBot AI' : '👤 Bạn / You (Web Speech STT)'}</span>
                         <span>{msg.time}</span>
                       </div>
 
@@ -420,9 +418,10 @@
               {/* Chat Input & Finish Button Bar */}
               <div style={{ padding: '20px 24px', borderTop: '1px solid var(--border-warm)', background: 'rgba(255, 253, 249, 0.95)', display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <input
+                  id="chat-text-input-field"
                   type="text"
                   class="form-input"
-                  placeholder="Nhập tin nhắn hoặc nhấn micro để trò chuyện / Type or use mic..."
+                  placeholder="Nhập tin nhắn hoặc nhấn micro để nói chuyện / Type message or talk via mic..."
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       handleUserChat(e.target.value);
@@ -432,9 +431,23 @@
                 />
 
                 <button
+                  class="btn btn-terracotta"
+                  style={{ padding: '12px 18px', whiteSpace: 'nowrap' }}
+                  onClick={() => {
+                    const el = document.getElementById('chat-text-input-field');
+                    if (el && el.value.trim()) {
+                      handleUserChat(el.value);
+                      el.value = '';
+                    }
+                  }}
+                >
+                  ✈️ Gửi / 送信
+                </button>
+
+                <button
                   class={`mic-button ${isRecording ? 'recording' : ''}`}
                   style={{ width: '50px', height: '50px', fontSize: '1.2rem' }}
-                  title="Nói chuyện với AI / Talk to AI"
+                  title="Nói chuyện với AI / Speak to AI"
                   onClick={() => {
                     toggleRecording('vi-VN', (finalText) => {
                       handleUserChat(finalText);
@@ -455,7 +468,7 @@
             </div>
           )}
 
-          {/* SHADOWING MODE */}
+          {/* SECONDARY SHADOWING MODE */}
           {activeTab === 'shadowing' && (
             <div class="shadowing-layout">
               {/* Sidebar Library */}
@@ -492,7 +505,7 @@
                     <div class="target-label">
                       ✨ Câu mẫu / Target Sentence ({VOICE_CONFIG[currentSentence.lang]?.name})
                     </div>
-                    <span class="badge badge-edge">{currentSentence.difficulty}</span>
+                    <span class="badge badge-sage">{currentSentence.difficulty}</span>
                   </div>
 
                   <div class="target-text">{currentSentence.text}</div>
@@ -628,7 +641,7 @@
                     <div>
                       <div class="pdf-report-title">🤖 LingoBotWebApp</div>
                       <div style={{ fontSize: '0.9rem', color: '#5e5045', marginTop: '4px' }}>
-                        Báo cáo tóm tắt kết quả bài học / Lesson Summary Report
+                        Báo cáo tóm tắt kết quả bài học hội thoại / Conversation Lesson Summary Report
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', fontSize: '0.85rem', color: '#8e7c6d' }}>
@@ -648,12 +661,12 @@
                       <div>
                         <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Điểm phát âm TB</div>
                         <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2a9d8f' }}>
-                          {evalResult ? `${evalResult.score}%` : '88%'}
+                          {evalResult ? `${evalResult.score}%` : '90%'}
                         </div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Giọng đọc TTS</div>
-                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#2d231d', marginTop: '6px' }}>Edge Neural</div>
+                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Giọng đọc native</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#2d231d', marginTop: '6px' }}>Edge Voice</div>
                       </div>
                     </div>
                   </div>
@@ -664,7 +677,7 @@
                     {chatMessages.map((msg, i) => (
                       <div key={i} class="pdf-chat-item">
                         <div style={{ fontWeight: 700, fontSize: '0.85rem', color: msg.sender === 'ai' ? '#e07a5f' : '#2a9d8f' }}>
-                          {msg.sender === 'ai' ? '🤖 LingoBot (Edge TTS)' : '👤 Bạn / User'}:
+                          {msg.sender === 'ai' ? '🤖 LingoBot AI' : '👤 Bạn / User'}:
                         </div>
                         <div style={{ marginTop: '4px' }}>{msg.text}</div>
                       </div>
@@ -675,14 +688,14 @@
                   <div class="pdf-section" style={{ borderTop: '1px dashed #e8ded0', paddingTop: '16px' }}>
                     <div class="pdf-section-title">💡 Đánh giá & Lời khuyên / AI Feedback</div>
                     <div style={{ fontSize: '0.92rem', color: '#5e5045', lineHeight: 1.6 }}>
-                      Chúc mừng bạn đã hoàn thành buổi luyện tập cùng <strong>LingoBotWebApp</strong>! 
-                      Nhờ việc kết hợp nghe giọng mẫu chuẩn từ <strong>Microsoft Edge TTS</strong> và luyện phát âm thực tế qua <strong>Web Speech API</strong>, phản xạ ngôn ngữ của bạn đang phát triển rất tốt. Hãy tiếp tục duy trì thói quen luyện tập hàng ngày nhé!
+                      Chúc mừng bạn đã hoàn thành buổi luyện tập hội thoại tự học cùng <strong>LingoBotWebApp</strong>! 
+                      Nhờ việc tích cực nói chuyện qua micro và lắng nghe giọng phản hồi chuẩn, phản xạ giao tiếp của bạn đang được nâng cao rõ rệt. Hãy tiếp tục phát huy nhé!
                     </div>
                   </div>
                 </div>
 
                 {/* PDF Action Buttons */}
-                <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-warm)', background: '#fdfbf7', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-warm)', background: '#fdfbf7', display: 'flex', justify: 'flex-end', gap: '12px' }}>
                   <button class="btn btn-secondary" onClick={() => window.print()}>🖨️ In / Print</button>
                   <button class="btn btn-terracotta" onClick={handleExportPdf}>📥 Tải xuống PDF / Export PDF</button>
                 </div>
