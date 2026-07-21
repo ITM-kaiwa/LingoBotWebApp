@@ -96,8 +96,18 @@ def chat_endpoint():
         history = data.get('history', [])
         ui_lang = data.get('uiLang', 'ja-JP').strip().lower()
         target_lang = data.get('targetLang', 'en-US').strip().lower()
-        api_key = data.get('apiKey', '').strip() or os.getenv('GEMINI_API_KEY', '')
+
+        # Fix 1: Strip invisible spaces, tabs, and newlines from API key
+        raw_api_key = data.get('apiKey', '') or os.getenv('GEMINI_API_KEY', '')
+        api_key = raw_api_key.strip().replace('\r', '').replace('\n', '').replace(' ', '')
+
         model_name = data.get('model', 'gemini-1.5-flash').strip()
+
+        # Fix 2: Ensure model name safely maps to Google's official endpoints
+        if '2.0' in model_name:
+            clean_model = 'gemini-2.0-flash'
+        else:
+            clean_model = 'gemini-1.5-flash'
 
         ui_name = LANG_NAMES.get(ui_lang, 'Japanese')
         target_name = LANG_NAMES.get(target_lang, 'English')
@@ -113,7 +123,6 @@ def chat_endpoint():
         # Call Gemini REST API if API Key is available
         if api_key:
             try:
-                clean_model = model_name.replace('gemini-3.5-flash', 'gemini-1.5-flash')
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={api_key}"
 
                 contents = []
@@ -133,7 +142,7 @@ def chat_endpoint():
                     "contents": contents,
                     "generationConfig": {
                         "temperature": 0.7,
-                        "maxOutputTokens": 200
+                        "maxOutputTokens": 250
                     }
                 }
 
@@ -151,9 +160,9 @@ def chat_endpoint():
                         parts = candidates[0]['content'].get('parts', [])
                         if parts:
                             reply_text = parts[0].get('text', '').strip()
-                            return jsonify({'reply': reply_text, 'model': model_name, 'source': 'gemini-api'})
+                            return jsonify({'reply': reply_text, 'model': clean_model, 'source': 'gemini-api'})
             except Exception as gemini_err:
-                print(f"[Gemini API Exception] {gemini_err}. Falling back to contextual tutor response.")
+                print(f"[Gemini API Error] {gemini_err}. Falling back to contextual tutor response.")
 
         reply_text = generate_contextual_tutor_reply(user_message, target_lang, ui_lang)
         return jsonify({'reply': reply_text, 'model': 'LingoBot Context Engine', 'source': 'tutor-engine'})
@@ -176,7 +185,7 @@ def generate_contextual_tutor_reply(msg, target_lang, ui_lang):
             return "Tôi rất khỏe, cảm ơn bạn đã hỏi! Hôm nay bạn muốn luyện tập chủ đề gì nào?"
 
     # PRIORITY 2: Scenario 1 - Restaurant / Ordering / Food (Only if explicitly in current message!)
-    elif any(w in lower for w in ['restaurant', 'order', 'food', 'menu', 'eat', 'table', 'waiter', 'drink', 'dish', 'dinner', 'lunch', 'nha hang', 'an', 'giao tiep', 'レストラン', '注文', '料理', '食事', 'メニュー', '店']):
+    elif any(w in lower for w in ['restaurant', 'order', 'food', 'menu', 'eat', 'table', 'waiter', 'drink', 'dish', 'dinner', 'lunch', 'pizza', 'nha hang', 'an', 'giao tiep', 'レストラン', '注文', '料理', '食事', 'メニュー', '店', 'ピザ']):
         if t_prefix == 'en':
             if any(w in lower for w in ['drink', 'water', 'coffee', 'tea', 'juice', 'wine', 'beer']):
                 return "Excellent choice! I will bring your drink right away. What main dish would you like to order today?"
