@@ -25,13 +25,33 @@
 
     // Language Metadata
     const LANG_META = {
-      'vi-VN': { code: 'vi-VN', name: 'Tiếng Việt', flag: '🇻🇳', voice: 'vi-VN-HoaiMyNeural' },
       'ja-JP': { code: 'ja-JP', name: '日本語', flag: '🇯🇵', voice: 'ja-JP-NanamiNeural' },
-      'en-US': { code: 'en-US', name: 'English', flag: '🇺🇸', voice: 'en-US-AriaNeural' }
+      'vi-VN': { code: 'vi-VN', name: 'Tiếng Việt', flag: '🇻🇳', voice: 'vi-VN-HoaiMyNeural' },
+      'en-US': { code: 'en-US', name: 'English', flag: '🇺🇸', voice: 'en-US-AriaNeural' },
+      'bilingual': { code: 'bilingual', name: 'Tiếng Việt / 日本語', flag: '🇻🇳 🇯🇵', voice: 'ja-JP-NanamiNeural' }
     };
 
     // UI Dictionaries
     const UI_DICT = {
+      'bilingual': {
+        subtitle: 'Luyện tập giao tiếp AI (Tự học) / AI会話練習（自習用）：ネイティブの音声でリアルタイム返答',
+        playVoice: '🔊 音声再生 / Nghe',
+        stopVoice: '⏹ 停止 / Dừng',
+        downloadMp3: '⬇️ MP3ダウンロード / Tải MP3',
+        endLesson: '🛑 レッスン終了 / Kết thúc',
+        chatTab: '💬 相互会話 / Giao tiếp AI',
+        shadowingTab: '🎯 発音分析 / Phát âm',
+        send: '✈️ 送信 / Gửi',
+        micOn: '🎙️ 話しかける / Nói',
+        micOff: '🛑 停止 / Dừng',
+        inputPlaceholder: 'メッセージを入力またはマイクで話しかける... / Nhập tin nhắn hoặc nói bằng micro...',
+        generating: '⏳ 音声生成中... / Đang tạo...',
+        uiLangLabel: '使用言語 / Ngôn ngữ',
+        targetLangLabel: '目標言語 / Mục tiêu',
+        pdfTitle: 'Bài học tóm tắt / レッスン要約レポート',
+        print: '🖨️ 印刷 / In',
+        downloadPdf: '📥 PDFダウンロード / Tải PDF'
+      },
       'ja-JP': {
         subtitle: 'AIとの会話練習（自習用）：ネイティブの音声でリアルタイム返答',
         playVoice: '🔊 音声を再生',
@@ -98,7 +118,12 @@
         lang: 'en-US',
         text: "We need to optimize our workflow to deliver the project on schedule.",
         phonetic: "wiː niːd tuː ˈɒptɪmaɪz ˈaʊə ˈwɜːkfləʊ tuː dɪˈlɪvə ðə ˈprɒdʒɛkt ɒn ˈʃɛdjuːl",
-        translation: "Chúng ta cần tối ưu hóa quy trình làm việc / スケジュール通りに最適化する必要があります。"
+        translation: "Chúng ta cần tối ưu hóa quy trình làm việc / スケジュール通りに最適化する必要があります。",
+        advice: {
+          vi: "Tập trung bật rõ âm 'p' trong 'optimize' và giữ âm 'w' tròn môi trong 'workflow'.",
+          ja: "「optimize」の 'p' は唇を密着させてから息を弾ませ、「workflow」の 'w' は唇を丸めて発音します。",
+          mouthTip: "👄 口の形・コツ: 『optimize』は頭音 'op' をしっかり大きく縦に開け、『deliver』の 'v' は上歯で下唇を軽く押さえます。"
+        }
       },
       {
         id: 2,
@@ -106,7 +131,12 @@
         lang: 'ja-JP',
         text: "ネイティブの音声ボイスを活用して、自然なスピーキング会話練習を行いましょう。",
         phonetic: "ねぃてぃぶ の おんせい を かつようして、しぜんな すぴーきんぐ かいわ れんしゅう を おこないましょう。",
-        translation: "Hãy luyện tập nói tự nhiên bằng giọng đọc AI chuẩn native."
+        translation: "Hãy luyện tập nói tự nhiên bằng giọng đọc AI chuẩn native.",
+        advice: {
+          vi: "Chú ý phát âm rõ các âm đuôi 'せい' (se-i) và 'しょう' (sho-u) kéo dài vừa phải.",
+          ja: "「活用して（かつようして）」の 'つ' は息を歯の間から押し出すイメージで短く促音化させます。",
+          mouthTip: "👄 口の形・コツ: 「スピーキング」の 'ス' は唇を横に引き、息を小さく吐き出します。"
+        }
       },
       {
         id: 3,
@@ -114,9 +144,45 @@
         lang: 'vi-VN',
         text: "Chào mừng bạn đến với LingoBotWebApp! Hãy bắt đầu luyện tập hội thoại ngay hôm nay.",
         phonetic: "Chao mung ban den voi LingoBotWebApp! Hay bat dau luyen tap hoi thoai ngay hom nay.",
-        translation: "Welcome to LingoBotWebApp! Start practicing conversation today."
+        translation: "Welcome to LingoBotWebApp! Start practicing conversation today.",
+        advice: {
+          vi: "Chú ý thanh hỏi trong 'hỏi' và thanh nặng trong 'luyện tập' phát âm dứt khoát.",
+          ja: "ベトナム語の「Chào mừng（チャオ・ムン）」は頭音 'ch' を軽く息を破裂させて発音します。",
+          mouthTip: "👄 口の形・コツ: 'bắt đầu' の 'b' は日本語の「バ」行と同様に唇を密着させて発声します。"
+        }
       }
     ];
+
+    // Helper: Generate structured expression & grammar advice for Lesson Summary PDF Report
+    function generateExpressionAdvice(text, targetLang) {
+      const lower = text ? text.toLowerCase().trim() : '';
+
+      if (lower.includes('pizza') || lower.includes('food') || lower.includes('order') || lower.includes('eat')) {
+        return {
+          better: "I'd like to order a pizza, please.",
+          explanation: "注文の際は 'I would like to have...' よりも 'I'd like to order...' や 'Can I get...' と伝えるのが自然で丁寧です。",
+          usage: "パターン『I'd like to + 動詞』は飲食店やお店でのリクエスト全般で日常的に使えます。",
+          example: "I'd like to order a pepperoni pizza with extra cheese, please.",
+          exampleTrans: "ペパロニピザにチーズを追加で注文したいです。"
+        };
+      } else if (lower.includes('fine') || lower.includes('how are you') || lower.includes('doing')) {
+        return {
+          better: "I'm doing well, thank you. How about yourself?",
+          explanation: "'I am fine' だけでも通じますが、'I'm doing well' や 'How about yourself?' と聞き返すとよりフレンドリーな会話が弾みます。",
+          usage: "挨拶の返答の後に相手に質問を投げかけることで対話がスムーズに継続します。",
+          example: "I'm doing great! How has your week been so far?",
+          exampleTrans: "とても順調ですよ！今週はいかがですか？"
+        };
+      } else {
+        return {
+          better: targetLang.startsWith('en') ? `Could you please tell me more about ${text}?` : `『${text}』について教えていただけますか？`,
+          explanation: "相手との対話をさらに深めるために、質問形式や具体的な情景を加えるとより豊かなコミュニケーションになります。",
+          usage: "相手の返答を引き出すフレーズ『Could you tell me more about...』を活用しましょう。",
+          example: targetLang.startsWith('en') ? `I'd love to learn more about that topic.` : `そのトピックについてぜひ詳しく知りたいです。`,
+          exampleTrans: "そのトピックについてぜひ詳しく知りたいです。"
+        };
+      }
+    }
 
     // Pronunciation Levenshtein Evaluator
     function evaluatePronunciation(targetText, recognizedText) {
@@ -167,7 +233,7 @@
     function App() {
       // Onboarding & Language State
       const [onboardingStep, setOnboardingStep] = useState('api_key'); // 'api_key' | 'ui_lang' | 'target_lang' | 'complete'
-      const [uiLang, setUiLang] = useState('ja-JP'); // 'ja-JP' | 'vi-VN' | 'en-US'
+      const [uiLang, setUiLang] = useState('bilingual'); // 'bilingual' | 'ja-JP' | 'vi-VN' | 'en-US'
       const [targetLang, setTargetLang] = useState('en-US'); // 'en-US' | 'ja-JP' | 'vi-VN'
 
       const [geminiModel, setGeminiModel] = useState('gemini-1.5-flash');
@@ -957,29 +1023,43 @@
                   </div>
                 </div>
 
-                {/* Evaluation Card */}
+                {/* Evaluation Card & Pronunciation Advice */}
                 {evalResult && (
-                  <div class="score-result-panel">
-                    <div class="score-header">
-                      <div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                          Accuracy Score
+                  <div>
+                    <div class="score-result-panel">
+                      <div class="score-header">
+                        <div>
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                            Accuracy Score
+                          </div>
+                          <div style={{ fontSize: '1.3rem', fontWeight: 700, color: evalResult.gradeColor }}>
+                            {evalResult.grade}
+                          </div>
                         </div>
-                        <div style={{ fontSize: '1.3rem', fontWeight: 700, color: evalResult.gradeColor }}>
-                          {evalResult.grade}
+                        <div class="score-badge" style={{ color: evalResult.gradeColor }}>
+                          {evalResult.score}%
                         </div>
                       </div>
-                      <div class="score-badge" style={{ color: evalResult.gradeColor }}>
-                        {evalResult.score}%
+
+                      <div class="word-diff-container" style={{ marginTop: '12px' }}>
+                        {evalResult.diff.map((item, i) => (
+                          <span key={i} class={`diff-word diff-${item.type}`}>
+                            {item.word} {item.said ? `(said: ${item.said})` : ''}
+                          </span>
+                        ))}
                       </div>
                     </div>
 
-                    <div class="word-diff-container" style={{ marginTop: '12px' }}>
-                      {evalResult.diff.map((item, i) => (
-                        <span key={i} class={`diff-word diff-${item.type}`}>
-                          {item.word} {item.said ? `(said: ${item.said})` : ''}
-                        </span>
-                      ))}
+                    {/* Pronunciation & Mouth Position Advice Guide */}
+                    <div class="pronunciation-advice-box">
+                      <div class="pronunciation-advice-title">
+                        👄 正しい発音 ＆ 口の形のアドバイス (Pronunciation & Mouth Position Guide)
+                      </div>
+                      <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', lineHeight: 1.5 }}>
+                        <div><strong>正解の読み方 (IPA):</strong> <code style={{ color: 'var(--accent-terracotta-dark)', fontFamily: 'var(--font-mono)' }}>{currentSentence.phonetic}</code></div>
+                        <div style={{ marginTop: '6px' }}><strong>発音アドバイス (Advice):</strong> {currentSentence.advice?.ja || currentSentence.advice?.vi}</div>
+                        <div style={{ marginTop: '4px', color: 'var(--text-muted)' }}>{currentSentence.advice?.mouthTip}</div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1027,7 +1107,7 @@
                       </div>
                       <div>
                         <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>AI Model</div>
-                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#2d231d' }}>{geminiModel}</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#2d231d' }}>{activeConnectedModel || 'Gemini AI'}</div>
                       </div>
                     </div>
                   </div>
@@ -1043,6 +1123,25 @@
                         <div style={{ marginTop: '4px', whiteSpace: 'pre-line' }}>{msg.text}</div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Detailed Expression & Grammar Advice Section */}
+                  <div class="pdf-section" style={{ borderTop: '2px solid var(--accent-amber)', paddingTop: '16px' }}>
+                    <div class="pdf-section-title">💡 表現・文法アドバイス ＆ 改善ポイント / Expression & Grammar Advice</div>
+                    {chatMessages.filter(m => m.sender === 'user' && !m.type).map((m, idx) => {
+                      const adviceItem = generateExpressionAdvice(m.text, targetLang);
+                      return (
+                        <div key={idx} class="pdf-advice-item">
+                          <div class="user-said">❌ あなたの発話 / You said: "{m.text}"</div>
+                          <div class="better-say">✅ より自然でふさわしい表現 / Better Expression: "{adviceItem.better}"</div>
+                          <div class="pdf-advice-detail">
+                            <div><strong>解説 / Explanation:</strong> {adviceItem.explanation}</div>
+                            <div><strong>使い方 / Usage Context:</strong> {adviceItem.usage}</div>
+                            <div><strong>例文 / Example Sentence:</strong> <em>"{adviceItem.example}"</em> ({adviceItem.exampleTrans})</div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Feedback */}
