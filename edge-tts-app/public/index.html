@@ -277,9 +277,11 @@
       const scrollToBottom = () => {
         requestAnimationFrame(() => {
           setTimeout(() => {
-            if (chatMessagesRef.current) {
-              chatMessagesRef.current.scrollTo({
-                top: chatMessagesRef.current.scrollHeight,
+            const chatEl = document.querySelector('.chat-messages') || chatMessagesRef.current;
+            if (chatEl) {
+              chatEl.scrollTop = chatEl.scrollHeight;
+              chatEl.scrollTo({
+                top: chatEl.scrollHeight,
                 behavior: 'smooth'
               });
             }
@@ -306,9 +308,9 @@
         {
           id: 'welcome-api-key',
           sender: 'ai',
-          lang: 'trilingual',
+          lang: 'bilingual',
           type: 'onboarding_api_key',
-          text: `🔑 Google Gemini API Key Setup / 設定:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu:\n🇯🇵 こんにちは！ご利用前に Google Gemini API Key（例: AIzaSy...）を下のチャット入力欄に入力してください：\n🇺🇸 Welcome! Please enter your Google Gemini API Key (e.g. AIzaSy...) in the chat box below to begin:`,
+          text: `🔑 Google Gemini API Key Setup / Google Gemini APIキーの設定:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu:\n🇯🇵 こんにちは！ご使用前に Google Gemini APIキー（例: AIzaSy...）を下のチャット入力欄に入力してください：`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -509,6 +511,7 @@
 
       // Active Connected Gemini Model State
       const [activeConnectedModel, setActiveConnectedModel] = useState('');
+      const [isThinking, setIsThinking] = useState(false);
 
       // Send Chat Message to Gemini API / Backend Chat Tutor
       const handleUserChat = async (userText) => {
@@ -527,6 +530,7 @@
         };
 
         setChatMessages(prev => [...prev, userMsg]);
+        setIsThinking(true);
         scrollToBottom();
 
         let replyText = '';
@@ -630,6 +634,8 @@
             directErrorLog += `Backend Fetch Error: ${backendErr.message}`;
           }
         }
+
+        setIsThinking(false);
 
         // 3. IF SUCCESSFUL: Display AI reply and update Active Connected Model Badge
         if (replyText) {
@@ -867,6 +873,19 @@
                     </div>
                   );
                 })}
+                {isThinking && (
+                  <div class="chat-bubble ai thinking-bubble" style={{ alignSelf: 'flex-start', background: '#ffffff', border: '1px solid var(--border-warm)', borderRadius: 'var(--radius-lg)', padding: '14px 18px', boxShadow: 'var(--shadow-sm)', margin: '4px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-terracotta-dark)', fontWeight: 600, fontSize: '0.92rem' }}>
+                      <span style={{ fontSize: '1.2rem' }}>⏳</span>
+                      <span>
+                        {uiLang === 'ja-JP' ? '🤖 ちょっと待ってください...（AIが考え中）' :
+                         uiLang === 'vi-VN' ? '🤖 Vui lòng chờ một chút... (AI đang suy nghĩ)' :
+                         uiLang === 'en-US' ? '🤖 Please wait a moment... (AI is thinking)' :
+                         '🤖 Vui lòng chờ một chút... / ちょっと待ってください...'}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} style={{ float: 'left', clear: 'both' }} />
               </div>
 
