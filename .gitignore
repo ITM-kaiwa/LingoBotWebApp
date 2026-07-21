@@ -3,4 +3,5 @@ node_modules/
 dist/
 brain/
 .brain/
+scratch/
 .DS_Store
