@@ -120,7 +120,14 @@ def chat_endpoint():
 
         genai.configure(api_key=api_key)
 
-        candidate_models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
+        candidate_models = [
+            'gemini-flash',
+            'gemini-3.5-flash',
+            'gemini-1.5-flash-latest',
+            'gemini-2.0-flash-exp',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro'
+        ]
         reply_text = None
         used_model = None
         attempt_logs = []
