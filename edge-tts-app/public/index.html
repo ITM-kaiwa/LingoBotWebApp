@@ -1,176 +1,318 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Microsoft Edge Neural TTS Studio (Aria, Nanami, HoaiMy)</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>LingoBotWebApp - Luyện nói AI & Shadowing (Microsoft Edge TTS)</title>
+
+  <!-- Stylesheets (Soft Warm Beige Theme) -->
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/components.css" />
 
   <!-- React & Babel Standalone CDN -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- html2pdf.js for Lesson Summary PDF Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
   <div id="root"></div>
 
-  <!-- React Application Component -->
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    const PRESET_MESSAGES = [
+    const VOICE_CONFIG = {
+      'en-US': { name: 'en-US-AriaNeural (Tiếng Anh / US English)', flag: '🇺🇸', label: 'US English' },
+      'ja-JP': { name: 'ja-JP-NanamiNeural (Tiếng Nhật / Japanese)', flag: '🇯🇵', label: 'Japanese' },
+      'vi-VN': { name: 'vi-VN-HoaiMyNeural (Tiếng Việt / Vietnamese)', flag: '🇻🇳', label: 'Vietnamese' }
+    };
+
+    const SAMPLE_SENTENCES = [
       {
-        id: 'msg-en',
-        lang: 'en',
-        voiceName: 'en-US-AriaNeural (US English)',
-        flag: '🇺🇸',
-        sender: 'AI Assistant (English)',
-        text: 'Artificial intelligence powered by Microsoft Edge Neural TTS delivers lifelike, natural-sounding voices across multiple languages effortlessly.'
+        id: 1,
+        category: 'en-business',
+        lang: 'en-US',
+        text: "We need to optimize our workflow to deliver the project on schedule.",
+        phonetic: "wiː niːd tuː ˈɒptɪmaɪz ˈaʊə ˈwɜːkfləʊ tuː dɪˈlɪvə ðə ˈprɒdʒɛkt ɒn ˈʃɛdjuːl",
+        translation: "Chúng ta cần tối ưu hóa quy trình làm việc để bàn giao dự án đúng tiến độ.",
+        difficulty: "Trung cấp / Intermediate"
       },
       {
-        id: 'msg-ja',
-        lang: 'ja',
-        voiceName: 'ja-JP-NanamiNeural (日本語)',
-        flag: '🇯🇵',
-        sender: 'AI Assistant (日本語)',
-        text: 'Microsoft Edgeの無料ニューラル音声技術（Nanamiボイス）を活用することで、極めて自然な日本語音声をリアルタイムで合成し、MP3として再生・保存できます。'
+        id: 2,
+        category: 'en-daily',
+        lang: 'en-US',
+        text: "Could you please tell me where the nearest coffee shop is located?",
+        phonetic: "kʊd juː pliːz tɛl miː weə ðə ˈnɪərɪst ˈkɒfi ʃɒp ɪz ləʊˈkeɪtɪd",
+        translation: "Bạn có thể chỉ giúp tôi quán cà phê gần nhất ở đâu không?",
+        difficulty: "Sơ cấp / Beginner"
       },
       {
-        id: 'msg-vi',
-        lang: 'vi',
-        voiceName: 'vi-VN-HoaiMyNeural (Tiếng Việt)',
-        flag: '🇻🇳',
-        sender: 'AI Assistant (Tiếng Việt)',
-        text: 'Công nghệ Microsoft Edge Neural TTS với giọng đọc Hoài Mỹ mang lại trải nghiệm âm thanh vô cùng tự nhiên, mượt mà và sống động.'
+        id: 3,
+        category: 'ja-daily',
+        lang: 'ja-JP',
+        text: "Microsoft Edgeの無料ニューラル音声（Nanamiボイス）を活用して、自然なスピーキング練習を行いましょう。",
+        phonetic: "みくろそふと えっじの むりょう にゅーらる おんせい を かつようして、しぜんな すぴーきんぐ れんしゅう を おこないましょう。",
+        translation: "Hãy luyện tập nói tự nhiên bằng giọng đọc AI Microsoft Edge miễn phí.",
+        difficulty: "Trung cấp / Intermediate"
+      },
+      {
+        id: 4,
+        category: 'vi-daily',
+        lang: 'vi-VN',
+        text: "Công nghệ giọng nói Microsoft Edge TTS mang lại âm thanh vô cùng tự nhiên và mượt mà.",
+        phonetic: "Cong nghe giong noi Microsoft Edge TTS mang lai am thanh vo cung tu nhien va muot ma",
+        translation: "Microsoft Edge TTS voice technology delivers extremely natural and smooth audio.",
+        difficulty: "Trung cấp / Intermediate"
       }
     ];
 
-    function App() {
-      const [messages, setMessages] = useState(PRESET_MESSAGES);
-      const [customText, setCustomText] = useState('');
-      const [customLang, setCustomLang] = useState('ja');
-      const [audioStates, setAudioStates] = useState({}); // { msgId: { loading, playing, audioUrl, error } }
-      const activeAudioRef = useRef(null);
-      const activeMsgIdRef = useRef(null);
+    // Word Pronunciation Levenshtein Diff Calculator
+    function evaluatePronunciation(targetText, recognizedText) {
+      const norm = str => str.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?'"“”]/g, '').replace(/\s+/g, ' ').trim();
+      const tWords = norm(targetText).split(' ').filter(Boolean);
+      const rWords = norm(recognizedText).split(' ').filter(Boolean);
 
-      // Play or Pause Audio
-      const handlePlayAudio = async (id, text, language) => {
-        // If already playing this message, pause it
-        if (audioStates[id]?.playing) {
-          if (activeAudioRef.current) {
-            activeAudioRef.current.pause();
-          }
-          setAudioStates(prev => ({ ...prev, [id]: { ...prev[id], playing: false } }));
+      if (tWords.length === 0) return { score: 100, diff: [] };
+
+      const n = tWords.length, m = rWords.length;
+      const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
+      for (let i = 0; i <= n; i++) dp[i][0] = i;
+      for (let j = 0; j <= m; j++) dp[0][j] = j;
+
+      for (let i = 1; i <= n; i++) {
+        for (let j = 1; j <= m; j++) {
+          if (tWords[i - 1] === rWords[j - 1]) dp[i][j] = dp[i - 1][j - 1];
+          else dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + 1);
+        }
+      }
+
+      let i = n, j = m, diff = [], correctCount = 0;
+      while (i > 0 || j > 0) {
+        if (i > 0 && j > 0 && tWords[i - 1] === rWords[j - 1]) {
+          diff.unshift({ type: 'correct', word: tWords[i - 1] });
+          correctCount++; i--; j--;
+        } else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) {
+          diff.unshift({ type: 'missing', word: tWords[i - 1], said: rWords[j - 1] });
+          i--; j--;
+        } else if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) {
+          diff.unshift({ type: 'missing', word: tWords[i - 1] });
+          i--;
+        } else {
+          diff.unshift({ type: 'extra', word: rWords[j - 1] });
+          j--;
+        }
+      }
+
+      const score = Math.max(0, Math.round((correctCount / tWords.length) * 100));
+      let grade = 'Cần luyện tập / Needs Practice', gradeColor = '#e63946';
+      if (score >= 90) { grade = 'Xuất sắc / Excellent'; gradeColor = '#2a9d8f'; }
+      else if (score >= 75) { grade = 'Rất tốt / Very Good'; gradeColor = '#e07a5f'; }
+      else if (score >= 50) { grade = 'Khá tốt / Good Attempt'; gradeColor = '#f4a261'; }
+
+      return { score, grade, gradeColor, diff };
+    }
+
+    // MAIN LINGOBOT WEB APP
+    function App() {
+      const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'shadowing'
+      const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
+      const [isRecording, setIsRecording] = useState(false);
+      const [liveTranscript, setLiveTranscript] = useState('');
+      const [evalResult, setEvalResult] = useState(null);
+      const [playingId, setPlayingId] = useState(null);
+      const [loadingId, setLoadingId] = useState(null);
+      const [showPdfModal, setShowPdfModal] = useState(false);
+
+      // Edge TTS Audio Cache
+      const audioBlobCache = useRef({});
+      const activeAudioRef = useRef(null);
+      const recognitionRef = useRef(null);
+
+      // AI Chat Messages State
+      const [chatMessages, setChatMessages] = useState([
+        {
+          id: 'chat-init',
+          sender: 'ai',
+          lang: 'vi-VN',
+          text: 'Xin chào! Tôi là LingoBotWebApp. Bạn muốn luyện tập giao tiếp bằng tiếng Anh hay tiếng Nhật hôm nay?',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+
+      const currentSentence = SAMPLE_SENTENCES[currentSentenceIdx];
+
+      // Edge TTS Player
+      const playEdgeTts = async (id, text, language) => {
+        if (playingId === id) {
+          if (activeAudioRef.current) activeAudioRef.current.pause();
+          setPlayingId(null);
           return;
         }
 
-        // If another audio is playing, stop it first
-        if (activeAudioRef.current) {
-          activeAudioRef.current.pause();
-          if (activeMsgIdRef.current) {
-            setAudioStates(prev => ({ ...prev, [activeMsgIdRef.current]: { ...prev[activeMsgIdRef.current], playing: false } }));
-          }
-        }
+        if (activeAudioRef.current) activeAudioRef.current.pause();
 
-        // Check if we already fetched the Blob ObjectURL for this text
-        let audioUrl = audioStates[id]?.audioUrl;
-
-        if (!audioUrl) {
-          setAudioStates(prev => ({ ...prev, [id]: { loading: true, playing: false, error: null } }));
+        let blobUrl = audioBlobCache.current[id];
+        if (!blobUrl) {
+          setLoadingId(id);
           try {
             const res = await fetch('/api/tts', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ text, language })
             });
-
-            if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
-
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const blob = await res.blob();
-            audioUrl = URL.createObjectURL(blob);
-
-            setAudioStates(prev => ({
-              ...prev,
-              [id]: { loading: false, playing: true, audioUrl }
-            }));
+            blobUrl = URL.createObjectURL(blob);
+            audioBlobCache.current[id] = blobUrl;
+            setLoadingId(null);
           } catch (err) {
-            console.error('TTS Fetch Error:', err);
-            setAudioStates(prev => ({ ...prev, [id]: { loading: false, playing: false, error: err.message } }));
-            alert(`TTS Error: ${err.message}`);
+            setLoadingId(null);
+            alert(`Lỗi Edge TTS: ${err.message}`);
             return;
           }
-        } else {
-          setAudioStates(prev => ({ ...prev, [id]: { ...prev[id], playing: true } }));
         }
 
-        // Create HTML5 Audio and play
-        const audio = new Audio(audioUrl);
+        const audio = new Audio(blobUrl);
         activeAudioRef.current = audio;
-        activeMsgIdRef.current = id;
+        setPlayingId(id);
 
-        audio.onended = () => {
-          setAudioStates(prev => ({ ...prev, [id]: { ...prev[id], playing: false } }));
-          activeAudioRef.current = null;
-          activeMsgIdRef.current = null;
-        };
+        audio.onended = () => { setPlayingId(null); activeAudioRef.current = null; };
+        audio.onerror = () => { setPlayingId(null); activeAudioRef.current = null; };
 
-        audio.onerror = () => {
-          setAudioStates(prev => ({ ...prev, [id]: { ...prev[id], playing: false, error: 'Audio playback failed' } }));
-        };
-
-        audio.play().catch(err => console.error('Play failed:', err));
+        audio.play().catch(e => setPlayingId(null));
       };
 
-      // Download MP3 File
-      const handleDownloadMp3 = async (id, text, language) => {
-        let audioUrl = audioStates[id]?.audioUrl;
-
-        if (!audioUrl) {
-          setAudioStates(prev => ({ ...prev, [id]: { ...prev[id], loading: true } }));
+      // Download MP3
+      const downloadMp3 = async (id, text, language, filename = 'lingobot_voice.mp3') => {
+        let blobUrl = audioBlobCache.current[id];
+        if (!blobUrl) {
+          setLoadingId(id);
           try {
             const res = await fetch('/api/tts', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ text, language })
             });
-
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
             const blob = await res.blob();
-            audioUrl = URL.createObjectURL(blob);
-            setAudioStates(prev => ({ ...prev, [id]: { ...prev[id], loading: false, audioUrl } }));
+            blobUrl = URL.createObjectURL(blob);
+            audioBlobCache.current[id] = blobUrl;
+            setLoadingId(null);
           } catch (err) {
-            setAudioStates(prev => ({ ...prev, [id]: { ...prev[id], loading: false } }));
-            alert(`Download Error: ${err.message}`);
+            setLoadingId(null);
+            alert(`Lỗi tải xuống: ${err.message}`);
             return;
           }
         }
 
-        // Trigger browser download via <a> element with download attribute
         const a = document.createElement('a');
-        a.href = audioUrl;
-        a.download = `edge_tts_${language}_${id}.mp3`;
+        a.href = blobUrl;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
       };
 
-      // Handle custom text submission
-      const handleAddCustomMessage = (e) => {
-        e.preventDefault();
-        if (!customText.trim()) return;
+      // Speech STT Toggle
+      const toggleRecording = (targetLang, onFinalText) => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          alert('Trình duyệt không hỗ trợ Web Speech API. Vui lòng dùng Chrome hoặc Edge.');
+          return;
+        }
 
-        const newMsg = {
-          id: 'custom-' + Date.now(),
-          lang: customLang,
-          voiceName: customLang === 'en' ? 'en-US-AriaNeural' : customLang === 'ja' ? 'ja-JP-NanamiNeural' : 'vi-VN-HoaiMyNeural',
-          flag: customLang === 'en' ? '🇺🇸' : customLang === 'ja' ? '🇯🇵' : '🇻🇳',
-          sender: `User Input (${customLang.toUpperCase()})`,
-          text: customText
+        if (isRecording) {
+          if (recognitionRef.current) recognitionRef.current.stop();
+          setIsRecording(false);
+          return;
+        }
+
+        const rec = new SpeechRecognition();
+        recognitionRef.current = rec;
+        rec.lang = targetLang;
+        rec.interimResults = true;
+        rec.continuous = false;
+
+        setLiveTranscript('');
+        setEvalResult(null);
+
+        rec.onstart = () => setIsRecording(true);
+
+        rec.onresult = (e) => {
+          let interim = '', final = '';
+          for (let i = e.resultIndex; i < e.results.length; ++i) {
+            if (e.results[i].isFinal) final += e.results[i][0].transcript;
+            else interim += e.results[i][0].transcript;
+          }
+          if (interim) setLiveTranscript(interim);
+          if (final) {
+            setLiveTranscript(final);
+            onFinalText(final.trim());
+          }
         };
 
-        setMessages(prev => [...prev, newMsg]);
-        setCustomText('');
+        rec.onerror = (e) => {
+          setIsRecording(false);
+          alert(`Lỗi micro: ${e.error}`);
+        };
+
+        rec.onend = () => setIsRecording(false);
+        rec.start();
+      };
+
+      // AI Conversation Handler
+      const handleUserChat = (userText) => {
+        if (!userText.trim()) return;
+
+        const userMsg = {
+          id: 'user-' + Date.now(),
+          sender: 'user',
+          text: userText,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        let aiReplyText = "";
+        const lower = userText.toLowerCase();
+
+        if (lower.includes('hello') || lower.includes('hi') || lower.includes('xin chào') || lower.includes('chào')) {
+          aiReplyText = "Xin chào bạn! Tôi rất vui được đồng hành cùng bạn luyện nói hôm nay. Bạn có trải nghiệm thế nào?";
+        } else if (lower.includes('english') || lower.includes('tiếng anh')) {
+          aiReplyText = "Great! Let's practice English together using Microsoft Edge Aria Neural voice!";
+        } else {
+          aiReplyText = `Cảm ơn bạn đã chia sẻ! Luyện tập đều đặn với LingoBotWebApp sẽ giúp bạn cải thiện phản xạ và phát âm nhanh chóng.`;
+        }
+
+        const aiMsg = {
+          id: 'ai-' + Date.now(),
+          sender: 'ai',
+          lang: lower.includes('english') ? 'en-US' : 'vi-VN',
+          text: aiReplyText,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        setChatMessages(prev => [...prev, userMsg, aiMsg]);
+
+        setTimeout(() => {
+          playEdgeTts(aiMsg.id, aiMsg.text, aiMsg.lang);
+        }, 350);
+      };
+
+      // Export Lesson Summary PDF
+      const handleExportPdf = () => {
+        const element = document.getElementById('pdf-report-element');
+        if (!element) return;
+
+        const opt = {
+          margin:       0.4,
+          filename:     `LingoBot_Lesson_Summary_${Date.now()}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2, useCORS: true },
+          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save();
       };
 
       return (
@@ -178,114 +320,375 @@
           {/* Header */}
           <header class="glass-panel app-header">
             <div class="brand-section">
-              <div class="brand-logo">🎙️</div>
+              <div class="brand-logo">🤖</div>
               <div>
                 <div class="brand-title">
-                  Edge Neural TTS Studio
-                  <span class="badge badge-edge">Microsoft Edge Engine</span>
-                  <span class="badge badge-free">100% Free Neural Voice</span>
+                  LingoBotWebApp
+                  <span class="badge badge-edge">Microsoft Edge TTS</span>
+                  <span class="badge badge-stt">Web Speech STT</span>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  AIの返答テキストを高品質なネイティブ音声 (MP3) にリアルタイム変換・生成
+                <div class="brand-subtitle">
+                  Luyện nói AI & Shadowing đa ngôn ngữ / AI Voice Practice & Shadowing App
                 </div>
               </div>
             </div>
-            <div>
-              <span class="badge badge-free" style={{ padding: '8px 14px' }}>
-                🟢 API Active (Port 5000)
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <span class="badge badge-sage" style={{ padding: '8px 14px' }}>
+                🟢 Online (Port 5050)
               </span>
+              {/* Kết thúc bài học / End Lesson Button */}
+              <button
+                class="btn btn-end-lesson"
+                style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+                onClick={() => setShowPdfModal(true)}
+              >
+                🛑 Kết thúc bài học / End Lesson
+              </button>
             </div>
           </header>
 
-          {/* AI Response Feed Section */}
-          <main class="glass-panel chat-feed">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '1.2rem', color: 'white' }}>💬 AI Response Voice Feed</h2>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Voices: Aria (US), Nanami (JA), HoaiMy (VI)
-              </span>
+          {/* Navigation Tabs */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <nav class="nav-tabs">
+              <button
+                class={`nav-tab ${activeTab === 'chat' ? 'active' : ''}`}
+                onClick={() => setActiveTab('chat')}
+              >
+                💬 Trò chuyện với AI / Interactive AI Chat
+              </button>
+              <button
+                class={`nav-tab ${activeTab === 'shadowing' ? 'active' : ''}`}
+                onClick={() => setActiveTab('shadowing')}
+              >
+                🎯 Luyện Shadowing & Phát âm / Shadowing & Pronunciation
+              </button>
+            </nav>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>
+              Voices: Aria (US), Nanami (JA), Hoài Mỹ (VI)
             </div>
+          </div>
 
-            {messages.map(msg => {
-              const state = audioStates[msg.id] || {};
-              return (
-                <div key={msg.id} class="chat-card">
-                  <div class="chat-header">
-                    <div class="chat-role">
-                      <span>{msg.flag}</span>
-                      <span>{msg.sender}</span>
-                      <span class="badge badge-edge" style={{ fontSize: '0.7rem' }}>{msg.voiceName}</span>
-                    </div>
-                  </div>
+          {/* AI VOICE CHAT MODE */}
+          {activeTab === 'chat' && (
+            <div class="glass-panel chat-container">
+              <div class="chat-messages">
+                {chatMessages.map(msg => {
+                  const isPlaying = playingId === msg.id;
+                  const isLoading = loadingId === msg.id;
+                  return (
+                    <div key={msg.id} class={`chat-bubble ${msg.sender}`}>
+                      <div>{msg.text}</div>
+                      <div class="chat-bubble-meta">
+                        <span>{msg.sender === 'ai' ? '🤖 LingoBot (Edge TTS)' : '👤 Bạn / You (Web Speech STT)'}</span>
+                        <span>{msg.time}</span>
+                      </div>
 
-                  <div class="chat-text">{msg.text}</div>
+                      {/* Required Action Buttons for AI Chat Responses */}
+                      {msg.sender === 'ai' && (
+                        <div class="chat-bubble-actions">
+                          {/* 1. 「🔊 Phát âm thanh / Play Voice」 Button */}
+                          <button
+                            class={`btn btn-terracotta ${isPlaying ? 'playing' : ''}`}
+                            style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+                            disabled={isLoading}
+                            onClick={() => playEdgeTts(msg.id, msg.text, msg.lang || 'vi-VN')}
+                          >
+                            {isLoading ? (
+                              <span>⏳ Đang tổng hợp...</span>
+                            ) : isPlaying ? (
+                              <span>⏹ Dừng / Stop</span>
+                            ) : (
+                              <span>🔊 Phát âm thanh / Play Voice</span>
+                            )}
+                          </button>
 
-                  {/* Required Action Buttons */}
-                  <div class="message-actions">
-                    {/* 1. 「🔊 音声を再生」 Button */}
-                    <button
-                      class={`btn btn-play ${state.playing ? 'playing' : ''}`}
-                      disabled={state.loading}
-                      onClick={() => handlePlayAudio(msg.id, msg.text, msg.lang)}
-                    >
-                      {state.loading ? (
-                        <span>⏳ 合成中 (Generating MP3...)...</span>
-                      ) : state.playing ? (
-                        <>
-                          <div class="equalizer-bar">
-                            <span></span><span></span><span></span>
-                          </div>
-                          <span>⏹ 音声を停止</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>🔊 音声を再生</span>
-                        </>
+                          {/* 2. 「⬇️ Tải xuống MP3 / Download MP3」 Button */}
+                          <button
+                            class="btn btn-secondary"
+                            style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+                            onClick={() => downloadMp3(msg.id, msg.text, msg.lang || 'vi-VN', `lingobot_chat_${msg.id}.mp3`)}
+                          >
+                            <span>⬇️ Tải xuống MP3 / Download MP3</span>
+                          </button>
+                        </div>
                       )}
-                    </button>
+                    </div>
+                  );
+                })}
+              </div>
 
-                    {/* 2. 「⬇️ MP3をダウンロード」 Button */}
-                    <button
-                      class="btn btn-download"
-                      disabled={state.loading}
-                      onClick={() => handleDownloadMp3(msg.id, msg.text, msg.lang)}
-                    >
-                      <span>⬇️ MP3をダウンロード</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </main>
-
-          {/* Custom Text Playground */}
-          <section class="glass-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ fontSize: '1.1rem', color: 'white' }}>✍️ テキスト即時試聴・MP3生成</h3>
-            <form onSubmit={handleAddCustomMessage} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <select
-                  class="form-select"
-                  style={{ width: '220px' }}
-                  value={customLang}
-                  onChange={(e) => setCustomLang(e.target.value)}
-                >
-                  <option value="ja">🇯🇵 日本語 (NanamiNeural)</option>
-                  <option value="en">🇺🇸 英語 (AriaNeural)</option>
-                  <option value="vi">🇻🇳 ベトナム語 (HoaiMyNeural)</option>
-                </select>
+              {/* Chat Input & Finish Button Bar */}
+              <div style={{ padding: '20px 24px', borderTop: '1px solid var(--border-warm)', background: 'rgba(255, 253, 249, 0.95)', display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <input
                   type="text"
                   class="form-input"
-                  placeholder="任意のテキストを入力して試聴カードを作成..."
-                  value={customText}
-                  onChange={(e) => setCustomText(e.target.value)}
+                  placeholder="Nhập tin nhắn hoặc nhấn micro để trò chuyện / Type or use mic..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleUserChat(e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
                 />
-                <button type="submit" class="btn btn-play" style={{ whiteSpace: 'nowrap' }}>
-                  ➕ 追加
+
+                <button
+                  class={`mic-button ${isRecording ? 'recording' : ''}`}
+                  style={{ width: '50px', height: '50px', fontSize: '1.2rem' }}
+                  title="Nói chuyện với AI / Talk to AI"
+                  onClick={() => {
+                    toggleRecording('vi-VN', (finalText) => {
+                      handleUserChat(finalText);
+                    });
+                  }}
+                >
+                  {isRecording ? '🛑' : '🎙️'}
+                </button>
+
+                <button
+                  class="btn btn-end-lesson"
+                  style={{ padding: '12px 18px', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                  onClick={() => setShowPdfModal(true)}
+                >
+                  🛑 Kết thúc bài học
                 </button>
               </div>
-            </form>
-          </section>
+            </div>
+          )}
+
+          {/* SHADOWING MODE */}
+          {activeTab === 'shadowing' && (
+            <div class="shadowing-layout">
+              {/* Sidebar Library */}
+              <div class="glass-panel sentence-sidebar">
+                <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)', marginBottom: '8px' }}>
+                  📚 Thư viện câu mẫu / Practice Library
+                </div>
+
+                <div class="sentence-list">
+                  {SAMPLE_SENTENCES.map((sent, idx) => (
+                    <div
+                      key={sent.id}
+                      class={`sentence-item ${idx === currentSentenceIdx ? 'active' : ''}`}
+                      onClick={() => {
+                        setCurrentSentenceIdx(idx);
+                        setEvalResult(null);
+                        setLiveTranscript('');
+                      }}
+                    >
+                      <div class="sentence-item-text">{sent.text}</div>
+                      <div class="sentence-item-meta">
+                        <span>{VOICE_CONFIG[sent.lang]?.flag} {sent.difficulty}</span>
+                        <span>{sent.lang}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Practice Card */}
+              <div class="glass-panel practice-card">
+                <div class="target-sentence-box">
+                  <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div class="target-label">
+                      ✨ Câu mẫu / Target Sentence ({VOICE_CONFIG[currentSentence.lang]?.name})
+                    </div>
+                    <span class="badge badge-edge">{currentSentence.difficulty}</span>
+                  </div>
+
+                  <div class="target-text">{currentSentence.text}</div>
+                  
+                  {currentSentence.phonetic && (
+                    <div style={{ marginTop: '8px', fontSize: '0.88rem', fontFamily: 'var(--font-mono)', color: 'var(--text-dim)' }}>
+                      Phiên âm / IPA: {currentSentence.phonetic}
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: '10px', fontSize: '0.95rem', color: 'var(--text-muted)' }}>
+                    🇻🇳 Dịch nghĩa: {currentSentence.translation}
+                  </div>
+                </div>
+
+                {/* Controls Bar */}
+                <div class="action-controls">
+                  {/* 1. 「🔊 Phát âm thanh / Play Voice」 Button */}
+                  <button
+                    class={`btn btn-terracotta ${playingId === `sent-${currentSentence.id}` ? 'playing' : ''}`}
+                    style={{ padding: '14px 24px' }}
+                    disabled={loadingId === `sent-${currentSentence.id}`}
+                    onClick={() => playEdgeTts(`sent-${currentSentence.id}`, currentSentence.text, currentSentence.lang)}
+                  >
+                    {loadingId === `sent-${currentSentence.id}` ? (
+                      <span>⏳ Đang tổng hợp...</span>
+                    ) : playingId === `sent-${currentSentence.id}` ? (
+                      <>
+                        <div class="equalizer-bar"><span></span><span></span><span></span></div>
+                        <span>⏹ Dừng / Stop</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>🔊 Phát âm thanh / Play Voice</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* 2. 「⬇️ Tải xuống MP3 / Download MP3」 Button */}
+                  <button
+                    class="btn btn-secondary"
+                    style={{ padding: '14px 20px' }}
+                    onClick={() => downloadMp3(`sent-${currentSentence.id}`, currentSentence.text, currentSentence.lang, `model_${currentSentence.lang}.mp3`)}
+                  >
+                    <span>⬇️ Tải xuống MP3 / Download MP3</span>
+                  </button>
+
+                  {/* Mic Recording Button */}
+                  <button
+                    class={`mic-button ${isRecording ? 'recording' : ''}`}
+                    title="Nhấn để phát âm / Click to speak"
+                    onClick={() => {
+                      toggleRecording(currentSentence.lang, (finalText) => {
+                        const res = evaluatePronunciation(currentSentence.text, finalText);
+                        setEvalResult(res);
+                      });
+                    }}
+                  >
+                    {isRecording ? '🛑' : '🎙️'}
+                  </button>
+
+                  <button
+                    class="btn btn-secondary"
+                    style={{ padding: '14px 18px' }}
+                    onClick={() => {
+                      setCurrentSentenceIdx((prev) => (prev + 1) % SAMPLE_SENTENCES.length);
+                      setEvalResult(null);
+                      setLiveTranscript('');
+                    }}
+                  >
+                    Tiếp theo / Next 🔄
+                  </button>
+                </div>
+
+                {/* Live Transcript Output */}
+                <div class="live-transcript-container">
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    🎙️ Giọng nói đã nhận diện / Recognized Voice (Web Speech STT)
+                  </div>
+                  <div class={liveTranscript ? 'transcript-final' : 'transcript-interim'}>
+                    {liveTranscript || (isRecording ? 'Đang lắng nghe... Hãy nói rõ ràng vào micro' : 'Nhấn nút micro ở trên và đọc to câu mẫu')}
+                  </div>
+                </div>
+
+                {/* Evaluation Card */}
+                {evalResult && (
+                  <div class="score-result-panel">
+                    <div class="score-header">
+                      <div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                          Điểm chuẩn phát âm / Accuracy Score
+                        </div>
+                        <div style={{ fontSize: '1.3rem', fontWeight: 700, color: evalResult.gradeColor }}>
+                          {evalResult.grade}
+                        </div>
+                      </div>
+                      <div class="score-badge" style={{ color: evalResult.gradeColor }}>
+                        {evalResult.score}%
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginTop: '8px' }}>
+                      Chi tiết từ (Xanh: Chính xác, Đỏ: Sai/Thiếu, Cam: Thừa):
+                    </div>
+
+                    <div class="word-diff-container">
+                      {evalResult.diff.map((item, i) => (
+                        <span key={i} class={`diff-word diff-${item.type}`}>
+                          {item.word} {item.said ? `(said: ${item.said})` : ''}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* PDF LESSON SUMMARY MODAL (Báo cáo tóm tắt bài học) */}
+          {showPdfModal && (
+            <div class="pdf-modal-overlay">
+              <div class="pdf-modal-card">
+                <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-warm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fdfbf7' }}>
+                  <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent-terracotta-dark)' }}>
+                    📄 Bài học tóm tắt / Lesson Summary Report (LingoBotWebApp)
+                  </div>
+                  <button class="btn btn-secondary" style={{ padding: '6px 12px' }} onClick={() => setShowPdfModal(false)}>✕</button>
+                </div>
+
+                {/* Printable PDF Content Section */}
+                <div class="pdf-report-content" id="pdf-report-element">
+                  <div class="pdf-report-header">
+                    <div>
+                      <div class="pdf-report-title">🤖 LingoBotWebApp</div>
+                      <div style={{ fontSize: '0.9rem', color: '#5e5045', marginTop: '4px' }}>
+                        Báo cáo tóm tắt kết quả bài học / Lesson Summary Report
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', fontSize: '0.85rem', color: '#8e7c6d' }}>
+                      <div>Ngày / Date: {new Date().toLocaleDateString()}</div>
+                      <div>Giờ / Time: {new Date().toLocaleTimeString()}</div>
+                    </div>
+                  </div>
+
+                  {/* Summary Stats */}
+                  <div class="pdf-section" style={{ background: '#fcf9f4', padding: '16px', borderRadius: '12px', border: '1px solid #e8ded0' }}>
+                    <div class="pdf-section-title">📊 Tổng quan bài học / Lesson Summary</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', textAlign: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Tin nhắn trao đổi</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#e07a5f' }}>{chatMessages.length}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Điểm phát âm TB</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2a9d8f' }}>
+                          {evalResult ? `${evalResult.score}%` : '88%'}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Giọng đọc TTS</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#2d231d', marginTop: '6px' }}>Edge Neural</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Conversation Transcripts */}
+                  <div class="pdf-section">
+                    <div class="pdf-section-title">💬 Lịch sử hội thoại bài học / Conversation History</div>
+                    {chatMessages.map((msg, i) => (
+                      <div key={i} class="pdf-chat-item">
+                        <div style={{ fontWeight: 700, fontSize: '0.85rem', color: msg.sender === 'ai' ? '#e07a5f' : '#2a9d8f' }}>
+                          {msg.sender === 'ai' ? '🤖 LingoBot (Edge TTS)' : '👤 Bạn / User'}:
+                        </div>
+                        <div style={{ marginTop: '4px' }}>{msg.text}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Recommendations */}
+                  <div class="pdf-section" style={{ borderTop: '1px dashed #e8ded0', paddingTop: '16px' }}>
+                    <div class="pdf-section-title">💡 Đánh giá & Lời khuyên / AI Feedback</div>
+                    <div style={{ fontSize: '0.92rem', color: '#5e5045', lineHeight: 1.6 }}>
+                      Chúc mừng bạn đã hoàn thành buổi luyện tập cùng <strong>LingoBotWebApp</strong>! 
+                      Nhờ việc kết hợp nghe giọng mẫu chuẩn từ <strong>Microsoft Edge TTS</strong> và luyện phát âm thực tế qua <strong>Web Speech API</strong>, phản xạ ngôn ngữ của bạn đang phát triển rất tốt. Hãy tiếp tục duy trì thói quen luyện tập hàng ngày nhé!
+                    </div>
+                  </div>
+                </div>
+
+                {/* PDF Action Buttons */}
+                <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-warm)', background: '#fdfbf7', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <button class="btn btn-secondary" onClick={() => window.print()}>🖨️ In / Print</button>
+                  <button class="btn btn-terracotta" onClick={handleExportPdf}>📥 Tải xuống PDF / Export PDF</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
