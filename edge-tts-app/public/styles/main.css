@@ -88,11 +88,13 @@ body {
 .app-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 20px 60px 20px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  min-height: 100vh;
+  gap: 14px;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Buttons */

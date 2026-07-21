@@ -23,10 +23,72 @@
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    const VOICE_CONFIG = {
-      'en-US': { name: 'Aria (US English)', flag: '🇺🇸', label: 'US English' },
-      'ja-JP': { name: 'Nanami (日本語)', flag: '🇯🇵', label: 'Japanese' },
-      'vi-VN': { name: 'Hoài Mỹ (Tiếng Việt)', flag: '🇻🇳', label: 'Vietnamese' }
+    // Language Metadata
+    const LANG_META = {
+      'vi-VN': { code: 'vi-VN', name: 'Tiếng Việt', flag: '🇻🇳', voice: 'vi-VN-HoaiMyNeural' },
+      'ja-JP': { code: 'ja-JP', name: '日本語', flag: '🇯🇵', voice: 'ja-JP-NanamiNeural' },
+      'en-US': { code: 'en-US', name: 'English', flag: '🇺🇸', voice: 'en-US-AriaNeural' }
+    };
+
+    // UI Dictionaries
+    const UI_DICT = {
+      'ja-JP': {
+        subtitle: 'AIとの会話練習（自習用）：ネイティブの音声でリアルタイム返答',
+        playVoice: '🔊 音声を再生',
+        stopVoice: '⏹ 停止',
+        downloadMp3: '⬇️ MP3をダウンロード',
+        endLesson: '🛑 レッスン終了',
+        chatTab: '💬 相互会話',
+        shadowingTab: '🎯 発音分析',
+        send: '✈️ 送信',
+        micOn: '🎙️ マイク音声入力',
+        micOff: '🛑 停止',
+        inputPlaceholder: 'メッセージを入力またはマイクで話しかける...',
+        generating: '⏳ 音声合成中...',
+        uiLangLabel: '使用言語',
+        targetLangLabel: '目標言語',
+        pdfTitle: 'Bài học tóm tắt / レッスン要約レポート',
+        print: '🖨️ 印刷',
+        downloadPdf: '📥 PDFダウンロード'
+      },
+      'vi-VN': {
+        subtitle: 'Luyện tập giao tiếp AI (Tự học): Phản hồi thời gian thực với giọng đọc native',
+        playVoice: '🔊 Phát âm thanh',
+        stopVoice: '⏹ Dừng',
+        downloadMp3: '⬇️ Tải xuống MP3',
+        endLesson: '🛑 Kết thúc bài học',
+        chatTab: '💬 Trò chuyện AI',
+        shadowingTab: '🎯 Luyện phát âm',
+        send: '✈️ Gửi',
+        micOn: '🎙️ Nói',
+        micOff: '🛑 Dừng',
+        inputPlaceholder: 'Nhập tin nhắn hoặc nhấn micro để nói...',
+        generating: '⏳ Đang tổng hợp...',
+        uiLangLabel: 'Ngôn ngữ giao diện',
+        targetLangLabel: 'Ngôn ngữ mục tiêu',
+        pdfTitle: 'Báo cáo tóm tắt bài học / Lesson Summary Report',
+        print: '🖨️ In',
+        downloadPdf: '📥 Tải PDF'
+      },
+      'en-US': {
+        subtitle: 'AI Conversation Practice (Self-study): Real-time native voice audio response',
+        playVoice: '🔊 Play Voice',
+        stopVoice: '⏹ Stop',
+        downloadMp3: '⬇️ Download MP3',
+        endLesson: '🛑 End Lesson',
+        chatTab: '💬 AI Conversation',
+        shadowingTab: '🎯 Pronunciation',
+        send: '✈️ Send',
+        micOn: '🎙️ Speak',
+        micOff: '🛑 Stop',
+        inputPlaceholder: 'Type a message or click mic to talk...',
+        generating: '⏳ Generating audio...',
+        uiLangLabel: 'UI Language',
+        targetLangLabel: 'Target Language',
+        pdfTitle: 'Lesson Summary Report',
+        print: '🖨️ Print',
+        downloadPdf: '📥 Download PDF'
+      }
     };
 
     const SAMPLE_SENTENCES = [
@@ -36,44 +98,31 @@
         lang: 'en-US',
         text: "We need to optimize our workflow to deliver the project on schedule.",
         phonetic: "wiː niːd tuː ˈɒptɪmaɪz ˈaʊə ˈwɜːkfləʊ tuː dɪˈlɪvə ðə ˈprɒdʒɛkt ɒn ˈʃɛdjuːl",
-        translation: "Chúng ta cần tối ưu hóa quy trình làm việc để bàn giao dự án đúng tiến độ.",
-        difficulty: "Trung cấp / Intermediate"
+        translation: "Chúng ta cần tối ưu hóa quy trình làm việc / スケジュール通りに最適化する必要があります。"
       },
       {
         id: 2,
-        category: 'en-daily',
-        lang: 'en-US',
-        text: "Could you please tell me where the nearest coffee shop is located?",
-        phonetic: "kʊd juː pliːz tɛl miː weə ðə ˈnɪərɪst ˈkɒfi ʃɒp ɪz ləʊˈkeɪtɪd",
-        translation: "Bạn có thể chỉ giúp tôi quán cà phê gần nhất ở đâu không?",
-        difficulty: "Sơ cấp / Beginner"
-      },
-      {
-        id: 3,
         category: 'ja-daily',
         lang: 'ja-JP',
         text: "ネイティブの音声ボイスを活用して、自然なスピーキング会話練習を行いましょう。",
         phonetic: "ねぃてぃぶ の おんせい を かつようして、しぜんな すぴーきんぐ かいわ れんしゅう を おこないましょう。",
-        translation: "Hãy luyện tập nói tự nhiên bằng giọng đọc AI chuẩn native.",
-        difficulty: "Trung cấp / Intermediate"
+        translation: "Hãy luyện tập nói tự nhiên bằng giọng đọc AI chuẩn native."
       },
       {
-        id: 4,
+        id: 3,
         category: 'vi-daily',
         lang: 'vi-VN',
         text: "Chào mừng bạn đến với LingoBotWebApp! Hãy bắt đầu luyện tập hội thoại ngay hôm nay.",
         phonetic: "Chao mung ban den voi LingoBotWebApp! Hay bat dau luyen tap hoi thoai ngay hom nay.",
-        translation: "Welcome to LingoBotWebApp! Start practicing conversation today.",
-        difficulty: "Trung cấp / Intermediate"
+        translation: "Welcome to LingoBotWebApp! Start practicing conversation today."
       }
     ];
 
-    // Word Pronunciation Levenshtein Diff Calculator
+    // Pronunciation Levenshtein Evaluator
     function evaluatePronunciation(targetText, recognizedText) {
       const norm = str => str.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?'"“”]/g, '').replace(/\s+/g, ' ').trim();
       const tWords = norm(targetText).split(' ').filter(Boolean);
       const rWords = norm(recognizedText).split(' ').filter(Boolean);
-
       if (tWords.length === 0) return { score: 100, diff: [] };
 
       const n = tWords.length, m = rWords.length;
@@ -114,9 +163,16 @@
       return { score, grade, gradeColor, diff };
     }
 
-    // MAIN LINGOBOT WEB APP
+    // MAIN LINGOBOT APP
     function App() {
-      // Main screen default is 'chat' for conversation practice
+      // Onboarding & Language State
+      const [onboardingStep, setOnboardingStep] = useState('api_key'); // 'api_key' | 'ui_lang' | 'target_lang' | 'complete'
+      const [uiLang, setUiLang] = useState('ja-JP'); // 'ja-JP' | 'vi-VN' | 'en-US'
+      const [targetLang, setTargetLang] = useState('en-US'); // 'en-US' | 'ja-JP' | 'vi-VN'
+
+      const [geminiModel, setGeminiModel] = useState('gemini-1.5-flash');
+      const [geminiApiKey, setGeminiApiKey] = useState('');
+
       const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'shadowing'
       const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
       const [isRecording, setIsRecording] = useState(false);
@@ -126,23 +182,68 @@
       const [loadingId, setLoadingId] = useState(null);
       const [showPdfModal, setShowPdfModal] = useState(false);
 
-      // Edge TTS Audio Cache
       const audioBlobCache = useRef({});
       const activeAudioRef = useRef(null);
       const recognitionRef = useRef(null);
+      const messagesEndRef = useRef(null);
+      const chatMessagesRef = useRef(null);
+      const textInputRef = useRef(null);
 
-      // AI Chat Messages State
+      const focusTextInput = () => {
+        setTimeout(() => {
+          if (textInputRef.current) {
+            textInputRef.current.focus({ preventScroll: true });
+          }
+        }, 100);
+      };
+
+      const scrollToTop = () => {
+        setTimeout(() => {
+          if (chatMessagesRef.current) {
+            chatMessagesRef.current.scrollTo({
+              top: 0,
+              behavior: 'smooth'
+            });
+          }
+        }, 50);
+      };
+
+      const scrollToBottom = () => {
+        setTimeout(() => {
+          if (chatMessagesRef.current) {
+            chatMessagesRef.current.scrollTo({
+              top: chatMessagesRef.current.scrollHeight,
+              behavior: 'smooth'
+            });
+          }
+        }, 50);
+      };
+
+      useEffect(() => {
+        if (onboardingStep !== 'complete') {
+          scrollToTop();
+        } else {
+          scrollToBottom();
+        }
+        if (activeTab === 'chat') {
+          focusTextInput();
+        }
+      }, [chatMessages, onboardingStep, liveTranscript, activeTab]);
+
+      // Onboarding Initial Step 0: Gemini API Key Prompt
       const [chatMessages, setChatMessages] = useState([
         {
-          id: 'chat-init',
+          id: 'welcome-api-key',
           sender: 'ai',
-          lang: 'vi-VN',
-          text: 'Xin chào! Tôi là LingoBotWebApp. Bạn muốn cùng tôi luyện tập hội thoại tự học bằng tiếng Anh, tiếng Nhật hay tiếng Việt hôm nay?',
+          lang: 'trilingual',
+          type: 'onboarding_api_key',
+          text: `🔑 Google Gemini API Key Setup / 設定:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu:\n🇯🇵 こんにちは！ご利用前に Google Gemini API Key（例: AIzaSy...）を下のチャット入力欄に入力してください：\n🇺🇸 Welcome! Please enter your Google Gemini API Key (e.g. AIzaSy...) in the chat box below to begin:`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
 
       const currentSentence = SAMPLE_SENTENCES[currentSentenceIdx];
+      const dict = UI_DICT[uiLang] || UI_DICT['ja-JP'];
 
       // Edge TTS Player
       const playEdgeTts = async (id, text, language) => {
@@ -216,11 +317,200 @@
         document.body.removeChild(a);
       };
 
-      // Speech STT Toggle
-      const toggleRecording = (targetLang, onFinalText) => {
+      // Handle Step 0 Choice: Gemini API Key
+      const handleSubmitApiKey = (inputKey) => {
+        const cleanKey = inputKey ? inputKey.trim() : '';
+        const isSkipped = !cleanKey || cleanKey.toLowerCase() === 'skip';
+
+        if (!isSkipped) {
+          setGeminiApiKey(cleanKey);
+        }
+        setOnboardingStep('ui_lang');
+
+        const userMsg = {
+          id: 'user-key-' + Date.now(),
+          sender: 'user',
+          text: !isSkipped ? `🔑 [API Key]: ${cleanKey.slice(0, 6)}...` : `⏭️ [API Key]: Skipped / スキップ`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        const aiStep1 = {
+          id: 'step1-prompt-' + Date.now(),
+          sender: 'ai',
+          lang: 'trilingual',
+          type: 'onboarding_ui',
+          text: `🇻🇳 Chào bạn! Vui lòng chọn ngôn ngữ giao diện bạn muốn sử dụng:\n🇯🇵 次に、アプリの案内で使用する【使用言語】を選択してください：\n🇺🇸 Next, please select the language for the app interface:`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        setChatMessages(prev => [...prev, userMsg, aiStep1]);
+        scrollToBottom();
+        focusTextInput();
+      };
+
+      // Handle Step 1 Choice: UI Language
+      const handleSelectUiLang = (selectedCode) => {
+        setUiLang(selectedCode);
+        setOnboardingStep('target_lang');
+
+        const step2MsgMap = {
+          'ja-JP': '使用言語を【日本語】に設定しました。次に、会話練習で学習したい【目標言語】を選択してください：',
+          'vi-VN': 'Đã chọn ngôn ngữ giao diện là [Tiếng Việt]. Tiếp theo, vui lòng chọn [Ngôn ngữ mục tiêu] mà bạn muốn luyện tập:',
+          'en-US': 'Interface language set to [English]. Next, please select your [Target Learning Language] to practice:'
+        };
+
+        const userMsg = {
+          id: 'user-select-ui-' + Date.now(),
+          sender: 'user',
+          text: `[使用言語 / UI Language]: ${LANG_META[selectedCode].flag} ${LANG_META[selectedCode].name}`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        const aiStep2 = {
+          id: 'step2-prompt-' + Date.now(),
+          sender: 'ai',
+          lang: selectedCode,
+          type: 'onboarding_target',
+          text: step2MsgMap[selectedCode] || step2MsgMap['ja-JP'],
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        setChatMessages(prev => [...prev, userMsg, aiStep2]);
+      };
+
+      // Handle Step 2 Choice: Target Learning Language
+      const handleSelectTargetLang = (selectedCode) => {
+        setTargetLang(selectedCode);
+        setOnboardingStep('complete');
+
+        const step3WelcomeMap = {
+          'en-US': "Wonderful! Target language set to English. Let's practice speaking together! How are you doing today?",
+          'ja-JP': "素晴らしいですね！目標言語を【日本語】に設定しました。さあ、一緒に会話練習を始めましょう！",
+          'vi-VN': "Tuyệt vời! Ngôn ngữ mục tiêu là [Tiếng Việt]. Hãy bắt đầu luyện tập giao tiếp ngay hôm nay nhé!"
+        };
+
+        const userMsg = {
+          id: 'user-select-target-' + Date.now(),
+          sender: 'user',
+          text: `[目標言語 / Target Language]: ${LANG_META[selectedCode].flag} ${LANG_META[selectedCode].name}`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        const aiStep3 = {
+          id: 'step3-start-' + Date.now(),
+          sender: 'ai',
+          lang: selectedCode,
+          text: step3WelcomeMap[selectedCode] || step3WelcomeMap['en-US'],
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        setChatMessages(prev => [...prev, userMsg, aiStep3]);
+
+        // Play welcome in target language
+        setTimeout(() => {
+          playEdgeTts(aiStep3.id, aiStep3.text, selectedCode);
+        }, 300);
+      };
+
+      // Reset Chat History
+      const handleResetChat = () => {
+        const resetMap = {
+          'en-US': "Conversation reset! What topic or situation would you like to practice now? (e.g. daily conversation, ordering food, or travel)",
+          'ja-JP': "会話をリセットしました！新しいトピックで会話を始めましょう。どんな場面を練習しますか？（例：日常会話、レストランでの注文、旅行など）",
+          'vi-VN': "Đã làm mới cuộc trò chuyện! Bạn muốn luyện tập chủ đề nào tiếp theo?"
+        };
+
+        const resetMsg = {
+          id: 'ai-reset-' + Date.now(),
+          sender: 'ai',
+          lang: targetLang,
+          text: resetMap[targetLang] || resetMap['en-US'],
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        setChatMessages([resetMsg]);
+        scrollToBottom();
+        focusTextInput();
+      };
+
+      // Send Chat Message to Gemini API / Backend Chat Tutor
+      const handleUserChat = async (userText) => {
+        if (!userText.trim()) return;
+
+        if (onboardingStep === 'api_key') {
+          handleSubmitApiKey(userText);
+          return;
+        }
+
+        const userMsg = {
+          id: 'user-' + Date.now(),
+          sender: 'user',
+          text: userText,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        setChatMessages(prev => [...prev, userMsg]);
+        scrollToBottom();
+
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: userText,
+              history: chatMessages,
+              uiLang: uiLang,
+              targetLang: targetLang,
+              apiKey: geminiApiKey,
+              model: geminiModel
+            })
+          });
+
+          if (!res.ok) throw new Error(`Chat API error ${res.status}`);
+          const chatData = await res.json();
+          const replyText = chatData.reply || "Let's keep practicing conversation!";
+
+          const aiMsg = {
+            id: 'ai-' + Date.now(),
+            sender: 'ai',
+            lang: targetLang,
+            text: replyText,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+
+          setChatMessages(prev => [...prev, aiMsg]);
+          scrollToBottom();
+          focusTextInput();
+
+          setTimeout(() => {
+            playEdgeTts(aiMsg.id, aiMsg.text, targetLang);
+          }, 300);
+        } catch (err) {
+          console.error('Chat error:', err);
+          const fallbackText = targetLang.startsWith('en')
+            ? "I understand! Consistent conversation practice is key. What else would you like to discuss?"
+            : targetLang.startsWith('ja')
+            ? "なるほど！毎日会話を練習することが一番大切ですね。他にはどんなことをお話ししますか？"
+            : "Rất hay! Luyện tập giao tiếp thường xuyên là chìa khóa thành công. Bạn muốn nói về điều gì tiếp theo?";
+
+          const aiMsg = {
+            id: 'ai-' + Date.now(),
+            sender: 'ai',
+            lang: targetLang,
+            text: fallbackText,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setChatMessages(prev => [...prev, aiMsg]);
+          scrollToBottom();
+          focusTextInput();
+        }
+      };
+
+      // STT Speech Recognition Toggle
+      const toggleRecording = (targetLangCode, onFinalText) => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-          alert('Trình duyệt không hỗ trợ Web Speech API. Vui lòng dùng Chrome hoặc Edge.');
+          alert('Web Speech API is not supported in this browser. Please use Chrome or Edge.');
           return;
         }
 
@@ -232,7 +522,7 @@
 
         const rec = new SpeechRecognition();
         recognitionRef.current = rec;
-        rec.lang = targetLang;
+        rec.lang = targetLangCode;
         rec.interimResults = true;
         rec.continuous = false;
 
@@ -254,52 +544,9 @@
           }
         };
 
-        rec.onerror = (e) => {
-          setIsRecording(false);
-          alert(`Lỗi micro: ${e.error}`);
-        };
-
+        rec.onerror = (e) => { setIsRecording(false); alert(`Mic error: ${e.error}`); };
         rec.onend = () => setIsRecording(false);
         rec.start();
-      };
-
-      // AI Conversation Handler
-      const handleUserChat = (userText) => {
-        if (!userText.trim()) return;
-
-        const userMsg = {
-          id: 'user-' + Date.now(),
-          sender: 'user',
-          text: userText,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-
-        let aiReplyText = "";
-        const lower = userText.toLowerCase();
-
-        if (lower.includes('hello') || lower.includes('hi') || lower.includes('xin chào') || lower.includes('chào')) {
-          aiReplyText = "Xin chào bạn! Tôi rất vui được đồng hành cùng bạn luyện tập hội thoại tự học hôm nay. Bạn muốn trao đổi chủ đề gì?";
-        } else if (lower.includes('english') || lower.includes('tiếng anh')) {
-          aiReplyText = "Great! Let's practice English together with natural native audio responses!";
-        } else if (lower.includes('japanese') || lower.includes('tiếng nhật') || lower.includes('日本語')) {
-          aiReplyText = "素晴らしいですね！日本語の会話練習を始めましょう。何か質問はありますか？";
-        } else {
-          aiReplyText = `Cảm ơn bạn đã chia sẻ! Việc chủ động nói chuyện và lắng nghe phản hồi phát âm chuẩn sẽ giúp bạn tiến bộ vô cùng nhanh chóng.`;
-        }
-
-        const aiMsg = {
-          id: 'ai-' + Date.now(),
-          sender: 'ai',
-          lang: lower.includes('english') ? 'en-US' : lower.includes('japanese') || lower.includes('日本語') ? 'ja-JP' : 'vi-VN',
-          text: aiReplyText,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-
-        setChatMessages(prev => [...prev, userMsg, aiMsg]);
-
-        setTimeout(() => {
-          playEdgeTts(aiMsg.id, aiMsg.text, aiMsg.lang);
-        }, 350);
       };
 
       // Export Lesson Summary PDF
@@ -320,112 +567,164 @@
 
       return (
         <div class="app-container">
-          {/* Header */}
-          <header class="glass-panel app-header">
-            <div class="brand-section">
-              <div class="brand-logo">🤖</div>
+          {/* Compact Single-Row Header */}
+          <header class="glass-panel app-header-compact">
+            <div class="brand-section-compact">
+              <div class="brand-logo-sm">🤖</div>
               <div>
-                <div class="brand-title">
-                  LingoBotWebApp
-                </div>
-                <div class="brand-subtitle">
-                  AIとの会話練習（自習用）：ネイティブの音声でリアルタイム返答
-                </div>
+                <div class="brand-title-sm">LingoBotWebApp</div>
+                <div class="brand-subtitle-sm">{dict.subtitle}</div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <span class="badge badge-sage" style={{ padding: '8px 14px' }}>
-                🟢 Online (Port 5050)
-              </span>
-              {/* Kết thúc bài học / End Lesson Button */}
+
+            <nav class="nav-tabs-compact">
               <button
-                class="btn btn-end-lesson"
-                style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+                class={`nav-tab-sm ${activeTab === 'chat' ? 'active' : ''}`}
+                onClick={() => setActiveTab('chat')}
+              >
+                {dict.chatTab}
+              </button>
+              <button
+                class={`nav-tab-sm ${activeTab === 'shadowing' ? 'active' : ''}`}
+                onClick={() => setActiveTab('shadowing')}
+              >
+                {dict.shadowingTab}
+              </button>
+            </nav>
+
+            <div class="header-controls-sm">
+              <span class="badge-sm badge-edge">
+                {dict.uiLangLabel}: {LANG_META[uiLang]?.flag} {LANG_META[uiLang]?.name}
+              </span>
+              <span class="badge-sm badge-sage">
+                {dict.targetLangLabel}: {LANG_META[targetLang]?.flag} {LANG_META[targetLang]?.name}
+              </span>
+              <select
+                class="form-select-sm"
+                value={geminiModel}
+                onChange={(e) => setGeminiModel(e.target.value)}
+                title="Select Gemini AI Model"
+              >
+                <option value="gemini-1.5-flash">Gemini 1.5</option>
+                <option value="gemini-2.0-flash">Gemini 2.0</option>
+                <option value="gemini-3.5-flash">Gemini 3.5</option>
+              </select>
+              <button
+                class="btn-end-lesson-sm"
+                style={{ background: 'linear-gradient(135deg, #f4a261 0%, #e07a5f 100%)' }}
+                onClick={handleResetChat}
+                title="Reset Chat & Clear History"
+              >
+                🔄 Reset Chat
+              </button>
+              <button
+                class="btn-end-lesson-sm"
                 onClick={() => setShowPdfModal(true)}
               >
-                🛑 Kết thúc bài học / End Lesson
+                {dict.endLesson}
               </button>
             </div>
           </header>
 
-          {/* Navigation Tabs */}
-          <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-            <nav class="nav-tabs">
-              <button
-                class={`nav-tab ${activeTab === 'chat' ? 'active' : ''}`}
-                onClick={() => setActiveTab('chat')}
-              >
-                💬 Trò chuyện AI (Hội thoại) / 相互会話
-              </button>
-              <button
-                class={`nav-tab ${activeTab === 'shadowing' ? 'active' : ''}`}
-                onClick={() => setActiveTab('shadowing')}
-              >
-                🎯 Luyện phát âm / 発音分析
-              </button>
-            </nav>
-          </div>
-
-          {/* MAIN CONVERSATION PRACTICE SCREEN (Default Screen) */}
+          {/* MAIN CONVERSATION PRACTICE SCREEN */}
           {activeTab === 'chat' && (
             <div class="glass-panel chat-container">
-              <div class="chat-messages">
+              <div class="chat-messages" ref={chatMessagesRef}>
                 {chatMessages.map(msg => {
                   const isPlaying = playingId === msg.id;
                   const isLoading = loadingId === msg.id;
                   return (
                     <div key={msg.id} class={`chat-bubble ${msg.sender}`}>
-                      <div>{msg.text}</div>
+                      <div style={{ whiteSpace: 'pre-line' }}>{msg.text}</div>
                       <div class="chat-bubble-meta">
-                        <span>{msg.sender === 'ai' ? '🤖 LingoBot AI' : '👤 Bạn / You (Web Speech STT)'}</span>
+                        <span>{msg.sender === 'ai' ? `🤖 LingoBot (${geminiModel})` : `👤 User (${LANG_META[uiLang]?.name})`}</span>
                         <span>{msg.time}</span>
                       </div>
 
-                      {/* Required Action Buttons for AI Chat Responses */}
-                      {msg.sender === 'ai' && (
+                      {/* Step 0 Interactive Onboarding Choice Chips (API Key Skip) */}
+                      {msg.type === 'onboarding_api_key' && onboardingStep === 'api_key' && (
+                        <div style={{ marginTop: '14px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                          <button class="btn btn-secondary" onClick={() => handleSubmitApiKey('skip')}>
+                            ⏭️ Bỏ qua / スキップ (Skip API Key)
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Step 1 Interactive Onboarding Choice Chips (UI Language) */}
+                      {msg.type === 'onboarding_ui' && onboardingStep === 'ui_lang' && (
+                        <div style={{ marginTop: '14px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                          <button class="btn btn-terracotta" onClick={() => handleSelectUiLang('vi-VN')}>
+                            🇻🇳 Tiếng Việt
+                          </button>
+                          <button class="btn btn-terracotta" onClick={() => handleSelectUiLang('ja-JP')}>
+                            🇯🇵 日本語
+                          </button>
+                          <button class="btn btn-terracotta" onClick={() => handleSelectUiLang('en-US')}>
+                            🇺🇸 English
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Step 2 Interactive Onboarding Choice Chips (Target Learning Language) */}
+                      {msg.type === 'onboarding_target' && onboardingStep === 'target_lang' && (
+                        <div style={{ marginTop: '14px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                          <button class="btn btn-sage" onClick={() => handleSelectTargetLang('vi-VN')}>
+                            🇻🇳 Tiếng Việt (Vietnamese)
+                          </button>
+                          <button class="btn btn-sage" onClick={() => handleSelectTargetLang('ja-JP')}>
+                            🇯🇵 日本語 (Japanese)
+                          </button>
+                          <button class="btn btn-sage" onClick={() => handleSelectTargetLang('en-US')}>
+                            🇺🇸 English (US English)
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Standard AI Message Action Buttons */}
+                      {msg.sender === 'ai' && !msg.type && (
                         <div class="chat-bubble-actions">
-                          {/* 1. 「🔊 Phát âm thanh / Play Voice」 Button */}
+                          {/* 🔊 Play Voice Button */}
                           <button
                             class={`btn btn-terracotta ${isPlaying ? 'playing' : ''}`}
                             style={{ padding: '6px 14px', fontSize: '0.82rem' }}
                             disabled={isLoading}
-                            onClick={() => playEdgeTts(msg.id, msg.text, msg.lang || 'vi-VN')}
+                            onClick={() => playEdgeTts(msg.id, msg.text, msg.lang || targetLang)}
                           >
-                            {isLoading ? (
-                              <span>⏳ Đang tổng hợp...</span>
-                            ) : isPlaying ? (
-                              <span>⏹ Dừng / Stop</span>
-                            ) : (
-                              <span>🔊 Phát âm thanh / Play Voice</span>
-                            )}
+                            {isLoading ? dict.generating : isPlaying ? dict.stopVoice : dict.playVoice}
                           </button>
 
-                          {/* 2. 「⬇️ Tải xuống MP3 / Download MP3」 Button */}
+                          {/* ⬇️ Download MP3 Button */}
                           <button
                             class="btn btn-secondary"
                             style={{ padding: '6px 14px', fontSize: '0.82rem' }}
-                            onClick={() => downloadMp3(msg.id, msg.text, msg.lang || 'vi-VN', `lingobot_chat_${msg.id}.mp3`)}
+                            onClick={() => downloadMp3(msg.id, msg.text, msg.lang || targetLang, `lingobot_${msg.id}.mp3`)}
                           >
-                            <span>⬇️ Tải xuống MP3 / Download MP3</span>
+                            {dict.downloadMp3}
                           </button>
                         </div>
                       )}
                     </div>
                   );
                 })}
+                <div ref={messagesEndRef} style={{ float: 'left', clear: 'both' }} />
               </div>
 
-              {/* Chat Input & Finish Button Bar */}
+              {/* Chat Input & End Lesson Bar */}
               <div style={{ padding: '20px 24px', borderTop: '1px solid var(--border-warm)', background: 'rgba(255, 253, 249, 0.95)', display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <input
                   id="chat-text-input-field"
+                  ref={textInputRef}
                   type="text"
                   class="form-input"
-                  placeholder="Nhập tin nhắn hoặc nhấn micro để nói chuyện / Type message or talk via mic..."
+                  placeholder={dict.inputPlaceholder}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      handleUserChat(e.target.value);
-                      e.target.value = '';
+                      e.preventDefault();
+                      const val = e.target.value.trim();
+                      if (val) {
+                        e.target.value = '';
+                        handleUserChat(val);
+                      }
                     }
                   }}
                 />
@@ -441,15 +740,15 @@
                     }
                   }}
                 >
-                  ✈️ Gửi / 送信
+                  {dict.send}
                 </button>
 
                 <button
                   class={`mic-button ${isRecording ? 'recording' : ''}`}
                   style={{ width: '50px', height: '50px', fontSize: '1.2rem' }}
-                  title="Nói chuyện với AI / Speak to AI"
+                  title="Speak to AI"
                   onClick={() => {
-                    toggleRecording('vi-VN', (finalText) => {
+                    toggleRecording(targetLang, (finalText) => {
                       handleUserChat(finalText);
                     });
                   }}
@@ -462,7 +761,7 @@
                   style={{ padding: '12px 18px', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
                   onClick={() => setShowPdfModal(true)}
                 >
-                  🛑 Kết thúc bài học
+                  {dict.endLesson}
                 </button>
               </div>
             </div>
@@ -474,7 +773,7 @@
               {/* Sidebar Library */}
               <div class="glass-panel sentence-sidebar">
                 <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)', marginBottom: '8px' }}>
-                  📚 Thư viện câu mẫu / Practice Library
+                  📚 {dict.shadowingTab} Library
                 </div>
 
                 <div class="sentence-list">
@@ -490,8 +789,7 @@
                     >
                       <div class="sentence-item-text">{sent.text}</div>
                       <div class="sentence-item-meta">
-                        <span>{VOICE_CONFIG[sent.lang]?.flag} {sent.difficulty}</span>
-                        <span>{sent.lang}</span>
+                        <span>{LANG_META[sent.lang]?.flag} {sent.lang}</span>
                       </div>
                     </div>
                   ))}
@@ -501,62 +799,48 @@
               {/* Practice Card */}
               <div class="glass-panel practice-card">
                 <div class="target-sentence-box">
-                  <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                     <div class="target-label">
-                      ✨ Câu mẫu / Target Sentence ({VOICE_CONFIG[currentSentence.lang]?.name})
+                      ✨ Target Sentence ({LANG_META[currentSentence.lang]?.name})
                     </div>
-                    <span class="badge badge-sage">{currentSentence.difficulty}</span>
+                    <span class="badge badge-sage">{currentSentence.lang}</span>
                   </div>
 
                   <div class="target-text">{currentSentence.text}</div>
                   
                   {currentSentence.phonetic && (
                     <div style={{ marginTop: '8px', fontSize: '0.88rem', fontFamily: 'var(--font-mono)', color: 'var(--text-dim)' }}>
-                      Phiên âm / IPA: {currentSentence.phonetic}
+                      IPA / 読み: {currentSentence.phonetic}
                     </div>
                   )}
 
                   <div style={{ marginTop: '10px', fontSize: '0.95rem', color: 'var(--text-muted)' }}>
-                    🇻🇳 Dịch nghĩa: {currentSentence.translation}
+                    Translation: {currentSentence.translation}
                   </div>
                 </div>
 
                 {/* Controls Bar */}
                 <div class="action-controls">
-                  {/* 1. 「🔊 Phát âm thanh / Play Voice」 Button */}
                   <button
                     class={`btn btn-terracotta ${playingId === `sent-${currentSentence.id}` ? 'playing' : ''}`}
                     style={{ padding: '14px 24px' }}
                     disabled={loadingId === `sent-${currentSentence.id}`}
                     onClick={() => playEdgeTts(`sent-${currentSentence.id}`, currentSentence.text, currentSentence.lang)}
                   >
-                    {loadingId === `sent-${currentSentence.id}` ? (
-                      <span>⏳ Đang tổng hợp...</span>
-                    ) : playingId === `sent-${currentSentence.id}` ? (
-                      <>
-                        <div class="equalizer-bar"><span></span><span></span><span></span></div>
-                        <span>⏹ Dừng / Stop</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>🔊 Phát âm thanh / Play Voice</span>
-                      </>
-                    )}
+                    {loadingId === `sent-${currentSentence.id}` ? dict.generating : playingId === `sent-${currentSentence.id}` ? dict.stopVoice : dict.playVoice}
                   </button>
 
-                  {/* 2. 「⬇️ Tải xuống MP3 / Download MP3」 Button */}
                   <button
                     class="btn btn-secondary"
                     style={{ padding: '14px 20px' }}
                     onClick={() => downloadMp3(`sent-${currentSentence.id}`, currentSentence.text, currentSentence.lang, `model_${currentSentence.lang}.mp3`)}
                   >
-                    <span>⬇️ Tải xuống MP3 / Download MP3</span>
+                    {dict.downloadMp3}
                   </button>
 
-                  {/* Mic Recording Button */}
                   <button
                     class={`mic-button ${isRecording ? 'recording' : ''}`}
-                    title="Nhấn để phát âm / Click to speak"
+                    title="Click to speak"
                     onClick={() => {
                       toggleRecording(currentSentence.lang, (finalText) => {
                         const res = evaluatePronunciation(currentSentence.text, finalText);
@@ -566,27 +850,15 @@
                   >
                     {isRecording ? '🛑' : '🎙️'}
                   </button>
-
-                  <button
-                    class="btn btn-secondary"
-                    style={{ padding: '14px 18px' }}
-                    onClick={() => {
-                      setCurrentSentenceIdx((prev) => (prev + 1) % SAMPLE_SENTENCES.length);
-                      setEvalResult(null);
-                      setLiveTranscript('');
-                    }}
-                  >
-                    Tiếp theo / Next 🔄
-                  </button>
                 </div>
 
                 {/* Live Transcript Output */}
                 <div class="live-transcript-container">
                   <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', marginBottom: '6px' }}>
-                    🎙️ Giọng nói đã nhận diện / Recognized Voice (Web Speech STT)
+                    🎙️ Recognized Speech (Web Speech STT)
                   </div>
                   <div class={liveTranscript ? 'transcript-final' : 'transcript-interim'}>
-                    {liveTranscript || (isRecording ? 'Đang lắng nghe... Hãy nói rõ ràng vào micro' : 'Nhấn nút micro ở trên và đọc to câu mẫu')}
+                    {liveTranscript || (isRecording ? 'Listening... Speak clearly into mic' : 'Click mic button above and read aloud')}
                   </div>
                 </div>
 
@@ -596,7 +868,7 @@
                     <div class="score-header">
                       <div>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                          Điểm chuẩn phát âm / Accuracy Score
+                          Accuracy Score
                         </div>
                         <div style={{ fontSize: '1.3rem', fontWeight: 700, color: evalResult.gradeColor }}>
                           {evalResult.grade}
@@ -607,11 +879,7 @@
                       </div>
                     </div>
 
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginTop: '8px' }}>
-                      Chi tiết từ (Xanh: Chính xác, Đỏ: Sai/Thiếu, Cam: Thừa):
-                    </div>
-
-                    <div class="word-diff-container">
+                    <div class="word-diff-container" style={{ marginTop: '12px' }}>
                       {evalResult.diff.map((item, i) => (
                         <span key={i} class={`diff-word diff-${item.type}`}>
                           {item.word} {item.said ? `(said: ${item.said})` : ''}
@@ -624,13 +892,13 @@
             </div>
           )}
 
-          {/* PDF LESSON SUMMARY MODAL (Báo cáo tóm tắt bài học) */}
+          {/* PDF LESSON SUMMARY MODAL */}
           {showPdfModal && (
             <div class="pdf-modal-overlay">
               <div class="pdf-modal-card">
                 <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-warm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fdfbf7' }}>
                   <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent-terracotta-dark)' }}>
-                    📄 Bài học tóm tắt / Lesson Summary Report (LingoBotWebApp)
+                    📄 {dict.pdfTitle}
                   </div>
                   <button class="btn btn-secondary" style={{ padding: '6px 12px' }} onClick={() => setShowPdfModal(false)}>✕</button>
                 </div>
@@ -641,63 +909,61 @@
                     <div>
                       <div class="pdf-report-title">🤖 LingoBotWebApp</div>
                       <div style={{ fontSize: '0.9rem', color: '#5e5045', marginTop: '4px' }}>
-                        Báo cáo tóm tắt kết quả bài học hội thoại / Conversation Lesson Summary Report
+                        Lesson Summary Report / Báo cáo tóm tắt bài học
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', fontSize: '0.85rem', color: '#8e7c6d' }}>
-                      <div>Ngày / Date: {new Date().toLocaleDateString()}</div>
-                      <div>Giờ / Time: {new Date().toLocaleTimeString()}</div>
+                      <div>Date: {new Date().toLocaleDateString()}</div>
+                      <div>Time: {new Date().toLocaleTimeString()}</div>
                     </div>
                   </div>
 
                   {/* Summary Stats */}
                   <div class="pdf-section" style={{ background: '#fcf9f4', padding: '16px', borderRadius: '12px', border: '1px solid #e8ded0' }}>
-                    <div class="pdf-section-title">📊 Tổng quan bài học / Lesson Summary</div>
+                    <div class="pdf-section-title">📊 Lesson Overview</div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', textAlign: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Tin nhắn trao đổi</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#e07a5f' }}>{chatMessages.length}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>UI Language</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#e07a5f' }}>{LANG_META[uiLang]?.name}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Điểm phát âm TB</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2a9d8f' }}>
-                          {evalResult ? `${evalResult.score}%` : '90%'}
-                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Target Language</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#2a9d8f' }}>{LANG_META[targetLang]?.name}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Giọng đọc native</div>
-                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#2d231d', marginTop: '6px' }}>Edge Voice</div>
+                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>AI Model</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#2d231d' }}>{geminiModel}</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Conversation Transcripts */}
                   <div class="pdf-section">
-                    <div class="pdf-section-title">💬 Lịch sử hội thoại bài học / Conversation History</div>
+                    <div class="pdf-section-title">💬 Conversation History</div>
                     {chatMessages.map((msg, i) => (
                       <div key={i} class="pdf-chat-item">
                         <div style={{ fontWeight: 700, fontSize: '0.85rem', color: msg.sender === 'ai' ? '#e07a5f' : '#2a9d8f' }}>
-                          {msg.sender === 'ai' ? '🤖 LingoBot AI' : '👤 Bạn / User'}:
+                          {msg.sender === 'ai' ? '🤖 LingoBot AI' : '👤 User'}:
                         </div>
-                        <div style={{ marginTop: '4px' }}>{msg.text}</div>
+                        <div style={{ marginTop: '4px', whiteSpace: 'pre-line' }}>{msg.text}</div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Recommendations */}
+                  {/* Feedback */}
                   <div class="pdf-section" style={{ borderTop: '1px dashed #e8ded0', paddingTop: '16px' }}>
-                    <div class="pdf-section-title">💡 Đánh giá & Lời khuyên / AI Feedback</div>
+                    <div class="pdf-section-title">💡 Tutor Feedback</div>
                     <div style={{ fontSize: '0.92rem', color: '#5e5045', lineHeight: 1.6 }}>
-                      Chúc mừng bạn đã hoàn thành buổi luyện tập hội thoại tự học cùng <strong>LingoBotWebApp</strong>! 
-                      Nhờ việc tích cực nói chuyện qua micro và lắng nghe giọng phản hồi chuẩn, phản xạ giao tiếp của bạn đang được nâng cao rõ rệt. Hãy tiếp tục phát huy nhé!
+                      Congratulations on completing your practice session on <strong>LingoBotWebApp</strong>! 
+                      Combining active speech practice with instant native audio feedback accelerates fluency. Keep practicing daily!
                     </div>
                   </div>
                 </div>
 
                 {/* PDF Action Buttons */}
                 <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-warm)', background: '#fdfbf7', display: 'flex', justify: 'flex-end', gap: '12px' }}>
-                  <button class="btn btn-secondary" onClick={() => window.print()}>🖨️ In / Print</button>
-                  <button class="btn btn-terracotta" onClick={handleExportPdf}>📥 Tải xuống PDF / Export PDF</button>
+                  <button class="btn btn-secondary" onClick={() => window.print()}>{dict.print}</button>
+                  <button class="btn btn-terracotta" onClick={handleExportPdf}>{dict.downloadPdf}</button>
                 </div>
               </div>
             </div>
