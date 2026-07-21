@@ -2,12 +2,11 @@ import asyncio
 import io
 import os
 import json
-import urllib.request
-import urllib.parse
 import traceback
 from flask import Flask, request, send_file, send_from_directory, jsonify
 from flask_cors import CORS
 import edge_tts
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
@@ -97,17 +96,9 @@ def chat_endpoint():
         ui_lang = data.get('uiLang', 'ja-JP').strip().lower()
         target_lang = data.get('targetLang', 'en-US').strip().lower()
 
-        # Fix 1: Strip invisible spaces, tabs, and newlines from API key
+        # Clean API Key
         raw_api_key = data.get('apiKey', '') or os.getenv('GEMINI_API_KEY', '')
         api_key = raw_api_key.strip().replace('\r', '').replace('\n', '').replace(' ', '')
-
-        model_name = data.get('model', 'gemini-1.5-flash').strip()
-
-        # Fix 2: Ensure model name safely maps to Google's official endpoints
-        if '2.0' in model_name:
-            clean_model = 'gemini-2.0-flash'
-        else:
-            clean_model = 'gemini-1.5-flash'
 
         ui_name = LANG_NAMES.get(ui_lang, 'Japanese')
         target_name = LANG_NAMES.get(target_lang, 'English')
@@ -120,49 +111,30 @@ def chat_endpoint():
             f"If the user asks a question about vocabulary or grammar in {ui_name}, provide a short helpful explanation in {ui_name} followed by a practice question in {target_name}."
         )
 
-        # Call Gemini REST API if API Key is available
+        # Official Google Generative AI SDK Integration
         if api_key:
             try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={api_key}"
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel(
+                    model_name='gemini-1.5-flash',
+                    system_instruction=system_instruction
+                )
 
-                contents = []
-                contents.append({"role": "user", "parts": [{"text": system_instruction}]})
-                contents.append({"role": "model", "parts": [{"text": f"Understood! I am ready to be your LingoBot conversation tutor in {target_name}."}]})
-
+                sdk_history = []
                 for item in history[-6:]:
                     sender = item.get('sender', 'user')
                     text = item.get('text', '').strip()
                     if text and not item.get('type'):
                         role = "user" if sender == "user" else "model"
-                        contents.append({"role": role, "parts": [{"text": text}]})
+                        sdk_history.append({"role": role, "parts": [text]})
 
-                contents.append({"role": "user", "parts": [{"text": user_message}]})
+                chat_session = model.start_chat(history=sdk_history)
+                response = chat_session.send_message(user_message)
 
-                payload = {
-                    "contents": contents,
-                    "generationConfig": {
-                        "temperature": 0.7,
-                        "maxOutputTokens": 250
-                    }
-                }
-
-                req = urllib.request.Request(
-                    url,
-                    data=json.dumps(payload).encode('utf-8'),
-                    headers={'Content-Type': 'application/json'},
-                    method='POST'
-                )
-
-                with urllib.request.urlopen(req, timeout=12) as resp:
-                    res_data = json.loads(resp.read().decode('utf-8'))
-                    candidates = res_data.get('candidates', [])
-                    if candidates and 'content' in candidates[0]:
-                        parts = candidates[0]['content'].get('parts', [])
-                        if parts:
-                            reply_text = parts[0].get('text', '').strip()
-                            return jsonify({'reply': reply_text, 'model': clean_model, 'source': 'gemini-api'})
+                if response and response.text:
+                    return jsonify({'reply': response.text.strip(), 'model': 'gemini-1.5-flash', 'source': 'gemini-sdk'})
             except Exception as gemini_err:
-                print(f"[Gemini API Error] {gemini_err}. Falling back to contextual tutor response.")
+                print(f"[Gemini SDK Error] {gemini_err}. Falling back to contextual tutor response.")
 
         reply_text = generate_contextual_tutor_reply(user_message, target_lang, ui_lang)
         return jsonify({'reply': reply_text, 'model': 'LingoBot Context Engine', 'source': 'tutor-engine'})
