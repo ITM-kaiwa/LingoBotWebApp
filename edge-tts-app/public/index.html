@@ -209,14 +209,19 @@
       };
 
       const scrollToBottom = () => {
-        setTimeout(() => {
-          if (chatMessagesRef.current) {
-            chatMessagesRef.current.scrollTo({
-              top: chatMessagesRef.current.scrollHeight,
-              behavior: 'smooth'
-            });
-          }
-        }, 50);
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            if (chatMessagesRef.current) {
+              chatMessagesRef.current.scrollTo({
+                top: chatMessagesRef.current.scrollHeight,
+                behavior: 'smooth'
+              });
+            }
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+          }, 60);
+        });
       };
 
       useEffect(() => {
