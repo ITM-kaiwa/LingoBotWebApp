@@ -436,6 +436,9 @@
         focusTextInput();
       };
 
+      // Active Connected Gemini Model State
+      const [activeConnectedModel, setActiveConnectedModel] = useState('');
+
       // Send Chat Message to Gemini API / Backend Chat Tutor
       const handleUserChat = async (userText) => {
         if (!userText.trim()) return;
@@ -456,57 +459,65 @@
         scrollToBottom();
 
         let replyText = '';
+        let connectedModel = '';
+        let directErrorLog = '';
 
-        // 1. Direct Browser-to-Gemini REST API Call (Supports GitHub Pages & Static Hosts)
+        // 1. Direct Browser-to-Gemini REST API Call (Sequential Candidate Trial)
         if (geminiApiKey && geminiApiKey.trim()) {
-          try {
-            const cleanModel = geminiModel.replace('gemini-3.5-flash', 'gemini-1.5-flash');
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${encodeURIComponent(geminiApiKey.trim())}`;
+          const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+          const uiName = LANG_META[uiLang]?.name || 'Japanese';
+          const targetName = LANG_META[targetLang]?.name || 'English';
 
-            const uiName = LANG_META[uiLang]?.name || 'Japanese';
-            const targetName = LANG_META[targetLang]?.name || 'English';
+          const systemPrompt = `You are LingoBot, a warm, encouraging AI conversation partner in LingoBotWebApp. ` +
+            `The user's interface language is ${uiName} and their target learning language is ${targetName}. ` +
+            `Always reply naturally, interactively, and concisely (1 to 3 sentences) in ${targetName} so the user can practice listening and speaking. ` +
+            `If the user orders food, requests pizza/drinks, or asks for a scenario, roleplay as a friendly conversation partner in that scenario!`;
 
-            const systemPrompt = `You are LingoBot, a warm, encouraging AI conversation partner in LingoBotWebApp. ` +
-              `The user's interface language is ${uiName} and their target learning language is ${targetName}. ` +
-              `Always reply naturally, interactively, and concisely (1 to 3 sentences) in ${targetName} so the user can practice listening and speaking. ` +
-              `If the user orders food, requests pizza/drinks, or asks for a scenario, roleplay as a friendly conversation partner in that scenario!`;
+          const contents = [
+            { role: 'user', parts: [{ text: systemPrompt }] },
+            { role: 'model', parts: [{ text: `Understood! I am ready to be your AI conversation partner in ${targetName}.` }] }
+          ];
 
-            const contents = [
-              { role: 'user', parts: [{ text: systemPrompt }] },
-              { role: 'model', parts: [{ text: `Understood! I am ready to be your AI conversation partner in ${targetName}.` }] }
-            ];
-
-            chatMessages.slice(-6).forEach(m => {
-              if (m.text && !m.type) {
-                contents.push({
-                  role: m.sender === 'user' ? 'user' : 'model',
-                  parts: [{ text: m.text }]
-                });
-              }
-            });
-
-            contents.push({ role: 'user', parts: [{ text: userText }] });
-
-            const geminiRes = await fetch(geminiUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: contents,
-                generationConfig: {
-                  temperature: 0.7,
-                  maxOutputTokens: 250
-                }
-              })
-            });
-
-            if (geminiRes.ok) {
-              const geminiData = await geminiRes.json();
-              if (geminiData.candidates && geminiData.candidates[0]?.content?.parts[0]?.text) {
-                replyText = geminiData.candidates[0].content.parts[0].text.trim();
-              }
+          chatMessages.slice(-6).forEach(m => {
+            if (m.text && !m.type && !m.isError) {
+              contents.push({
+                role: m.sender === 'user' ? 'user' : 'model',
+                parts: [{ text: m.text }]
+              });
             }
-          } catch (directErr) {
-            console.warn('Direct Gemini API call error:', directErr);
+          });
+
+          contents.push({ role: 'user', parts: [{ text: userText }] });
+
+          for (const mName of candidateModels) {
+            try {
+              const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${encodeURIComponent(geminiApiKey.trim())}`;
+              const geminiRes = await fetch(geminiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: contents,
+                  generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 250
+                  }
+                })
+              });
+
+              if (geminiRes.ok) {
+                const geminiData = await geminiRes.json();
+                if (geminiData.candidates && geminiData.candidates[0]?.content?.parts[0]?.text) {
+                  replyText = geminiData.candidates[0].content.parts[0].text.trim();
+                  connectedModel = mName;
+                  break;
+                }
+              } else {
+                const errJson = await geminiRes.json().catch(() => ({}));
+                directErrorLog += `[${mName} HTTP ${geminiRes.status}]: ${errJson.error?.message || 'Failed'} | `;
+              }
+            } catch (err) {
+              directErrorLog += `[${mName} Error]: ${err.message} | `;
+            }
           }
         }
 
@@ -521,44 +532,66 @@
                 history: chatMessages,
                 uiLang: uiLang,
                 targetLang: targetLang,
-                apiKey: geminiApiKey,
-                model: geminiModel
+                apiKey: geminiApiKey
               })
             });
 
             if (res.ok) {
               const chatData = await res.json();
-              replyText = chatData.reply;
+              if (chatData.reply && !chatData.error) {
+                replyText = chatData.reply;
+                connectedModel = chatData.model || 'gemini-1.5-flash';
+              } else if (chatData.error) {
+                directErrorLog += `Backend: ${chatData.error} (${chatData.log || ''})`;
+              }
+            } else {
+              const errData = await res.json().catch(() => ({}));
+              directErrorLog += `Backend HTTP ${res.status}: ${errData.error || ''} (${errData.log || ''})`;
             }
           } catch (backendErr) {
-            console.warn('Backend Chat API fallback error:', backendErr);
+            directErrorLog += `Backend Fetch Error: ${backendErr.message}`;
           }
         }
 
-        // 3. Fallback static reply if both failed
-        if (!replyText) {
-          replyText = targetLang.startsWith('en')
-            ? `That sounds interesting! Tell me more about '${userText}'. What would you like to discuss next?`
-            : targetLang.startsWith('ja')
-            ? `『${userText}』ですね！とても面白い話題です。`
-            : `Rất thú vị về '${userText}'!`;
+        // 3. IF SUCCESSFUL: Display AI reply and update Active Connected Model Badge
+        if (replyText) {
+          setActiveConnectedModel(connectedModel);
+
+          const aiMsg = {
+            id: 'ai-' + Date.now(),
+            sender: 'ai',
+            lang: targetLang,
+            modelName: connectedModel,
+            text: replyText,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+
+          setChatMessages(prev => [...prev, aiMsg]);
+          scrollToBottom();
+          focusTextInput();
+
+          setTimeout(() => {
+            playEdgeTts(aiMsg.id, aiMsg.text, targetLang);
+          }, 300);
+        } else {
+          // 4. IF FAILED: Display STRICT Connection Error Message with Logs (No local fake script fallback)
+          setActiveConnectedModel('未接続 / Error');
+
+          const errorMsg = {
+            id: 'ai-error-' + Date.now(),
+            sender: 'ai',
+            isError: true,
+            lang: uiLang,
+            text: `❌ Google Gemini API 接続エラー / Connection Failed:\n\n` +
+                  `Gemini APIへの接続が完了しませんでした。APIキーが正しく入力されているかご確認ください。\n\n` +
+                  `📋 【診断ログ / Diagnostic Log】:\n${directErrorLog || 'API Key is missing or invalid.'}`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+
+          setChatMessages(prev => [...prev, errorMsg]);
+          scrollToBottom();
+          focusTextInput();
         }
-
-        const aiMsg = {
-          id: 'ai-' + Date.now(),
-          sender: 'ai',
-          lang: targetLang,
-          text: replyText,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-
-        setChatMessages(prev => [...prev, aiMsg]);
-        scrollToBottom();
-        focusTextInput();
-
-        setTimeout(() => {
-          playEdgeTts(aiMsg.id, aiMsg.text, targetLang);
-        }, 300);
       };
 
       // STT Speech Recognition Toggle
@@ -654,16 +687,11 @@
               <span class="badge-sm badge-sage">
                 {dict.targetLangLabel}: {LANG_META[targetLang]?.flag} {LANG_META[targetLang]?.name}
               </span>
-              <select
-                class="form-select-sm"
-                value={geminiModel}
-                onChange={(e) => setGeminiModel(e.target.value)}
-                title="Select Gemini AI Model"
-              >
-                <option value="gemini-1.5-flash">Gemini 1.5</option>
-                <option value="gemini-2.0-flash">Gemini 2.0</option>
-                <option value="gemini-3.5-flash">Gemini 3.5</option>
-              </select>
+              {activeConnectedModel && (
+                <span class="badge-sm badge-sage" style={{ background: 'var(--accent-terracotta)', color: 'white' }}>
+                  🤖 {activeConnectedModel}
+                </span>
+              )}
               <button
                 class="btn-end-lesson-sm"
                 style={{ background: 'linear-gradient(135deg, #f4a261 0%, #e07a5f 100%)' }}
@@ -689,10 +717,10 @@
                   const isPlaying = playingId === msg.id;
                   const isLoading = loadingId === msg.id;
                   return (
-                    <div key={msg.id} class={`chat-bubble ${msg.sender}`}>
+                    <div key={msg.id} class={`chat-bubble ${msg.sender} ${msg.isError ? 'error-bubble' : ''}`}>
                       <div style={{ whiteSpace: 'pre-line' }}>{msg.text}</div>
                       <div class="chat-bubble-meta">
-                        <span>{msg.sender === 'ai' ? `🤖 LingoBot (${geminiModel})` : `👤 User (${LANG_META[uiLang]?.name})`}</span>
+                        <span>{msg.sender === 'ai' ? `🤖 LingoBot ${msg.modelName ? `(${msg.modelName})` : ''}` : `👤 User (${LANG_META[uiLang]?.name})`}</span>
                         <span>{msg.time}</span>
                       </div>
 

@@ -444,6 +444,13 @@
   border-bottom-left-radius: 4px;
 }
 
+.chat-bubble.error-bubble {
+  background: #fff0f0;
+  border: 1px solid #ff4d4f;
+  color: #cf1322;
+  box-shadow: 0 4px 14px rgba(255, 77, 79, 0.15);
+}
+
 .chat-bubble-meta {
   display: flex;
   align-items: center;

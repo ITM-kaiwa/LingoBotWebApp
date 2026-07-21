@@ -100,6 +100,13 @@ def chat_endpoint():
         raw_api_key = data.get('apiKey', '') or os.getenv('GEMINI_API_KEY', '')
         api_key = raw_api_key.strip().replace('\r', '').replace('\n', '').replace(' ', '')
 
+        if not api_key:
+            return jsonify({
+                'error': 'Gemini API Key is missing.',
+                'log': 'API key was not provided in request or environment variables.',
+                'source': 'gemini-error'
+            }), 401
+
         ui_name = LANG_NAMES.get(ui_lang, 'Japanese')
         target_name = LANG_NAMES.get(target_lang, 'English')
 
@@ -111,104 +118,51 @@ def chat_endpoint():
             f"If the user asks a question about vocabulary or grammar in {ui_name}, provide a short helpful explanation in {ui_name} followed by a practice question in {target_name}."
         )
 
-        # Official Google Generative AI SDK Integration with Model Fallback Loop
-        if api_key:
+        genai.configure(api_key=api_key)
+
+        candidate_models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
+        reply_text = None
+        used_model = None
+        attempt_logs = []
+
+        sdk_history = []
+        for item in history[-6:]:
+            sender = item.get('sender', 'user')
+            text = item.get('text', '').strip()
+            if text and not item.get('type') and not item.get('isError'):
+                role = "user" if sender == "user" else "model"
+                sdk_history.append({"role": role, "parts": [text]})
+
+        for m_name in candidate_models:
             try:
-                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel(
+                    model_name=m_name,
+                    system_instruction=system_instruction
+                )
+                chat_session = model.start_chat(history=sdk_history)
+                response = chat_session.send_message(user_message)
+                if response and response.text:
+                    reply_text = response.text.strip()
+                    used_model = m_name
+                    break
+            except Exception as m_err:
+                err_msg = f"{m_name}: {str(m_err)}"
+                attempt_logs.append(err_msg)
+                print(f"[Gemini Model Try Failed] {err_msg}")
 
-                candidate_models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
-                reply_text = None
-                used_model = None
+        if reply_text:
+            return jsonify({'reply': reply_text, 'model': used_model, 'source': 'gemini-sdk'})
 
-                sdk_history = []
-                for item in history[-6:]:
-                    sender = item.get('sender', 'user')
-                    text = item.get('text', '').strip()
-                    if text and not item.get('type'):
-                        role = "user" if sender == "user" else "model"
-                        sdk_history.append({"role": role, "parts": [text]})
-
-                for m_name in candidate_models:
-                    try:
-                        model = genai.GenerativeModel(
-                            model_name=m_name,
-                            system_instruction=system_instruction
-                        )
-                        chat_session = model.start_chat(history=sdk_history)
-                        response = chat_session.send_message(user_message)
-                        if response and response.text:
-                            reply_text = response.text.strip()
-                            used_model = m_name
-                            break
-                    except Exception as m_err:
-                        print(f"[Gemini Model Try Failed] {m_name}: {m_err}")
-
-                if reply_text:
-                    return jsonify({'reply': reply_text, 'model': used_model, 'source': 'gemini-sdk'})
-
-            except Exception as gemini_err:
-                print(f"[Gemini SDK Error] {gemini_err}. Falling back to contextual tutor response.")
-
-        reply_text = generate_contextual_tutor_reply(user_message, target_lang, ui_lang)
-        return jsonify({'reply': reply_text, 'model': 'LingoBot Context Engine', 'source': 'tutor-engine'})
+        # If all models failed, return strict connection error (no local fallback script)
+        return jsonify({
+            'error': 'Gemini API connection failed for all candidate models.',
+            'log': ' | '.join(attempt_logs),
+            'source': 'gemini-error'
+        }), 502
 
     except Exception as e:
         print(f"[Chat Error Traceback]:\n{traceback.format_exc()}")
-        return jsonify({'error': str(e)}), 500
-
-def generate_contextual_tutor_reply(msg, target_lang, ui_lang):
-    lower = msg.lower().strip()
-    t_prefix = target_lang.split('-')[0]
-
-    # PRIORITY 1: Greetings & Polite Check-ins ("how are you", "i am fine", "hello", "good morning")
-    if any(w in lower for w in ['how are you', 'how do you do', 'how are you doing', 'fine', 'good', 'thank', 'thanks', 'hello', 'hi', 'hey', 'chào', 'chao', 'こんにちは', '元気', '初めまして']):
-        if t_prefix == 'en':
-            return "I am doing great, thank you for asking! What topic or situation would you like to practice today?"
-        elif t_prefix == 'ja':
-            return "お元気そうで良かったです！今日はどんなトピックについてお話ししましょうか？"
-        else: # vi
-            return "Tôi rất khỏe, cảm ơn bạn đã hỏi! Hôm nay bạn muốn luyện tập chủ đề gì nào?"
-
-    # PRIORITY 2: Scenario 1 - Restaurant / Ordering / Food (Only if explicitly in current message!)
-    elif any(w in lower for w in ['restaurant', 'order', 'food', 'menu', 'eat', 'table', 'waiter', 'drink', 'dish', 'dinner', 'lunch', 'pizza', 'nha hang', 'an', 'giao tiep', 'レストラン', '注文', '料理', '食事', 'メニュー', '店', 'ピザ']):
-        if t_prefix == 'en':
-            if any(w in lower for w in ['drink', 'water', 'coffee', 'tea', 'juice', 'wine', 'beer']):
-                return "Excellent choice! I will bring your drink right away. What main dish would you like to order today?"
-            elif any(w in lower for w in ['menu', 'recommend', 'special', 'popular']):
-                return "Our chef's special today is grilled steak with fresh garden vegetables! Would you like to try that, or do you prefer seafood?"
-            else:
-                return "Welcome to our restaurant! Here is your table and today's menu. Are you ready to order, or would you like a minute to look it over?"
-        elif t_prefix == 'ja':
-            return "いらっしゃいませ！レストランへようこそ。こちらが本日のお席とメニューでございます。まずはお飲物からご注文なさいますか？"
-        else: # vi
-            return "Chào mừng quý khách đến với nhà hàng của chúng tôi! Đây là thực đơn hôm nay. Quý khách muốn gọi món gì ạ?"
-
-    # PRIORITY 3: Scenario 2 - Travel / Airport / Hotel
-    elif any(w in lower for w in ['travel', 'flight', 'hotel', 'trip', 'book', 'visit', 'du lich', 'khach san', '旅行', 'ホテル', '空港', '予約']):
-        if t_prefix == 'en':
-            return "Traveling is so exciting! Welcome to the hotel reception desk. May I have your name and reservation details?"
-        elif t_prefix == 'ja':
-            return "ご旅行ですね！ホテルのフロントへようこそ。お名前とご予約内容を伺ってもよろしいでしょうか？"
-        else:
-            return "Chào mừng quý khách đến với khách sạn của chúng tôi! Quý khách đã đặt phòng trước chưa ạ?"
-
-    # PRIORITY 4: Scenario 3 - Hobbies / Free time / Daily life
-    elif any(w in lower for w in ['hobby', 'free time', 'weekend', 'music', 'sport', 'movie', 'so thich', 'nhac', '趣味', '音楽', '映画', 'スポーツ']):
-        if t_prefix == 'en':
-            return "That sounds like a fun hobby! How long have you been doing that, and what do you enjoy most about it?"
-        elif t_prefix == 'ja':
-            return "とても楽しそうな趣味ですね！どのくらい続けていますか？どんなところが一番お気に入りですか？"
-        else:
-            return "Sở thích đó thật thú vị! Bạn đã gắn bó với nó lâu chưa và điều gì làm bạn thích nhất?"
-
-    # DEFAULT CONTEXTUAL RESPONSE
-    else:
-        if t_prefix == 'en':
-            return f"That is a great topic! Tell me more about '{msg}'. What would you like to discuss next?"
-        elif t_prefix == 'ja':
-            return f"素晴らしい話題ですね！『{msg}』についてもう少し詳しく教えていただけますか？"
-        else:
-            return f"Rất thú vị! Bạn có thể chia sẻ thêm về '{msg}' được không?"
+        return jsonify({'error': str(e), 'log': traceback.format_exc()}), 500
 
 @app.route('/')
 def serve_index():
