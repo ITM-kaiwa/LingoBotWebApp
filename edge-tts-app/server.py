@@ -111,14 +111,14 @@ def chat_endpoint():
             f"If the user asks a question about vocabulary or grammar in {ui_name}, provide a short helpful explanation in {ui_name} followed by a practice question in {target_name}."
         )
 
-        # Official Google Generative AI SDK Integration
+        # Official Google Generative AI SDK Integration with Model Fallback Loop
         if api_key:
             try:
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel(
-                    model_name='gemini-1.5-flash',
-                    system_instruction=system_instruction
-                )
+
+                candidate_models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
+                reply_text = None
+                used_model = None
 
                 sdk_history = []
                 for item in history[-6:]:
@@ -128,11 +128,24 @@ def chat_endpoint():
                         role = "user" if sender == "user" else "model"
                         sdk_history.append({"role": role, "parts": [text]})
 
-                chat_session = model.start_chat(history=sdk_history)
-                response = chat_session.send_message(user_message)
+                for m_name in candidate_models:
+                    try:
+                        model = genai.GenerativeModel(
+                            model_name=m_name,
+                            system_instruction=system_instruction
+                        )
+                        chat_session = model.start_chat(history=sdk_history)
+                        response = chat_session.send_message(user_message)
+                        if response and response.text:
+                            reply_text = response.text.strip()
+                            used_model = m_name
+                            break
+                    except Exception as m_err:
+                        print(f"[Gemini Model Try Failed] {m_name}: {m_err}")
 
-                if response and response.text:
-                    return jsonify({'reply': response.text.strip(), 'model': 'gemini-1.5-flash', 'source': 'gemini-sdk'})
+                if reply_text:
+                    return jsonify({'reply': reply_text, 'model': used_model, 'source': 'gemini-sdk'})
+
             except Exception as gemini_err:
                 print(f"[Gemini SDK Error] {gemini_err}. Falling back to contextual tutor response.")
 
