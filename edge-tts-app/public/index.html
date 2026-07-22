@@ -124,7 +124,8 @@
           ja: "「optimize」の 'p' は唇を密着させてから息を弾ませ、「workflow」の 'w' は唇を丸めて発音します。",
           mouthTip: "👄 口の形・コツ: 『optimize』は頭音 'op' をしっかり大きく縦に開け、『deliver』の 'v' は上歯で下唇を軽く押さえます。"
         }
-{
+      },
+      {
         id: 2,
         category: 'ja-daily',
         lang: 'ja-JP',
@@ -272,27 +273,96 @@
         };
       }
 
-      // 3. TARGET LANGUAGE: ENGLISH (en-US)
+      // 3. TARGET LANGUAGE: ENGLISH (en-US) - Contextual Native Phrasing
       else {
-        if (['order', 'pizza', 'want', 'food', 'coffee', 'buy'].some(w => lower.includes(w))) {
+        // Scenario / Setting setup (e.g. "I want to learn the conversation at the post office")
+        if (lower.includes('learn') || lower.includes('practice') || lower.includes('conversation') || lower.includes('post office') || lower.includes('hotel') || lower.includes('airport')) {
           return {
-            category: isUiVi ? "Gọi món lịch sự (Polite Request)" : "丁寧な注文・リクエスト表現 (Polite Ordering)",
-            better: "I'd like to order a pepperoni pizza, please. / Could I have a cup of coffee?",
-            explanation: isUiVi ? "Dùng 'I'd like to...' hoặc 'Could I get...?' lịch sự hơn nhiều so với 'I want...'."
-                                 : "'I want...' は直接的すぎて少し子供っぽく聞こえる場合があります。お店では 'I'd like to...' や 'Could I get...?' を使うのが大人で丁寧なマナーです。",
-            usage: "Pattern: I'd like + [item] + , please.",
-            example: "Could I please get a hot latte and a slice of cheese pizza?",
-            exampleTrans: isUiVi ? "Cho tôi xin 1 ly latte nóng và 1 miếng pizza cheese ạ." : "温かいラテとチーズピザを1枚いただけますか？"
+            category: isUiVi ? "Thiết lập tình huống luyện tập" : "会話の目的・シチュエーション提示",
+            betterList: [
+              "\"I'd like to practice a conversation set at the post office, please.\"",
+              "\"Could we roleplay a scenario at the post office?\""
+            ],
+            explanation: isUiVi ? "Dùng 'I'd like to practice...' hoặc 'Could we roleplay...?' tự nhiên hơn hẳn 'I want to learn...'."
+                                 : "「I want to...」よりも「I'd like to practice...（〜での会話を練習したいです）」や「Could we roleplay a scenario at...?（〜でのロールプレイをお願いできますか？）」と伝えると、より自然で洗練された英語になります。",
+            usage: "Pattern: I'd like to practice a conversation at [Location].",
+            example: "I'd like to practice buying stamps and mailing letters at the post office today.",
+            exampleTrans: isUiVi ? "Hôm nay tôi muốn luyện tập mua tem và gửi thư ở bưu điện." : "（郵便局での会話練習をリクエストする例文）"
           };
-        } else {
+        }
+        // Purchasing stamps, postcards, buying items (e.g. "stamp", "postcard", "buy", "have")
+        else if (lower.includes('stamp') || lower.includes('postcard') || lower.includes('buy') || lower.includes('have') || lower.includes('yen')) {
           return {
-            category: isUiVi ? "Mở rộng tiếng Anh tự nhiên" : "自然な英語表現の拡張 (Natural English Expression)",
-            better: `Could you please tell me more about ${trimmed}? / I'd love to know more.`,
-            explanation: isUiVi ? "Thêm các cụm từ lịch sự như 'Could you please...?' giúp giao tiếp tự nhiên hơn."
-                                 : "単語や短いフレーズだけでなく 'Could you please...?' や 'I would love to...' などの丁寧な前置きを補うと、相手との会話がスムーズになります。",
-            usage: "Pattern: Could you please + [verb]...?",
-            example: `I would really appreciate it if you could help me with ${trimmed}.`,
-            exampleTrans: isUiVi ? "Tôi rất cảm ơn nếu bạn có thể giúp tôi." : "（丁寧に協力を依頼する英文）"
+            category: isUiVi ? "Mua hàng & Gọi món (Polite Purchasing)" : "商品購入・切手リクエストの丁寧な依頼",
+            betterList: [
+              "\"Could I please get an 82-yen stamp?\"",
+              "\"I'd like to buy three commemorative postcards, please.\""
+            ],
+            explanation: isUiVi ? "Dùng 'Could I please get [món đồ]?' hoặc 'I'd like to buy [món đồ], please' tự nhiên hơn 'I would like to have...'."
+                                 : "郵便局やお店での購入時、\"I would like to have...\" よりも \"Could I please get [商品]?\" や \"I'd like to buy [商品], please.\" がネイティブ間で最も自然で一般的な言い回しです。",
+            usage: "Pattern: Could I please get [Item]? / I'd like to buy [Item], please.",
+            example: "Could I please get three 82-yen stamps and a souvenir postcard?",
+            exampleTrans: isUiVi ? "Cho tôi xin mua 3 con tem 82 yen và 1 bưu thiếp ạ." : "82円切手を3枚と記念絵はがきをいただけますか？"
+          };
+        }
+        // Payment methods & questions (e.g. "wire transfer", "qr code", "credit card", "pay")
+        else if (lower.includes('transfer') || lower.includes('qr') || lower.includes('code') || lower.includes('card') || lower.includes('pay')) {
+          return {
+            category: isUiVi ? "Hỏi về phương thức thanh toán" : "支払い方法・キャッシュレスの自然な質問",
+            betterList: [
+              "\"Do you accept QR code payments for wire transfers?\"",
+              "\"Can I pay via QR code transfer?\""
+            ],
+            explanation: isUiVi ? "Dùng 'Do you accept [phương thức]?' hoặc 'Can I pay via [phương thức]?' rất tự nhiên."
+                                 : "支払い方法を確認する際、\"Could I use...?\" も通じますが、\"Can I pay via QR code?\" や \"Do you accept QR code payments?\" の方が英語圏でより直接的で自然な尋ね方になります。",
+            usage: "Pattern: Can I pay via [Payment Method]? / Do you accept [Payment Method]?",
+            example: "Can I pay for this postcard using a QR code wire transfer?",
+            exampleTrans: isUiVi ? "Tôi có thể chuyển khoản thanh toán bưu thiếp này bằng mã QR được không ạ?" : "この絵はがきをQRコード送金で支払うことはできますか？"
+          };
+        }
+        // Handing over items (e.g. "here you go", "here it is")
+        else if (lower.includes('here you go') || lower.includes('here it is') || lower.includes('here')) {
+          return {
+            category: isUiVi ? "Trao đồ tự nhiên (Handing over items)" : "手渡し・支払いの完璧な日常フレーズ",
+            betterList: [
+              "\"Here you go. (完璧です！)\"",
+              "\"Here is the payment. / Here are the documents.\""
+            ],
+            explanation: isUiVi ? "'Here you go' là mẫu câu chuẩn và hoàn hảo nhất khi đưa tiền hoặc giấy tờ!"
+                                 : "\"Here you go.\" は手渡しの際の完璧で最も自然な表現です！具体的に品物を指して \"Here is the payment.\" や \"Here is the money.\" と言っても親切です。",
+            usage: "Pattern: Here you go. / Here is [item].",
+            example: "Here you go. Thank you for your help!",
+            exampleTrans: isUiVi ? "Của bạn đây ạ. Cảm ơn bạn đã giúp đỡ!" : "はい、どうぞ。ご親切にありがとうございました！"
+          };
+        }
+        // Gratitude & Greetings (e.g. "thank you", "you too", "thanks")
+        else if (lower.includes('thank') || lower.includes('you, too') || lower.includes('bye')) {
+          return {
+            category: isUiVi ? "Lời cảm ơn & Chào tạm biệt" : "感謝とやり取りの締めくくり挨拶",
+            betterList: [
+              "\"Thank you so much! Have a wonderful day!\"",
+              "\"Thanks for your help! You have a great day, too!\""
+            ],
+            explanation: isUiVi ? "Nói 'Thank you so much! Have a nice day!' rất lịch sự và thân thiện."
+                                 : "\"Thank you very much. You, too\" も伝わりますが、英語圏では \"Thank you! Have a great day!\" と返すと、お互いにとても気持ちの良い挨拶の締めくくりになります。",
+            usage: "Pattern: Thank you! Have a great day, too!",
+            example: "Thank you so much for your assistance. Have a wonderful day!",
+            exampleTrans: isUiVi ? "Cảm ơn bạn rất nhiều vì đã hỗ trợ. Chúc bạn một ngày tốt lành!" : "丁寧にご対応いただきありがとうございました。良い一日を！"
+          };
+        }
+        // General English Input
+        else {
+          return {
+            category: isUiVi ? "Mở rộng hội thoại tiếng Anh" : "自然な英語表現の発展ポイント",
+            betterList: [
+              `"Regarding this, ${trimmed}."`,
+              `"I would like to mention that ${trimmed}."`
+            ],
+            explanation: isUiVi ? "Kết nối các câu ngắn bằng các cụm từ đệm như 'Regarding this...' giúp câu văn mạch lạc."
+                                 : "単文をそのまま言うだけでなく、\"Regarding this,...\" や \"I would like to mention that...\" などの接続表現を頭に添えると、より知的な英語表現になります。",
+            usage: "Pattern: Regarding [topic], [sentence].",
+            example: `Regarding my request, ${trimmed}.`,
+            exampleTrans: isUiVi ? "Về yêu cầu của tôi, ..." : "（文脈を整えて伝える英文例）"
           };
         }
       }
