@@ -41,11 +41,11 @@
         targetLangLabel: 'Học tập',
         startPractice: 'Bắt đầu',
         endLesson: '📄 Báo cáo PDF',
-        resetChat: '🔄 Đặt lại',
+        resetChat: 'Đặt lại',
         placeholder: 'Nhập tin nhắn... (Ví dụ: Hãy đóng vai ở quầy gửi hành lý ở sân bay)',
         thinking: 'LingoBot đang suy nghĩ câu trả lời...',
-        print: '🖨️ In báo cáo',
-        downloadPdf: '📥 Tải PDF'
+        print: 'In báo cáo',
+        downloadPdf: 'Tải PDF'
       },
       'ja-JP': {
         title: 'LingoBotWebApp',
@@ -56,11 +56,11 @@
         targetLangLabel: '学習言語',
         startPractice: '練習を始める',
         endLesson: '📄 レッスン終了・PDF出力',
-        resetChat: '🔄 リセット',
+        resetChat: 'リセット',
         placeholder: 'メッセージを入力... (例: 空港の荷物預けの場面で話しましょう)',
         thinking: 'LingoBot が返答を考えています...',
-        print: '🖨️ 印刷',
-        downloadPdf: '📥 PDFダウンロード'
+        print: '印刷',
+        downloadPdf: 'PDFダウンロード'
       },
       'en-US': {
         title: 'LingoBotWebApp',
@@ -71,11 +71,11 @@
         targetLangLabel: 'Target Lang',
         startPractice: 'Start',
         endLesson: '📄 Report PDF',
-        resetChat: '🔄 Reset',
+        resetChat: 'Reset',
         placeholder: 'Type a message... (e.g. Let\'s roleplay checking bags at the airport)',
         thinking: 'LingoBot is thinking...',
-        print: '🖨️ Print',
-        downloadPdf: '📥 Download PDF'
+        print: 'Print',
+        downloadPdf: 'Download PDF'
       }
     };
 
@@ -217,7 +217,7 @@
       const [isThinking, setIsThinking] = useState(false);
       const [activeConnectedModel, setActiveConnectedModel] = useState('');
 
-      const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'shadowing'
+      const [activeTab, setActiveTab] = useState('chat');
       const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
       const [selectedCategory, setSelectedCategory] = useState('all');
       const [currentSelectedVoice, setCurrentSelectedVoice] = useState('journey');
@@ -226,10 +226,9 @@
       const [shadowingEval, setShadowingEval] = useState(null);
       const [playingId, setPlayingId] = useState(null);
       const [loadingId, setLoadingId] = useState(null);
-      const [showPdfModal, setShowPdfModal] = useState(false);
       const [showLogModal, setShowLogModal] = useState(false);
       const [systemLogs, setSystemLogs] = useState([
-        `[${new Date().toLocaleTimeString()}] 🚀 System Initialized. Restored 17:00 Original Layout & Shadowing Tab.`
+        `[${new Date().toLocaleTimeString()}] 🚀 System Initialized with Floating Logs and Auto-Speech.`
       ]);
 
       const addSystemLog = (msg) => {
@@ -258,15 +257,16 @@
       ]);
 
       const dict = UI_DICT[uiLang] || UI_DICT['vi-VN'];
-      const currentSentence = SAMPLE_SENTENCES[currentSentenceIdx] || SAMPLE_SENTENCES[0];
-      const BACKEND_URL = (window.location.hostname.includes('github.io') && !window.location.hostname.includes('vercel.app'))
-        ? 'https://lingobotwebapp.onrender.com'
-        : '';
 
       const filteredSentences = useMemo(() => {
         if (selectedCategory === 'all') return SAMPLE_SENTENCES;
         return SAMPLE_SENTENCES.filter(s => s.category === selectedCategory);
       }, [selectedCategory]);
+
+      const currentSentence = filteredSentences[currentSentenceIdx] || filteredSentences[0] || SAMPLE_SENTENCES[0];
+      const BACKEND_URL = (window.location.hostname.includes('github.io') && !window.location.hostname.includes('vercel.app'))
+        ? 'https://lingobotwebapp.onrender.com'
+        : '';
 
       const handleVoiceChange = (e) => {
         const newVoice = e.target.value;
@@ -281,7 +281,7 @@
             sender: 'ai',
             lang: 'bilingual',
             type: 'toast_info',
-            text: `ℹ️ Lựa chọn giọng nói mới sẽ áp dụng cho lần phát âm tiếp theo. / 次回の再生から選択した音声モデルが適用されます。`,
+            text: `ℹ️ Lựa chọn giọng nói mới sẽ áp dụng cho lần phát âm tiếp theo.`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
           setChatMessages(prev => [...prev, toastMsg]);
@@ -333,7 +333,7 @@
       // Voice Input for Chat
       const toggleSpeechRecognition = () => {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-          alert('Trình duyệt không hỗ trợ Nhận dạng giọng nói (Speech Recognition). Vui lòng dùng Chrome.');
+          alert('Trình duyệt không hỗ trợ Speech Recognition. Vui lòng dùng Chrome.');
           return;
         }
 
@@ -373,7 +373,7 @@
         recognition.start();
       };
 
-      // Voice Recording & Evaluation for Shadowing Mode
+      // Voice Recording for Shadowing
       const toggleShadowingMic = () => {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
           alert('Trình duyệt không hỗ trợ Web Speech API.');
@@ -437,7 +437,6 @@
             return;
           }
 
-          // Levenshtein-based similarity score calculation
           let matchCount = 0;
           const targetChars = target.replace(/[\s、。!?]/g, '').toLowerCase();
           const spokenChars = spoken.replace(/[\s、。!?]/g, '').toLowerCase();
@@ -497,7 +496,6 @@
         const playBrowserNativeSpeech = (reason = 'Direct/Fallback') => {
           if (!('speechSynthesis' in window)) {
             addSystemLog(`❌ Web Speech API Not Supported`);
-            alert('Trình duyệt không hỗ trợ Web Speech API.');
             return;
           }
           const utterance = new SpeechSynthesisUtterance(cleanAudioText);
@@ -623,6 +621,9 @@
         setChatMessages(prev => [...prev, userMsg, aiStep1]);
         scrollToBottom();
         focusTextInput();
+
+        // Restore Auto-speech trigger
+        playEdgeTts(aiStep1.id, aiStep1.text, targetLang);
       };
 
       const handleSelectUiLang = (selectedCode) => {
@@ -652,6 +653,9 @@
         };
 
         setChatMessages(prev => [...prev, userMsg, aiStep2]);
+
+        // Restore Auto-speech trigger
+        playEdgeTts(aiStep2.id, aiStep2.text, targetLang);
       };
 
       const handleSelectTargetLang = async (selectedCode) => {
@@ -680,6 +684,9 @@
         setChatMessages(prev => [...prev, userMsg, aiCompletedMsg]);
         scrollToBottom();
         focusTextInput();
+
+        // Restore Auto-speech trigger
+        playEdgeTts(aiCompletedMsg.id, aiCompletedMsg.text, selectedCode);
       };
 
       const handleSendMessage = async (customText = null) => {
@@ -750,7 +757,7 @@
           scrollToBottom();
           focusTextInput();
 
-          // Auto-play speech for AI reply
+          // Restore Auto-speech trigger for AI reply
           playEdgeTts(aiReply.id, data.reply, targetLang);
 
         } catch (err) {
@@ -787,12 +794,11 @@
 
       return (
         <div class="app-container">
-          {/* Header with 3D shadow & click sinking effect on navigation tab buttons */}
+          {/* Header Compact - Scaled for 100% Zoom */}
           <header class="glass-panel app-header-compact">
             <div class="brand-section-compact">
               <div
                 class="brand-logo-sm"
-                style={{ cursor: 'pointer', userSelect: 'none', transition: 'transform 0.15s ease' }}
                 onClick={() => setShowLogModal(true)}
                 title="🤖 Bấm để xem nhật ký TTS / Click to View Diagnostic Logs"
               >
@@ -805,20 +811,20 @@
             </div>
 
             {/* TAB BUTTONS WITH STYLISH SHADOW & ACTIVE SINKING EFFECT */}
-            <nav class="nav-tabs-compact" style={{ display: 'flex', gap: '8px', background: 'rgba(0, 0, 0, 0.04)', padding: '4px', borderRadius: '12px' }}>
+            <nav class="nav-tabs-compact" style={{ display: 'flex', gap: '6px', background: 'rgba(0, 0, 0, 0.04)', padding: '3px', borderRadius: '12px' }}>
               <button
                 class={`nav-tab-sm ${activeTab === 'chat' ? 'active' : ''}`}
                 style={{
-                  padding: '8px 16px',
+                  padding: '6px 14px',
                   borderRadius: '8px',
                   border: 'none',
                   fontWeight: '700',
-                  fontSize: '0.9rem',
+                  fontSize: '0.85rem',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease-in-out',
                   boxShadow: activeTab === 'chat'
-                    ? '0 4px 10px rgba(224, 122, 95, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
-                    : '0 2px 5px rgba(0, 0, 0, 0.08)',
+                    ? '0 4px 10px rgba(224, 122, 95, 0.3)'
+                    : '0 2px 4px rgba(0, 0, 0, 0.06)',
                   background: activeTab === 'chat'
                     ? 'linear-gradient(135deg, var(--accent-terracotta) 0%, var(--accent-terracotta-dark) 100%)'
                     : '#ffffff',
@@ -832,16 +838,16 @@
               <button
                 class={`nav-tab-sm ${activeTab === 'shadowing' ? 'active' : ''}`}
                 style={{
-                  padding: '8px 16px',
+                  padding: '6px 14px',
                   borderRadius: '8px',
                   border: 'none',
                   fontWeight: '700',
-                  fontSize: '0.9rem',
+                  fontSize: '0.85rem',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease-in-out',
                   boxShadow: activeTab === 'shadowing'
-                    ? '0 4px 10px rgba(224, 122, 95, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
-                    : '0 2px 5px rgba(0, 0, 0, 0.08)',
+                    ? '0 4px 10px rgba(224, 122, 95, 0.3)'
+                    : '0 2px 4px rgba(0, 0, 0, 0.06)',
                   background: activeTab === 'shadowing'
                     ? 'linear-gradient(135deg, var(--accent-terracotta) 0%, var(--accent-terracotta-dark) 100%)'
                     : '#ffffff',
@@ -878,13 +884,14 @@
                 <option value="wavenet">🎙️ WaveNet (高品質)</option>
                 <option value="web-speech-api">🔊 Web Speech API (Trình duyệt)</option>
               </select>
+              {/* CLEAN RESET BUTTON - NO DUPLICATE BLUE ICONS */}
               <button
                 class="btn-end-lesson-sm"
                 style={{ background: 'linear-gradient(135deg, #f4a261 0%, #e07a5f 100%)' }}
                 onClick={handleResetChat}
                 title="Đặt lại trò chuyện / Reset Chat"
               >
-                🔄 {dict.resetChat}
+                {dict.resetChat}
               </button>
               <button
                 class="btn-end-lesson-sm"
@@ -897,8 +904,8 @@
 
           {/* MODE 1: MAIN CONVERSATION PRACTICE SCREEN */}
           {activeTab === 'chat' && (
-            <div class="glass-panel chat-container" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', minHeight: '520px' }}>
-              <div class="chat-messages" ref={chatMessagesRef} style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+            <div class="glass-panel chat-container">
+              <div class="chat-messages" ref={chatMessagesRef}>
                 {chatMessages.map(msg => {
                   const isPlaying = playingId === msg.id;
                   const isLoading = loadingId === msg.id;
@@ -956,19 +963,6 @@
                           <div class="advice-explanation"><FuriganaText text={msg.advice.explanation} /></div>
                         </div>
                       )}
-
-                      {/* Audio Controls */}
-                      {msg.sender === 'ai' && !msg.isError && msg.type !== 'onboarding_api_key' && (
-                        <div class="chat-audio-controls">
-                          <button
-                            class={`btn-play-sm ${isPlaying ? 'playing' : ''}`}
-                            onClick={() => playEdgeTts(msg.id, msg.text, targetLang)}
-                            disabled={isLoading}
-                          >
-                            {isLoading ? '⏳ Đang tải...' : isPlaying ? '⏹️ Dừng' : '🔊 Phát âm'}
-                          </button>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -981,18 +975,7 @@
               </div>
 
               {/* ORIGINAL CHAT INPUT FOOTER */}
-              <div
-                class="chat-input-area"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '12px 18px',
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  borderTop: '1px solid var(--glass-border)',
-                  borderRadius: '0 0 16px 16px'
-                }}
-              >
+              <div class="chat-input-area">
                 <button
                   type="button"
                   class={`btn-mic-action ${isRecording ? 'recording' : ''}`}
@@ -1002,8 +985,8 @@
                     color: isRecording ? '#ffffff' : 'var(--accent-terracotta)',
                     border: '1.5px solid var(--accent-terracotta)',
                     borderRadius: '50%',
-                    width: '44px',
-                    height: '44px',
+                    width: '42px',
+                    height: '42px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1020,16 +1003,6 @@
                   ref={textInputRef}
                   type="text"
                   class="chat-input"
-                  style={{
-                    flex: 1,
-                    height: '44px',
-                    padding: '0 16px',
-                    borderRadius: '22px',
-                    border: '1.5px solid #e0e0e0',
-                    fontSize: '0.95rem',
-                    outline: 'none',
-                    background: '#ffffff'
-                  }}
                   placeholder={dict.placeholder}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
@@ -1041,24 +1014,7 @@
                   }}
                 />
 
-                <button
-                  class="btn-send"
-                  onClick={() => handleSendMessage()}
-                  style={{
-                    background: 'linear-gradient(135deg, var(--accent-terracotta) 0%, var(--accent-terracotta-dark) 100%)',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '22px',
-                    padding: '0 20px',
-                    height: '44px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    flexShrink: 0
-                  }}
-                >
+                <button class="btn-send" onClick={() => handleSendMessage()}>
                   <span>Gửi</span>
                   <span>➔</span>
                 </button>
@@ -1068,17 +1024,17 @@
 
           {/* MODE 2: RESTORED FULL SHADOWING PRACTICE SCREEN */}
           {activeTab === 'shadowing' && (
-            <div class="glass-panel shadowing-practice-container" style={{ padding: '24px', height: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+            <div class="glass-panel shadowing-practice-container" style={{ padding: '24px', height: 'calc(100vh - 110px)', overflowY: 'auto' }}>
               <div style={{ marginBottom: '20px' }}>
-                <h2 style={{ margin: 0, color: 'var(--accent-terracotta-dark)', fontSize: '1.4rem' }}>
+                <h2 style={{ margin: 0, color: 'var(--accent-terracotta-dark)', fontSize: '1.3rem' }}>
                   🎙️ Luyện phát âm & Shadowing (シャドーイング練習)
                 </h2>
-                <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
                   Nghe câu mẫu chuẩn và bấm Mic để thu âm đánh giá phát âm của bạn.
                 </p>
               </div>
 
-              {/* Category Filter Selector */}
+              {/* Working Category Filter Selector */}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
                 <button
                   class={`btn-filter-sm ${selectedCategory === 'all' ? 'active' : ''}`}
@@ -1110,25 +1066,25 @@
               {currentSentence && (
                 <div class="glass-card shadowing-card-main" style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #eae0d5', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <span class="badge-sm badge-terracotta">{currentSentence.levelLabel}</span>
+                    <span class="badge-sm badge-edge">{currentSentence.levelLabel}</span>
                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                       Câu {currentSentenceIdx + 1} / {filteredSentences.length}
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '12px', lineHeight: '1.6' }}>
+                  <div style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '12px', lineHeight: '1.6' }}>
                     <FuriganaText text={currentSentence.text} />
                   </div>
 
-                  <div style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '16px', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: '0.92rem', color: 'var(--text-muted)', marginBottom: '16px', fontStyle: 'italic' }}>
                     {currentSentence.translation}
                   </div>
 
                   {/* Audio Listen Button */}
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '20px' }}>
                     <button
-                      class="btn btn-terracotta"
-                      style={{ padding: '10px 20px', fontSize: '0.95rem' }}
+                      class="btn-end-lesson-sm"
+                      style={{ padding: '8px 18px', fontSize: '0.9rem' }}
                       onClick={() => playEdgeTts(`shadowing-${currentSentence.id}`, currentSentence.text, currentSentence.lang)}
                     >
                       {playingId === `shadowing-${currentSentence.id}` ? '⏹️ Dừng nghe' : '🔊 Nghe câu mẫu (Listen Standard)'}
@@ -1136,30 +1092,30 @@
                   </div>
 
                   {/* Mic Record Area */}
-                  <div style={{ textAlign: 'center', padding: '20px', background: '#fdfbf7', borderRadius: '12px', border: '1px dashed #e4d5c3' }}>
+                  <div style={{ textAlign: 'center', padding: '18px', background: '#fdfbf7', borderRadius: '12px', border: '1px dashed #e4d5c3' }}>
                     <button
                       class={`btn-record-large ${isRecording ? 'recording' : ''}`}
                       onClick={toggleShadowingMic}
                       style={{
-                        width: '72px',
-                        height: '72px',
+                        width: '64px',
+                        height: '64px',
                         borderRadius: '50%',
                         border: 'none',
                         background: isRecording ? '#e76f51' : 'linear-gradient(135deg, var(--accent-terracotta) 0%, var(--accent-terracotta-dark) 100%)',
                         color: '#ffffff',
-                        fontSize: '2rem',
+                        fontSize: '1.8rem',
                         cursor: 'pointer',
-                        boxShadow: '0 6px 20px rgba(224, 122, 95, 0.4)',
+                        boxShadow: '0 4px 16px rgba(224, 122, 95, 0.4)',
                         transition: 'all 0.2s ease'
                       }}
                     >
                       {isRecording ? '⏹️' : '🎙️'}
                     </button>
-                    <div style={{ marginTop: '12px', fontWeight: '700', color: isRecording ? '#e76f51' : 'var(--text-main)' }}>
+                    <div style={{ marginTop: '10px', fontWeight: '700', fontSize: '0.9rem', color: isRecording ? '#e76f51' : 'var(--text-main)' }}>
                       {isRecording ? '🔴 Đang ghi âm... Hãy đọc theo câu mẫu!' : 'Bấm nút Mic để bắt đầu đọc và thu âm (Shadowing)'}
                     </div>
                     {userVoiceInput && (
-                      <div style={{ marginTop: '10px', fontSize: '1rem', color: 'var(--accent-terracotta-dark)', fontStyle: 'italic' }}>
+                      <div style={{ marginTop: '8px', fontSize: '0.95rem', color: 'var(--accent-terracotta-dark)', fontStyle: 'italic' }}>
                         "{userVoiceInput}"
                       </div>
                     )}
@@ -1167,9 +1123,9 @@
 
                   {/* Evaluation Result Card */}
                   {shadowingEval && (
-                    <div style={{ marginTop: '24px', padding: '18px', background: '#f4f9f4', border: '1px solid #c8e6c9', borderRadius: '12px' }}>
+                    <div style={{ marginTop: '20px', padding: '16px', background: '#f4f9f4', border: '1px solid #c8e6c9', borderRadius: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '2rem', fontWeight: '900', color: shadowingEval.score >= 80 ? '#2e7d32' : '#ed6c02' }}>
+                        <span style={{ fontSize: '1.8rem', fontWeight: '900', color: shadowingEval.score >= 80 ? '#2e7d32' : '#ed6c02' }}>
                           {shadowingEval.score} điểm
                         </span>
                         <div>
@@ -1178,7 +1134,7 @@
                         </div>
                       </div>
                       {currentSentence.advice && (
-                        <div style={{ marginTop: '10px', fontSize: '0.88rem', color: '#2e7d32', background: '#ffffff', padding: '10px', borderRadius: '8px' }}>
+                        <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#2e7d32', background: '#ffffff', padding: '8px 12px', borderRadius: '8px' }}>
                           {currentSentence.advice.mouthTip}
                         </div>
                       )}
@@ -1186,20 +1142,20 @@
                   )}
 
                   {/* Pagination Controls */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
                     <button
-                      class="btn btn-secondary"
+                      class="btn-filter-sm"
                       disabled={currentSentenceIdx === 0}
                       onClick={() => { setCurrentSentenceIdx(prev => Math.max(0, prev - 1)); setShadowingEval(null); setUserVoiceInput(''); }}
                     >
-                      ⬅️ Câu trước (Previous)
+                      ⬅️ Câu trước
                     </button>
                     <button
-                      class="btn btn-terracotta"
+                      class="btn-filter-sm active"
                       disabled={currentSentenceIdx >= filteredSentences.length - 1}
                       onClick={() => { setCurrentSentenceIdx(prev => Math.min(filteredSentences.length - 1, prev + 1)); setShadowingEval(null); setUserVoiceInput(''); }}
                     >
-                      Câu tiếp theo (Next) ➡️
+                      Câu tiếp theo ➡️
                     </button>
                   </div>
                 </div>
@@ -1207,35 +1163,35 @@
             </div>
           )}
 
-          {/* SYSTEM DIAGNOSTIC LOGS MODAL */}
+          {/* SYSTEM DIAGNOSTIC LOGS MODAL - FLOATING FIXED CENTER */}
           {showLogModal && (
             <div class="modal-overlay" onClick={() => setShowLogModal(false)}>
-              <div class="modal-card glass-panel" style={{ maxWidth: '680px', width: '92%' }} onClick={e => e.stopPropagation()}>
-                <div class="modal-header">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '1.6rem' }}>🤖</span>
+              <div class="modal-card" style={{ maxWidth: '640px', width: '90%' }} onClick={e => e.stopPropagation()}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>🤖</span>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--accent-terracotta-dark)' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--accent-terracotta-dark)' }}>
                         📜 Nhật ký chẩn đoán TTS (Diagnostic Logs)
                       </h3>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                         Lịch sử gọi API, tạo âm thanh và chuyển đổi mô hình
                       </p>
                     </div>
                   </div>
-                  <button class="btn-close-sm" onClick={() => setShowLogModal(false)}>✕</button>
+                  <button style={{ border: 'none', background: 'transparent', fontSize: '1.2rem', cursor: 'pointer' }} onClick={() => setShowLogModal(false)}>✕</button>
                 </div>
 
-                <div class="modal-body" style={{ padding: '16px 0' }}>
+                <div style={{ padding: '8px 0' }}>
                   <div
                     style={{
                       background: '#1e1e2e',
                       color: '#a6adc8',
                       fontFamily: 'Consolas, Monaco, monospace',
-                      fontSize: '0.82rem',
-                      padding: '14px',
+                      fontSize: '0.8rem',
+                      padding: '12px',
                       borderRadius: '8px',
-                      maxHeight: '340px',
+                      maxHeight: '300px',
                       overflowY: 'auto',
                       whiteSpace: 'pre-wrap',
                       lineHeight: '1.5',
@@ -1254,24 +1210,22 @@
                   </div>
                 </div>
 
-                <div class="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginTop: '12px' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
-                      class="btn btn-secondary"
-                      style={{ fontSize: '0.82rem', padding: '6px 12px' }}
+                      class="btn-filter-sm"
                       onClick={() => setSystemLogs([`[${new Date().toLocaleTimeString()}] Log cleared.`])}
                     >
                       🗑️ Xóa log
                     </button>
                     <button
-                      class="btn btn-terracotta"
-                      style={{ fontSize: '0.82rem', padding: '6px 14px' }}
+                      class="btn-end-lesson-sm"
                       onClick={() => downloadTextFile(`lingobot_diagnostic_log_${Date.now()}.txt`, systemLogs.join(String.fromCharCode(10)))}
                     >
                       📥 Tải log (.txt)
                     </button>
                   </div>
-                  <button class="btn btn-secondary" onClick={() => setShowLogModal(false)}>
+                  <button class="btn-filter-sm" onClick={() => setShowLogModal(false)}>
                     Đóng
                   </button>
                 </div>
