@@ -422,19 +422,41 @@
         advice: {
           vi: 'Câu dài với nhiều thuật ngữ kinh tế, lấy hơi sâu ở ngắt câu "~できるよう".',
           ja: '複文長文のため、「対応できるよう」の直前でしっかり呼吸を整えるのがポイントです。',
-          mouthTip: '👄 口の形・コツ: 「きゅうそく」「じゅうなんせい」の拗音の連続で口がもつれないよう注意します。'
+          mouthTip: '👄 口の形・コツ: 「き            exampleTrans: isUiVi ? "Thật ra đây là nhạc cụ quan trọng, tôi có thể mượn hộp chuyên dụng được không ạ?" : "（理由を添えた丁寧な依頼例文）"
+          };
         }
-      },
-      {
-        id: 23,
-        category: 'ja-advanced',
-        levelLabel: '🌳 上級',
-        lang: 'ja-JP',
-        text: '一見（いっけん）すると画期的（かっきてき）な提案（ていあん）に見（み）えるが、実現可能性（じつげんかのうせい）の観点（かんてん）から疑問（ぎもん）が残（のこ）る。',
-        phonetic: 'いっけんするとかっきてきなていあんにみえるが、じつげんかのうせいのかんてんからぎもんがのこる。',
-        translation: 'Thoạt nhìn thì có vẻ là một đề xuất mang tính bước ngoặt, nhưng đứng từ góc độ tính khả thi thì vẫn còn nhiều nghi vấn.',
-        advice: {
-          vi: 'Giọng điệu nén lại ở "見えるが", nhấn mạnh cụm từ trừu tượng "実現可能性の観点から".',
+        // Handing over items (e.g. "こちらです", "これです", "はい")
+        else if (trimmed.includes('こちらです') || trimmed.includes('これです')) {
+          return {
+            category: isUiVi ? "Trao đồ tự nhiên / 提示・手渡しの表現" : "自然な手渡し・提示の表現",
+            betterList: [
+              "「はい、こちらでお願いします。」",
+              "「はい、どうぞご覧ください。」"
+            ],
+            explanation: isUiVi ? "Nói 'はい、こちらでお願いします' khi đưa đồ cho nhân viên rất tự nhiên."
+                                 : "「はい、こちらです」も自然で十分完璧な表現です！手渡す際に「こちらでお願いします」や「はい、どうぞ」と添えると、より親切でスムーズなやり取りになります。",
+            usage: isUiVi ? "Mẫu câu: [Vật] + でお願いします."
+                           : "【自然な手渡し】「こちらでお願いします」「はい、どうぞ」が日常会話に最適です。",
+            example: "はい、パスポートと搭乗券です。よろしくお願いします。",
+            exampleTrans: isUiVi ? "Vâng, đây là hộ chiếu và thẻ lên máy bay ạ." : "（手渡す際の自然な例文）"
+          };
+        }
+        // Gratitude & Closing (e.g. "ありがとう", "感謝")
+        else if (trimmed.includes('ありがとう') || trimmed.includes('感謝')) {
+          return {
+            category: isUiVi ? "Cảm ơn tự nhiên / お礼の表現" : "自然なお礼と締めくくりの言葉",
+            betterList: [
+              "「ありがとうございました。よろしくお願いします。」",
+              "「ご対応いただき、ありがとうございました！」"
+            ],
+            explanation: isUiVi ? "Kết hợp 'ありがとうございました' với 'よろしくお願いします' tạo cảm giác rất chu đáo."
+                                 : "「はい、どうもありがとうございました」で十分完璧なお礼です！最後に「よろしくお願いします」と一言添えると、荷物を預ける際のやり取りとして非常に爽やかです。",
+            usage: isUiVi ? "Mẫu câu: ありがとうございました + よろしくお願いします."
+                           : "【自然なお礼】「ありがとうございました。よろしくお願いします」が心地よい会話を作ります。",
+            example: "ご対応ありがとうございました。それでは、よろしくお願いします。",
+            exampleTrans: isUiVi ? "Cảm ơn bạn đã hỗ trợ. Nhờ bạn giúp tôi nhé." : "（やり取りの終わりのお礼例文）"
+          };
+        }n lại ở "見えるが", nhấn mạnh cụm từ trừu tượng "実現可能性の観点から".',
           ja: '「見えるが」で批判的・冷静なトーンに切り替え、「疑問が残る」で簡潔に断定します。',
           mouthTip: '👄 口の形・コツ: 「かっきてき」の促音「っ」の溜めを正確にキープします。'
         }
@@ -608,15 +630,6 @@
                            : "【柔らかい依頼】「〜なので、〜は可能でしょうか？」「〜はお借りできますか？」を活用しましょう。",
             example: "実は大切な楽器なので、専用のケースをお借りすることはできますか？",
             exampleTrans: isUiVi ? "Thật ra đây là nhạc cụ quan trọng, tôi có thể mượn hộp chuyên dụng được không ạ?" : "（理由を添えた丁寧な依頼例文）"
-            betterList: [
-              "「ありがとうございました。よろしくお願いします。」",
-              "「ご対応いただき、ありがとうございました！」"
-            ],
-            explanation: isUiVi ? "Dùng 'Could I please get [món đồ]?' hoặc 'I'd like to buy [món đồ], please' tự nhiên hơn 'I would like to have...'."
-                                 : "郵便局やお店での購入時、\"I would like to have...\" よりも \"Could I please get [商品]?\" や \"I'd like to buy [商品], please.\" がネイティブ間で最も自然で一般的な言い回しです。",
-            usage: "Pattern: Could I please get [Item]? / I'd like to buy [Item], please.",
-            example: "Could I please get three 82-yen stamps and a souvenir postcard?",
-            exampleTrans: isUiVi ? "Cho tôi xin mua 3 con tem 82 yen và 1 bưu thiếp ạ." : "82円切手を3枚と記念絵はがきをいただけますか？"
           };
         }
         // Payment methods & questions (e.g. "wire transfer", "qr code", "credit card", "pay")
