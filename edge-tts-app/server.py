@@ -10,8 +10,7 @@ from flask import Flask, request, send_file, send_from_directory, jsonify
 from flask_cors import CORS
 import edge_tts
 import aiohttp
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
@@ -170,7 +169,7 @@ def chat_endpoint():
             f"If the user asks a question about vocabulary or grammar in {ui_name}, provide a short helpful explanation in {ui_name} followed by a practice question in {target_name}."
         )
 
-        client = genai.Client(api_key=api_key)
+        genai.configure(api_key=api_key)
 
         candidate_models = [
             'gemini-3.6-flash',
@@ -181,34 +180,22 @@ def chat_endpoint():
         used_model = None
         attempt_logs = []
 
-        contents = []
+        sdk_history = []
         for item in history[-6:]:
             sender = item.get('sender', 'user')
             text = item.get('text', '').strip()
             if text and not item.get('type') and not item.get('isError'):
                 role = "user" if sender == "user" else "model"
-                contents.append(types.Content(
-                    role=role,
-                    parts=[types.Part.from_text(text=text)]
-                ))
-        
-        contents.append(types.Content(
-            role="user",
-            parts=[types.Part.from_text(text=user_message)]
-        ))
-
-        config = types.GenerateContentConfig(
-            system_instruction=system_instruction,
-            temperature=0.7
-        )
+                sdk_history.append({"role": role, "parts": [text]})
 
         for m_name in candidate_models:
             try:
-                response = client.models.generate_content(
-                    model=m_name,
-                    contents=contents,
-                    config=config
+                model = genai.GenerativeModel(
+                    model_name=m_name,
+                    system_instruction=system_instruction
                 )
+                chat_session = model.start_chat(history=sdk_history)
+                response = chat_session.send_message(user_message)
                 if response and response.text:
                     reply_text = response.text.strip()
                     used_model = m_name
@@ -216,13 +203,13 @@ def chat_endpoint():
             except Exception as m_err:
                 err_msg = f"{m_name}: {str(m_err)}"
                 attempt_logs.append(err_msg)
-                print(f"[google-genai Try Failed] {err_msg}", flush=True)
+                print(f"[Gemini Model Try Failed] {err_msg}", flush=True)
 
         if reply_text:
-            return jsonify({'reply': reply_text, 'model': used_model, 'source': 'google-genai-sdk'})
+            return jsonify({'reply': reply_text, 'model': used_model, 'source': 'gemini-sdk'})
 
         return jsonify({
-            'error': 'Gemini API connection failed for all candidate models using google-genai SDK.',
+            'error': 'Gemini API connection failed for all candidate models.',
             'log': ' | '.join(attempt_logs),
             'source': 'gemini-error'
         }), 502
@@ -242,5 +229,5 @@ def serve_static(path):
     return send_from_directory('public', 'index.html')
 
 if __name__ == '__main__':
-    print("🚀 Vocalise Edge AI Server starting on http://localhost:5100 (Resilient Edge-TTS)")
+    print("🚀 Vocalise Edge AI Server starting on http://localhost:5100 (google-generativeai SDK)")
     app.run(host='0.0.0.0', port=5100, debug=False)
