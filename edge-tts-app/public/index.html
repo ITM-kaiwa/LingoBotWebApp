@@ -609,110 +609,26 @@
             example: "実は大切な楽器なので、専用のケースをお借りすることはできますか？",
             exampleTrans: isUiVi ? "Thật ra đây là nhạc cụ quan trọng, tôi có thể mượn hộp chuyên dụng được không ạ?" : "（理由を添えた丁寧な依頼例文）"
           };
-        }
-        // Handing over items (e.g. "こちらです", "これです", "はい")
-        else if (trimmed.includes('こちらです') || trimmed.includes('これです')) {
-          return {
-            category: isUiVi ? "Trao đồ tự nhiên / 提示・手渡しの表現" : "自然な手渡し・提示の表現",
-            betterList: [
-              "「はい、こちらでお願いします。」",
-              "「はい、どうぞご覧ください。」"
-            ],
-            explanation: isUiVi ? "Nói 'はい、こちらでお願いします' khi đưa đồ cho nhân viên rất tự nhiên."
-                                 : "「はい、こちらです」も自然で十分完璧な表現です！手渡す際に「こちらでお願いします」や「はい、どうぞ」と添えると、より親切でスムーズなやり取りになります。",
-            usage: isUiVi ? "Mẫu câu: [Vật] + でお願いします."
-                           : "【自然な手渡し】「こちらでお願いします」「はい、どうぞ」が日常会話に最適です。",
-            example: "はい、パスポートと搭乗券です。よろしくお願いします。",
-            exampleTrans: isUiVi ? "Vâng, đây là hộ chiếu và thẻ lên máy bay ạ." : "（手渡す際の自然な例文）"
-          };
-        }
-        // Confirming questions (e.g. "わかりました", "いいですか", "大丈夫")
-        else if (trimmed.includes('わかりました') || trimmed.includes('いいですか') || trimmed.includes('確認')) {
-          return {
-            category: isUiVi ? "Xác nhận tự nhiên / 確認の表現" : "自然な確認・問いかけの丁寧語",
-            betterList: [
-              "「はい、わかりました。これで大丈夫でしょうか？」",
-              "「かしこまりました。こちらで合っていますか？」"
-            ],
-            explanation: isUiVi ? "Hỏi 'これで大丈夫でしょうか？' thay vì 'いいですか' nghe mềm mỏng và lịch sự hơn."
-                                 : "「はい、わかりました。これでいいですか？」も十分自然です！さらに柔らかく確認したい時は「これで大丈夫でしょうか？」や「これで合っていますか？」と尋ねるのもおすすめです。",
-            usage: isUiVi ? "Cấu trúc: [Nội dung] + で大丈夫でしょうか？"
-                           : "【柔らかい確認】「〜で大丈夫でしょうか？」「〜で合っていますか？」を活用しましょう。",
-            example: "はい、わかりました。記入完了しましたが、これで大丈夫でしょうか？",
-            exampleTrans: isUiVi ? "Vâng tôi hiểu rồi. Tôi đã điền xong, thế này đã ổn chưa ạ?" : "（記入後の自然な確認例文）"
-          };
-        }
-        // Gratitude & Closing (e.g. "ありがとう", "感謝")
-        else if (trimmed.includes('ありがとう') || trimmed.includes('感謝')) {
-          return {
-            category: isUiVi ? "Cảm ơn tự nhiên / お礼の表現" : "自然なお礼と締めくくりの言葉",
-            betterList: [
-              "「ありがとうございました。よろしくお願いします。」",
-              "「ご対応いただき、ありがとうございました！」"
-            ],
-            explanation: isUiVi ? "Kết hợp 'ありがとうございました' với 'よろしくお願いします' tạo cảm giác rất chu đáo."
-                                 : "「はい、どうもありがとうございました」で十分完璧なお礼です！最後に「よろしくお願いします」と一言添えると、荷物を預ける際のやり取りとして非常に爽やかです。",
-            usage: isUiVi ? "Mẫu câu: ありがとうございました + よろしくお願いします."
-                           : "【自然なお礼】「ありがとうございました。よろしくお願いします」が心地よい会話を作ります。",
-            example: "ご対応ありがとうございました。それでは、よろしくお願いします。",
-            exampleTrans: isUiVi ? "Cảm ơn bạn đã hỗ trợ. Nhờ bạn giúp tôi nhé." : "（やり取りの終わりのお礼例文）"
-          };
-        }
-        // General natural input
-        else {
-          return {
-            category: isUiVi ? "Giao tiếp tiếng Nhật tự nhiên" : "日常対話の自然なまとめ",
-            betterList: [
-              `「『${trimmed}』ですね。よろしくお願いします。」`,
-              `「『${trimmed}』でお願いします。」`
-            ],
-            explanation: isUiVi ? "Chỉ cần dùng thể 丁寧語 (Desu/Masu) tự nhiên, không cần dồn quá nhiều kính ngữ không cần thiết."
-                                 : "利用客側の立場としては過剰な敬語は不要で、自然な丁寧語（〜です・〜ます調）で十分気持ちが伝わります。語尾に「よろしくお願いします」を添えるとスムーズです。",
-            usage: isUiVi ? "Cấu trúc: [Ý kiến/Yêu cầu] + よろしくお願いします."
-                           : "【自然な丁寧語】〜です・〜ます ＋「よろしくお願いします」の組み合わせで十分です。",
-            example: `はい、${trimmed}。よろしくお願いします。`,
-            exampleTrans: isUiVi ? "Vâng, nhờ bạn giúp ạ." : "（自然な日常会話の例文）"
-          };
-        }
-      }
+    // Voice Model Selector Dropdown Change Handler
+    const handleVoiceChange = (e) => {
+      const newVoice = e.target.value;
+      setCurrentSelectedVoice(newVoice);
 
-      // 2. TARGET LANGUAGE: VIETNAMESE (vi-VN)
-      else if (tLangPrefix === 'vi') {
-        return {
-          category: isUiVi ? "Giao tiếp tiếng Việt chuẩn" : "ベトナム語の自然で丁寧な表現",
-          better: `Dạ, ${trimmed} ạ. Cảm ơn bạn rất nhiều!`,
-          explanation: isUiVi ? "Thêm 'Dạ' ở đầu câu và 'ạ' ở cuối câu thể hiện sự tôn trọng và thân thiện trong tiếng Việt."
-                               : "ベトナム語では文頭に『Dạ』（はい／丁寧な前置き）や文末に『ạ』（丁寧な敬称助詞）を添えることで、一気に丁寧で好印象な表現になります。",
-          usage: isUiVi ? "Cấu trúc: Dạ + [Nội dung] + ạ." : "【ベトナム語の丁寧表現】Dạ + [文章] + ạ.",
-          example: `Dạ vâng ạ, cảm ơn bạn đã hỗ trợ rất nhiệt tình!`,
-          exampleTrans: isUiVi ? "Vâng ạ, cảm ơn nhiệt tình." : "（「はい、丁寧にご対応いただきありがとうございました！」のベトナム語例文）"
+      // Crucial: Clear old audio blob cache on voice model change so next tap fetches freshly generated voice
+      audioBlobCache.current = {};
+      addSystemLog(`🔄 Voice Model Changed to: '${newVoice}' (Cleared Audio Cache)`);
+
+      // Check if audio is currently playing
+      const isAudioPlaying = playingId !== null || (window.speechSynthesis && window.speechSynthesis.speaking);
+      if (isAudioPlaying) {
+        const toastMsg = {
+          id: 'toast-' + Date.now(),
+          sender: 'ai',
+          lang: 'bilingual',
+          type: 'toast_info',
+          text: `ℹ️ 次回（じかい）の再生（さいせい）から選択（せんたく）した音声（おんせい）モデルが適用（てきよう）されます。`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
-      }
-
-      // 3. TARGET LANGUAGE: ENGLISH (en-US) - Contextual Native Phrasing
-      else {
-        // Scenario / Setting setup (e.g. "I want to learn the conversation at the post office")
-        if (lower.includes('learn') || lower.includes('practice') || lower.includes('conversation') || lower.includes('post office') || lower.includes('hotel') || lower.includes('airport')) {
-          return {
-            category: isUiVi ? "Thiết lập tình huống luyện tập" : "会話の目的・シチュエーション提示",
-            betterList: [
-              "\"I'd like to practice a conversation set at the post office, please.\"",
-              "\"Could we roleplay a scenario at the post office?\""
-            ],
-            explanation: isUiVi ? "Dùng 'I'd like to practice...' hoặc 'Could we roleplay...?' tự nhiên hơn hẳn 'I want to learn...'."
-                                 : "「I want to...」よりも「I'd like to practice...（〜での会話を練習したいです）」や「Could we roleplay a scenario at...?（〜でのロールプレイをお願いできますか？）」と伝えると、より自然で洗練された英語になります。",
-            usage: "Pattern: I'd like to practice a conversation at [Location].",
-            example: "I'd like to practice buying stamps and mailing letters at the post office today.",
-            exampleTrans: isUiVi ? "Hôm nay tôi muốn luyện tập mua tem và gửi thư ở bưu điện." : "（郵便局での会話練習をリクエストする例文）"
-          };
-        }
-        // Purchasing stamps, postcards, buying items (e.g. "stamp", "postcard", "buy", "have")
-        else if (lower.includes('stamp') || lower.includes('postcard') || lower.includes('buy') || lower.includes('have') || lower.includes('yen')) {
-          return {
-            category: isUiVi ? "Mua hàng & Gọi món (Polite Purchasing)" : "商品購入・切手リクエストの丁寧な依頼",
-            betterList: [
-              "\"Could I please get an 82-yen stamp?\"",
-              "\"I'd like to buy three commemorative postcards, please.\""
             ],
             explanation: isUiVi ? "Dùng 'Could I please get [món đồ]?' hoặc 'I'd like to buy [món đồ], please' tự nhiên hơn 'I would like to have...'."
                                  : "郵便局やお店での購入時、\"I would like to have...\" よりも \"Could I please get [商品]?\" や \"I'd like to buy [商品], please.\" がネイティブ間で最も自然で一般的な言い回しです。",
@@ -873,6 +789,17 @@
       const [playingId, setPlayingId] = useState(null);
       const [loadingId, setLoadingId] = useState(null);
       const [showPdfModal, setShowPdfModal] = useState(false);
+      const [showLogModal, setShowLogModal] = useState(false);
+      const [systemLogs, setSystemLogs] = useState([
+        `[${new Date().toLocaleTimeString()}] 🚀 Diagnostic Logger Initialized. Click robot icon anytime to view/download logs.`
+      ]);
+
+      const addSystemLog = (msg) => {
+        const timeStr = new Date().toLocaleTimeString();
+        const line = `[${timeStr}] ${msg}`;
+        console.log(line);
+        setSystemLogs(prev => [...prev.slice(-100), line]);
+      };
 
       // Voice Model Selector Dropdown Change Handler
       const handleVoiceChange = (e) => {
@@ -1561,7 +1488,14 @@
           {/* Compact Single-Row Header */}
           <header class="glass-panel app-header-compact">
             <div class="brand-section-compact">
-              <div class="brand-logo-sm">🤖</div>
+              <div
+                class="brand-logo-sm"
+                style={{ cursor: 'pointer', userSelect: 'none', transition: 'transform 0.15s ease' }}
+                onClick={() => setShowLogModal(true)}
+                title="🤖 クリックしてTTS診断ログを表示・ダウンロード / Click to View Diagnostic Logs"
+              >
+                🤖
+              </div>
               <div>
                 <div class="brand-title-sm">LingoBotWebApp</div>
                 <div class="brand-subtitle-sm">{dict.subtitle}</div>
@@ -2078,6 +2012,76 @@
                 <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-warm)', background: '#fdfbf7', display: 'flex', justify: 'flex-end', gap: '12px' }}>
                   <button class="btn btn-secondary" onClick={() => window.print()}>{dict.print}</button>
                   <button class="btn btn-terracotta" onClick={handleExportPdf}>{dict.downloadPdf}</button>
+                </div>
+              </div>
+            </div>
+          {/* SYSTEM DIAGNOSTIC LOGS MODAL */}
+          {showLogModal && (
+            <div class="modal-overlay" onClick={() => setShowLogModal(false)}>
+              <div class="modal-card glass-panel" style={{ maxWidth: '680px', width: '92%' }} onClick={e => e.stopPropagation()}>
+                <div class="modal-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '1.6rem' }}>🤖</span>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--accent-terracotta-dark)' }}>
+                        📜 システム・TTS診断ログ (Diagnostic Logs)
+                      </h3>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        音声生成・API通信・モデル切り替えの動作履歴
+                      </p>
+                    </div>
+                  </div>
+                  <button class="btn-close-sm" onClick={() => setShowLogModal(false)}>✕</button>
+                </div>
+
+                <div class="modal-body" style={{ padding: '16px 0' }}>
+                  <div
+                    style={{
+                      background: '#1e1e2e',
+                      color: '#a6adc8',
+                      fontFamily: 'Consolas, Monaco, monospace',
+                      fontSize: '0.82rem',
+                      padding: '14px',
+                      borderRadius: '8px',
+                      maxHeight: '340px',
+                      overflowY: 'auto',
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: '1.5',
+                      border: '1px solid #313244'
+                    }}
+                  >
+                    {systemLogs.length === 0 ? (
+                      <div style={{ color: '#6c7086', textAlign: 'center' }}>ログメッセージはありません。</div>
+                    ) : (
+                      systemLogs.map((log, idx) => (
+                        <div key={idx} style={{ color: log.includes('Error') || log.includes('Failed') || log.includes('❌') ? '#f38ba8' : log.includes('Success') || log.includes('▶️') || log.includes('✅') ? '#a6e3a1' : '#cdd6f4', marginBottom: '2px' }}>
+                          {log}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div class="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      class="btn btn-secondary"
+                      style={{ fontSize: '0.82rem', padding: '6px 12px' }}
+                      onClick={() => setSystemLogs([`[${new Date().toLocaleTimeString()}] Log cleared.`])}
+                    >
+                      🗑️ ログをクリア
+                    </button>
+                    <button
+                      class="btn btn-terracotta"
+                      style={{ fontSize: '0.82rem', padding: '6px 14px' }}
+                      onClick={() => downloadTextFile(`lingobot_diagnostic_log_${Date.now()}.txt`, systemLogs.join('\n'))}
+                    >
+                      📥 ログをダウンロード (.txt)
+                    </button>
+                  </div>
+                  <button class="btn btn-secondary" onClick={() => setShowLogModal(false)}>
+                    閉じる
+                  </button>
                 </div>
               </div>
             </div>
