@@ -1415,8 +1415,7 @@
                     <button
                       class="btn btn-terracotta"
                       style={{ fontSize: '0.82rem', padding: '6px 14px' }}
-                      onClick={() => downloadTextFile(`lingobot_diagnostic_log_${Date.now()}.txt`, systemLogs.join('
-'))}
+                      onClick={() => downloadTextFile(`lingobot_diagnostic_log_${Date.now()}.txt`, systemLogs.join(String.fromCharCode(10)))}
                     >
                       📥 ログをダウンロード (.txt)
                     </button>
