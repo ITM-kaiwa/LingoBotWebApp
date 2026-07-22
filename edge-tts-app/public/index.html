@@ -1,434 +1,130 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LingoBotWebApp</title>
-
-  <!-- Stylesheets (Soft Warm Beige Theme) -->
-  <link rel="stylesheet" href="styles/main.css" />
-  <link rel="stylesheet" href="styles/components.css" />
-
-  <!-- React & Babel Standalone CDN -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingoBotWebApp - AI Voice Language Partner</title>
+  
+  <!-- Fonts & React CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+  
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <!-- html2pdf.js for Lesson Summary PDF Export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/components.css">
 </head>
 <body>
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect, useRef, useMemo } = React;
 
-    // Language Metadata
+    // --- LANGUAGE CONFIG & DICTIONARIES ---
     const LANG_META = {
-      'ja-JP': { code: 'ja-JP', name: '日本語', flag: '🇯🇵', voice: 'ja-JP-NanamiNeural' },
-      'vi-VN': { code: 'vi-VN', name: 'Tiếng Việt', flag: '🇻🇳', voice: 'vi-VN-HoaiMyNeural' },
-      'en-US': { code: 'en-US', name: 'English', flag: '🇺🇸', voice: 'en-US-AriaNeural' },
-      'bilingual': { code: 'bilingual', name: 'Tiếng Việt / 日本語', flag: '🇻🇳 🇯🇵', voice: 'ja-JP-NanamiNeural' }
+      'ja-JP': { name: '日本語', flag: '🇯🇵', defaultTts: 'ja-JP' },
+      'vi-VN': { name: 'Tiếng Việt', flag: '🇻🇳', defaultTts: 'vi-VN' },
+      'en-US': { name: 'English', flag: '🇺🇸', defaultTts: 'en-US' }
     };
 
-    // UI Dictionaries
     const UI_DICT = {
-      'bilingual': {
-        subtitle: 'Luyện tập giao tiếp AI (Tự học)',
-        playVoice: '🔊 Nghe',
-        stopVoice: '⏹ Dừng',
-        downloadMp3: '⬇️ Tải MP3',
-        endLesson: '🛑 Kết thúc',
-        chatTab: '💬 Giao tiếp',
-        shadowingTab: '🎯 Phát âm',
-        send: '✈️ Gửi',
-        micOn: '🎙️ Nói',
-        micOff: '🛑 Dừng',
-        inputPlaceholder: 'Nhập tin nhắn hoặc nói bằng micro...',
-        generating: '⏳ Đang tạo...',
-        uiLangLabel: 'Sử dụng',
-        targetLangLabel: 'Mục tiêu',
-        pdfTitle: 'Báo cáo tóm tắt bài học',
-        print: '🖨️ In',
-        downloadPdf: '📥 Tải PDF'
-      },
       'ja-JP': {
-        subtitle: 'AIとの会話練習（自習用）：ネイティブの音声でリアルタイム返答',
-        playVoice: '🔊 音声を再生',
-        stopVoice: '⏹ 停止',
-        downloadMp3: '⬇️ MP3をダウンロード',
-        endLesson: '🛑 レッスン終了',
-        chatTab: '💬 相互会話',
-        shadowingTab: '🎯 発音分析',
-        send: '✈️ 送信',
-        micOn: '🎙️ マイク音声入力',
-        micOff: '🛑 停止',
-        inputPlaceholder: 'メッセージを入力またはマイクで話しかける...',
-        generating: '⏳ 音声合成中...',
-        uiLangLabel: '使用言語',
-        targetLangLabel: '目標言語',
-        pdfTitle: 'Bài học tóm tắt / レッスン要約レポート',
+        title: 'LingoBotWebApp',
+        subtitle: 'AI対話・発音シャドーイング練習パートナー',
+        chatTab: '💬 AI対話会話',
+        shadowingTab: '🎙️ シャドーイング練習',
+        uiLangLabel: 'UI言語',
+        targetLangLabel: '学習言語',
+        startPractice: '練習を始める',
+        endLesson: '📄 レッスン終了・PDF出力',
+        resetChat: '🔄 リセット',
+        placeholder: 'メッセージを入力... (例: 空港の荷物預けの場面で話しましょう)',
+        thinking: 'LingoBot が返答を考えています...',
         print: '🖨️ 印刷',
         downloadPdf: '📥 PDFダウンロード'
       },
       'vi-VN': {
-        subtitle: 'Luyện tập giao tiếp AI (Tự học): Phản hồi thời gian thực với giọng đọc native',
-        playVoice: '🔊 Phát âm thanh',
-        stopVoice: '⏹ Dừng',
-        downloadMp3: '⬇️ Tải xuống MP3',
-        endLesson: '🛑 Kết thúc bài học',
+        title: 'LingoBotWebApp',
+        subtitle: 'Đối thoại AI & Luyện phát âm Shadowing',
         chatTab: '💬 Trò chuyện AI',
-        shadowingTab: '🎯 Luyện phát âm',
-        send: '✈️ Gửi',
-        micOn: '🎙️ Nói',
-        micOff: '🛑 Dừng',
-        inputPlaceholder: 'Nhập tin nhắn hoặc nhấn micro để nói...',
-        generating: '⏳ Đang tổng hợp...',
-        uiLangLabel: 'Ngôn ngữ giao diện',
-        targetLangLabel: 'Ngôn ngữ mục tiêu',
-        pdfTitle: 'Báo cáo tóm tắt bài học / Lesson Summary Report',
-        print: '🖨️ In',
+        shadowingTab: '🎙️ Luyện Shadowing',
+        uiLangLabel: 'Giao diện',
+        targetLangLabel: 'Học tập',
+        startPractice: 'Bắt đầu',
+        endLesson: '📄 Báo cáo PDF',
+        resetChat: '🔄 Đặt lại',
+        placeholder: 'Nhập tin nhắn... (Ví dụ: Hãy đóng vai ở quầy gửi hành lý ở sân bay)',
+        thinking: 'LingoBot đang suy nghĩ câu trả lời...',
+        print: '🖨️ In báo cáo',
         downloadPdf: '📥 Tải PDF'
       },
       'en-US': {
-        subtitle: 'AI Conversation Practice (Self-study): Real-time native voice audio response',
-        playVoice: '🔊 Play Voice',
-        stopVoice: '⏹ Stop',
-        downloadMp3: '⬇️ Download MP3',
-        endLesson: '🛑 End Lesson',
+        title: 'LingoBotWebApp',
+        subtitle: 'AI Conversation & Shadowing Practice',
         chatTab: '💬 AI Conversation',
-        shadowingTab: '🎯 Pronunciation',
-        send: '✈️ Send',
-        micOn: '🎙️ Speak',
-        micOff: '🛑 Stop',
-        inputPlaceholder: 'Type a message or click mic to talk...',
-        generating: '⏳ Generating audio...',
-        uiLangLabel: 'UI Language',
-        targetLangLabel: 'Target Language',
-        pdfTitle: 'Lesson Summary Report',
+        shadowingTab: '🎙️ Shadowing Practice',
+        uiLangLabel: 'UI Lang',
+        targetLangLabel: 'Target Lang',
+        startPractice: 'Start',
+        endLesson: '📄 Report PDF',
+        resetChat: '🔄 Reset',
+        placeholder: 'Type a message... (e.g. Let\'s roleplay checking bags at the airport)',
+        thinking: 'LingoBot is thinking...',
         print: '🖨️ Print',
         downloadPdf: '📥 Download PDF'
       }
     };
 
     const SAMPLE_SENTENCES = [
-      // --- 1. 初級後半レベル (N4-N3相当 / 10文) ---
       {
         id: 1,
         category: 'ja-beginner',
-        levelLabel: '🌱 初級後半',
+        levelLabel: '🌱 初級',
         lang: 'ja-JP',
-        text: '雨（あめ）が降（ふ）ったら、タクシーで行（い）きましょう。',
-        phonetic: 'あめがふったら、たくしーでいきましょう。',
-        translation: 'Nếu trời mưa, chúng ta hãy đi bằng taxi.',
+        text: 'すみません、荷物（にもつ）を預（あず）けたいのですが。',
+        phonetic: 'すみません、にもつをあずけたいのですが。',
+        translation: 'Xin lỗi, tôi muốn gửi hành lý ạ.',
         advice: {
-          vi: 'Chú ý nối âm tự nhiên ở cụm "降ったら" (futtara) và hạ giọng nhẹ ở cuối câu "行きましょう".',
-          ja: '「降ったら」の促音（小「っ」）のリズムと、「行きましょう」の丁寧な下降イントネーションに注意しましょう。',
-          mouthTip: '👄 口の形・コツ: 「ふったら」の「っ」では息を短く止め、「いきましょう」は口を大きめに動かします。'
+          vi: 'Chú ý phát âm rõ cụm từ "荷物（にもつ）" và hạ giọng tự nhiên ở đuôi câu "〜ですが".',
+          ja: '「荷物（にもつ）」をハッキリと発音し、「〜ですが」で柔らかく語尾を濁すのが自然な日本語です。',
+          mouthTip: '👄 口の形・コツ: 「すみません」の最後は唇をしっかり閉じて「ん」を発音します。'
         }
       },
       {
         id: 2,
-        category: 'ja-beginner',
-        levelLabel: '🌱 初級後半',
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
         lang: 'ja-JP',
-        text: 'パスポートを失（な）くしてしまって、とても困（こま）りました。',
-        phonetic: 'ぱすぽーとをなくしてしまって、とてもこまりました。',
-        translation: 'Tôi đã lỡ làm mất hộ chiếu nên rất rắc rối.',
+        text: '壊（こわ）れやすい物（もの）が入（はい）っているので、取扱（とりあつか）いに注意（ちゅうい）していただけますか？',
+        phonetic: 'こわれやすいものがはいっているので、とりあつかいにちゅういしていただけますか？',
+        translation: 'Vì bên trong có đồ dễ vỡ, nhờ bạn chú ý cẩn thận khi vận chuyển được không ạ?',
         advice: {
-          vi: 'Phát âm rõ cụm "~てしまう" (lỡ làm gì đó) thể hiện sự tiếc nuối, giữ nhịp mượt mà.',
-          ja: '「〜てしまって」の残念なニュアンスを込めつつ、「困りました」へ自然に繋げます。',
-          mouthTip: '👄 口の形・コツ: 「パスポート」の「ポー」の長音をしっかり伸ばし、「しまって」の促音で息を止めます。'
+          vi: 'Nhấn giọng nhẹ ở cụm "壊れやすい物", và lên giọng nhẹ ở câu hỏi "いただけますか？".',
+          ja: '「壊れやすい物」を少し強調し、「いただけますか？」の語尾を少し持ち上げると丁寧な依頼になります。',
+          mouthTip: '👄 口の形・コツ: 「とりあつかい」は「と・り・あ・つ・か・い」と1音ずつ滑らかに繋げます。'
         }
       },
       {
         id: 3,
-        category: 'ja-beginner',
-        levelLabel: '🌱 初級後半',
-        lang: 'ja-JP',
-        text: '先輩（せんぱい）に引（ひ）っ越（こ）しを手伝（てつだ）ってもらいました。',
-        phonetic: 'せんぱいにひっこしをてつだってもらいました。',
-        translation: 'Tôi đã được tiền bối giúp đỡ chuyển nhà.',
+        category: 'en-business',
+        levelLabel: '✈️ 英語',
+        lang: 'en-US',
+        text: 'I would like to check in my luggage, please.',
+        phonetic: 'アイ ワドゥ ライク トゥー チェック イン マイ ラゲッジ プリーズ',
+        translation: 'Tôi muốn làm thủ tục gửi hành lý ạ.',
         advice: {
-          vi: 'Chú ý cấu trúc cho nhận "~てもらいました", phát âm rõ trợ từ "に" chỉ người giúp đỡ.',
-          ja: '「先輩に」の助詞「に」を明瞭に発音し、「手伝ってもらいました」をスムーズに唱えます。',
-          mouthTip: '👄 口の形・コツ: 「ひっこし」と「てつだって」で連続する促音のリズムを意識しましょう。'
-        }
-      },
-      {
-        id: 4,
-        category: 'ja-beginner',
-        levelLabel: '🌱 初級後半',
-        lang: 'ja-JP',
-        text: 'もっと早（はや）く連絡（れんらく）してくれれば良（よ）かったです。',
-        phonetic: 'もっとはやくれんらくしてくれればよかったです。',
-        translation: 'Giá mà bạn liên lạc sớm hơn thì tốt biết mấy.',
-        advice: {
-          vi: 'Dùng thể điều kiện "~ければ良かったです" thể hiện sự tiếc nuối, hạ ngữ điệu ở cuối câu.',
-          ja: '仮定形「〜くれれば」から「良かったです」への語尾のニュアンスに注意します。',
-          mouthTip: '👄 口の形・コツ: 「れんらく」の「ん」は舌の後ろを上顎につけて発声します。'
-        }
-      },
-      {
-        id: 5,
-        category: 'ja-beginner',
-        levelLabel: '🌱 初級後半',
-        lang: 'ja-JP',
-        text: 'この服（ふく）は安（やす）くても、質（しつ）があまり良（よ）くありません。',
-        phonetic: 'このふくはやすぐても、しつがあまりよくありません。',
-        translation: 'Bộ quần áo này dù rẻ nhưng chất lượng không tốt lắm.',
-        advice: {
-          vi: 'Ngắt nhịp nhẹ sau "安くても" (dù rẻ), phát âm câu phủ định "良くありません" rõ ràng.',
-          ja: '逆説「安くても」の直後で少し息を整え、「良くありません」へ繋げます。',
-          mouthTip: '👄 口の形・コツ: 「しつ」の「つ」は歯の間から息を吹き出すように発音します。'
-        }
-      },
-      {
-        id: 6,
-        category: 'ja-beginner',
-        levelLabel: '🌱 初級後半',
-        lang: 'ja-JP',
-        text: '後（うし）ろの人（ひと）に足（あし）を踏（ふ）まれて痛（いた）かったです。',
-        phonetic: 'うしろのひとにあしをふまれていたかったです。',
-        translation: 'Tôi bị người phía sau giẫm vào chân nên rất đau.',
-        advice: {
-          vi: 'Thể bị động "踏まれて" (bị giẫm), chú ý nhấn trọng âm nhẹ ở từ "痛かったです".',
-          ja: '受身形「踏まれて」を正確に発音し、感情を込めて「痛かったです」と結びます。',
-          mouthTip: '👄 口の形・コツ: 「あしをふまれて」は音をつなげて流れるように発音します。'
-        }
-      },
-      {
-        id: 7,
-        category: 'ja-beginner',
-        levelLabel: '🌱 初級後半',
-        lang: 'ja-JP',
-        text: '部長（ぶちょう）は私（わたし）に新（あたら）しいプロジェクトを担当（たんとう）させました。',
-        phonetic: 'ぶちょうはわたしにあたらしいぷろじぇくとをたんとうさせました。',
-        translation: 'Trưởng phòng đã giao cho tôi đảm nhận dự án mới.',
-        advice: {
-          vi: 'Thể sai khiến "担当させました" (giao đảm nhận), phát âm tách biệt "担当" và "させました".',
-          ja: '使役形「担当させました」の音節を崩さず丁寧に発音します。',
-          mouthTip: '👄 口の形・コツ: 「プロジェクト」の外来音「ジェ」は唇を少し丸めて発音します。'
-        }
-      },
-      {
-        id: 8,
-        category: 'ja-beginner',
-        levelLabel: '🌱 初級後半',
-        lang: 'ja-JP',
-        text: '会議（かいぎ）が終わったら、すぐにメールで報告（ほうこく）してください。',
-        phonetic: 'かいぎがおわったら、すぐにめーるでほうこくしてください。',
-        translation: 'Khi cuộc họp kết thúc, hãy báo cáo ngay qua email.',
-        advice: {
-          vi: 'Mẫu câu chỉ thị lịch sự "~てください", ngắt nhịp nhẹ sau "終わったら".',
-          ja: '「終わったら」の後の読点で一息置き、「報告してください」をはっきり伝えます。',
-          mouthTip: '👄 口の形・コツ: 「ほうこく」の長音（ほう）と促音（こく）を正確にコントロールします。'
-        }
-      },
-      {
-        id: 9,
-        category: 'ja-beginner',
-        levelLabel: '🌱 初級後半',
-        lang: 'ja-JP',
-        text: '風邪（かぜ）を引（ひ）かないように、温（あたた）かい服（ふく）を着（き）てください。',
-        phonetic: 'かぜをひかないように、あたたかいふくをきてください。',
-        translation: 'Để không bị cảm lạnh, bạn hãy mặc áo ấm nhé.',
-        advice: {
-          vi: 'Mẫu câu mục đích "~ように", phát âm mềm mại mang tính khuyên bảo quan tâm.',
-          ja: '「〜ように」の気遣いのニュアンスを大切にし、「温かい服を」をなめらかに唱えます。',
-          mouthTip: '👄 口の形・コツ: 「あたたかい」の「た」の連音で口が固くならないよう注意します。'
-        }
-      },
-      {
-        id: 10,
-        category: 'ja-beginner',
-        levelLabel: '🌱 初級後半',
-        lang: 'ja-JP',
-        text: '日本（にほん）へ行（い）く前（まえ）に、ひらがなとカタカナを覚（おぼ）えておきます。',
-        phonetic: 'にほんへいくまえに、ひらがなとかたかなをおぼえておきます。',
-        translation: 'Trước khi đi Nhật, tôi sẽ học thuộc Hiragana và Katakana.',
-        advice: {
-          vi: 'Cấu trúc chuẩn bị trước "~ておく", phát âm mượt cụm "ひらがなとカタカナ".',
-          ja: '「〜前に」で一度区切り、「覚えておきます」の準備の意図を込めて発音します。',
-          mouthTip: '👄 口の形・コツ: 「にほんへ」の助詞「へ」は「え」と発音します。'
-        }
-      },
-
-      // --- 2. 中級レベル (CEFR B1-B2 / N3-N2相当 / 10文) ---
-      {
-        id: 11,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: 'お忙（いそが）しいところ恐縮（きょうしゅく）ですが、確認（かくにん）していただけますでしょうか。',
-        phonetic: 'おいそがしいところきょうしゅくですが、かくにんしていただけますでしょうか。',
-        translation: 'Tôi xin lỗi vì đã làm phiền lúc bạn bận, nhưng bạn có thể kiểm tra giúp tôi được không?',
-        advice: {
-          vi: 'Mẫu câu kính ngữ doanh nghiệp chuẩn, giọng điệu hạ nhẹ ở "恐縮ですが" thể hiện sự khiêm tốn.',
-          ja: 'ビジネス敬語の定番。「恐縮ですが」で語尾を少し和らげ、丁寧な疑問形にします。',
-          mouthTip: '👄 口の形・コツ: 「きょうしゅく」の拗音「きょ」「しゅ」は息を鼻から抜かずに発声します。'
-        }
-      },
-      {
-        id: 12,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: 'プロジェクトの進捗状況（しんちょくじょうきょう）に応（おう）じて、スケジュールを調整（ちょうせい）する予定（よてい）です。',
-        phonetic: 'ぷろじぇくとのしんちょくじょうきょうにおうじて、すけじゅーるをちょうせいするよていです。',
-        translation: 'Tùy thuộc vào tiến độ của dự án, chúng tôi dự định sẽ điều chỉnh lịch trình.',
-        advice: {
-          vi: 'Cụm từ "進捗状況に応じて" ghép nối phức tạp, chú ý không ngắt âm giữa "進捗" và "状況".',
-          ja: '熟語連号「進捗状況」のリズムを一定にし、「応じて」で一呼吸置きます。',
-          mouthTip: '👄 口の形・コツ: 「しんちょく」の促音「っ」と「じょうきょう」の拗音を正確に意識します。'
-        }
-      },
-      {
-        id: 13,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: '新商品（しんしょうひん）の開発（かいはつ）に伴（ともな）い、市場調査（しじょうちょうさ）をやり直（なお）すことになりました。',
-        phonetic: 'しんしょうひんのかいはつにともない、しじょうちょうさをやりなおすことになりました。',
-        translation: 'Cùng với việc phát triển sản phẩm mới, chúng tôi đã quyết định làm lại nghiên cứu thị trường.',
-        advice: {
-          vi: 'Mẫu cấu trúc "~に伴い" (cùng với), đọc rõ cụm "やり直すことになりました".',
-          ja: '「〜に伴い」で文節の繋がりを意識し、決定事項の語尾「〜ことになりました」を落ち着いて発音します。',
-          mouthTip: '👄 口の形・コツ: 「しんしょうひん」の「ん」音を連続して滑らかに発音します。'
-        }
-      },
-      {
-        id: 14,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: '予期（よき）せぬトラブルが発生（はっせい）したため、対応（たいおう）に追（お）われています。',
-        phonetic: 'よきせぬとらぶるがはっせいしたため、たいおうにおわれています。',
-        translation: 'Do sự cố bất ngờ xảy ra nên chúng tôi đang cuống cuồng xử lý.',
-        advice: {
-          vi: 'Cụm quán ngữ "対応に追われています", phát âm rõ "予期せぬ" (ngoài dự kiến).',
-          ja: '「予期せぬトラブル」をひとかたまりで捉え、「追われています」で受身の緊迫感を表します。',
-          mouthTip: '👄 口の形・コツ: 「はっせい」の促音と「たいおう」の母音（あ・い・お・う）を正確に口を開きます。'
-        }
-      },
-      {
-        id: 15,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: 'お客様（きゃくさま）からのご要望（ようぼう）には、できる限（かぎ）り柔軟（じゅうなん）に対応（たいおう）いたします。',
-        phonetic: 'おきゃくさまからのごようぼうには、できるかぎりじゅうなんにたいおういたします。',
-        translation: 'Đối với yêu cầu của khách hàng, chúng tôi sẽ linh hoạt đáp ứng trong khả năng có thể.',
-        advice: {
-          vi: 'Kính ngữ phục vụ khách hàng "対応いたします", phát âm rõ từ "柔軟に" (linh hoạt).',
-          ja: '謙譲表現「いたします」を含み、お客様第一の姿勢を丁寧なトーンで表現します。',
-          mouthTip: '👄 口の形・コツ: 「じゅうなん」の「じゅ」は口唇を突き出さず自然に横に開きます。'
-        }
-      },
-      {
-        id: 16,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: '今回（こんかい）の失敗（しっぱい）を教訓（きょうくん）にして、次回（じかい）は万全（ばんぜん）の態勢（たいせい）で臨（のぞ）みます。',
-        phonetic: 'こんかいのしっぱいをきょうくんにして、じかいはばんぜんのたいせいでぞみます。',
-        translation: 'Rút kinh nghiệm từ thất bại lần này, lần tới chúng tôi sẽ chuẩn bị thật chu đáo.',
-        advice: {
-          vi: 'Các từ Hán Việt cao cấp như "教訓", "万全", "態勢", chú ý độ dai của âm "ん".',
-          ja: '「教訓にして」の後にポーズを置き、「万全の態勢で臨みます」の決意を込めます。',
-          mouthTip: '👄 口の形・コツ: 「しっぱい」の「っ」と「ぱい」の破裂音をしっかり弾ませます。'
-        }
-      },
-      {
-        id: 17,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: '専門家（せんもんか）のアドバイスに従（したが）って、作業（さぎょう）の手順（てじゅん）を見直（みなお）しました。',
-        phonetic: 'せんもんかのあどばいすにしたがって、さぎょうのてじゅんをみなおしました。',
-        translation: 'Theo lời khuyên của chuyên gia, chúng tôi đã xem xét lại quy trình làm việc.',
-        advice: {
-          vi: 'Mẫu câu "~に従って" (theo như), chú ý phát âm từ mượn "アドバイス".',
-          ja: '「〜に従って」で前提を指し、「作業の手順を見直しました」へすっきりと繋げます。',
-          mouthTip: '👄 口の形・コツ: 「さぎょう」の「ぎょ」と「てじゅん」の「じゅ」の濁音を明瞭にします。'
-        }
-      },
-      {
-        id: 18,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: 'たとえ時間（じかん）がかかったとしても、最後（さいご）までやり抜（ぬ）くつもりです。',
-        phonetic: 'たとえじかんがかかったとしても、さいごまでやりぬくつもりです。',
-        translation: 'Cho dù có mất thời gian đi nữa, tôi vẫn dự định sẽ làm đến cùng.',
-        advice: {
-          vi: 'Mẫu câu giả định "たとえ〜としても", nhấn mạnh ở động từ phức hợp "やり抜く".',
-          ja: '「たとえ〜としても」の強く固い意志を込め、「やり抜くつもりです」をしっかり言い切ります。',
-          mouthTip: '👄 口の形・コツ: 「やりぬく」の「ぬ」は息を鼻に抜かずに口の奥で発音します。'
-        }
-      },
-      {
-        id: 19,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: '予備知識（よびちしき）がないまま会議（かいぎ）に参加（さんか）しても、議論（ぎろん）についていけません。',
-        phonetic: 'よびちしきがないままかいぎにさんかしても、ぎろんについていけません。',
-        translation: 'Dù có tham gia cuộc họp mà không có kiến thức nền tảng thì cũng không thể theo kịp cuộc thảo luận.',
-        advice: {
-          vi: 'Cụm "~ないまま" và thể khả năng phủ định "ついていけません", ngắt giọng hợp lý.',
-          ja: '「〜ないまま」で条件の不足を示し、「ついていけません」を感情を抑えて述べます。',
-          mouthTip: '👄 口の形・コツ: 「よびちしき」の「ちしき」で無声化（息だけの発音）に注意します。'
-        }
-      },
-      {
-        id: 20,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: 'この地域（ちいき）は交通（こうつう）の便（べん）が良（よ）く、住（す）みやすい環境（かんきょう）が整（ととの）っています。',
-        phonetic: 'このちいきはこうつうのべんがよく、すみやすいかんきょうがととのっています。',
-        translation: 'Khu vực này giao thuận tiện và có môi trường sống rất tốt.',
-        advice: {
-          vi: 'Phát âm mượt mà các từ Hán Việt "交通の便", "環境", "整っています".',
-          ja: '「交通の便が良い」の並列関係を整え、「整っています」で爽やかに締めくくります。',
-          mouthTip: '👄 口の形・コツ: 「こうつう」の長音（こう・つう）を二音節分しっかり伸ばします。'
-        }
-      },
-
-      // --- 3. 上級レベル (CEFR C1-C2 / N1-超N1相当 / 10文) ---
-      {
-        id: 21,
-        category: 'ja-advanced',
-        levelLabel: '🌳 上級',
-        lang: 'ja-JP',
-        text: '既存（きそん）の枠組（わくぐ）みにとらわれることなく、革新的（かくしんてき）なアイデアを生（う）み出（だ）すことが求（もと）められています。',
-        phonetic: 'きそんのわくぐみにとらわれることなく、かくしんてきないであをうみだすことがもとめられています。',
-        translation: 'Chúng ta được yêu cầu phải tạo ra những ý tưởng đột phá mà không bị gò bó bởi các khuôn mẫu có sẵn.',
-        advice: {
-          vi: 'Văn phong trang trọng, ngắt nhịp tinh tế ở "とらわれることなく" và "生み出すことが".',
-          ja: '「〜にとらわれることなく」の固い書面語のリズムを崩さず、流暢な韻律（プロソディ）で発音します。',
-          mouthTip: '👄 口の形・コツ: 「わくぐみ」の「ぐみ」は濁音を喉の奥から響かせて発声します。'
-        }
-      },
-      {
-        id: 22,
-        category: 'ja-advanced',
-        levelLabel: '🌳 上級',
-        lang: 'ja-JP',
-        text: '市場（しじょう）の急速（きゅうそく）な変化（へんか）に即座（そくざ）に対応（たいおう）できるよう、組織全体（そしきぜんたい）の柔軟性（じゅうなんせい）を高（たか）める必要（ひつよう）があります。',
-        phonetic: 'しじょうのきゅうそくなへんかにそくざにたいおうできるよう、そしきぜんたいのじゅうなんせいをたかめるひつようがあります。',
-        translation: 'Cần phải nâng cao tính linh hoạt của toàn bộ tổ chức để có thể ứng phó tức thì với những thay đổi nhanh chóng của thị trường.',
-        advice: {
-          vi: 'Câu dài với nhiều thuật ngữ kinh tế, lấy hơi sâu ở ngắt câu "~できるよう".',
-          ja: '複文長文のため、「対応できるよう」の直前でしっかり呼吸を整えるのがポイントです。',
-          mouthTip: '👄 口の形・コツ: 口を大きく開けてハッキリ発音します。'
+          vi: 'Nối âm "check in" thành /tʃekɪn/, giữ âm /d/ nhẹ ở "would like".',
+          ja: '「check in」のリンキング（チェックイン）を意識し、語尾の「please」を添えて丁寧に。',
+          mouthTip: '👄 口の形・コツ: "luggage" の /gɪdʒ/ は舌の奥を上あごにつけて破裂させます。'
         }
       }
     ];
 
-    // --- CONTEXT ADVICE GENERATOR ---
-        // --- HELPER COMPONENT FOR FURIGANA RENDERING ---
+    // --- HELPER COMPONENT FOR FURIGANA RENDERING ---
     const FuriganaText = ({ text }) => {
       if (!text) return null;
       const regex = /([\u4E00-\u9FFF\u3005]+)\s*[\（\(]([\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+)[\）\)]/g;
@@ -464,6 +160,7 @@
       );
     };
 
+    // --- CONTEXT ADVICE GENERATOR ---
     function generateContextAdvice(userInput, uiLang, targetLang) {
       if (!userInput) return null;
       const trimmed = userInput.trim();
@@ -496,19 +193,21 @@
       }
     }
 
+    // --- MAIN APP COMPONENT ---
     function App() {
-      // Onboarding & Language State
-      const [onboardingStep, setOnboardingStep] = useState('api_key'); // 'api_key' | 'ui_lang' | 'target_lang' | 'complete'
-      const [uiLang, setUiLang] = useState('bilingual'); // 'bilingual' | 'ja-JP' | 'vi-VN' | 'en-US'
-      const [targetLang, setTargetLang] = useState('en-US'); // 'en-US' | 'ja-JP' | 'vi-VN'
-
-      const [geminiModel, setGeminiModel] = useState('gemini-1.5-flash');
+      // All App States
+      const [onboardingStep, setOnboardingStep] = useState('api_key');
       const [geminiApiKey, setGeminiApiKey] = useState('');
+      const [uiLang, setUiLang] = useState('ja-JP');
+      const [targetLang, setTargetLang] = useState('en-US');
+      const [inputMessage, setInputMessage] = useState('');
+      const [isThinking, setIsThinking] = useState(false);
+      const [activeConnectedModel, setActiveConnectedModel] = useState('');
 
-      const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'shadowing'
+      const [activeTab, setActiveTab] = useState('chat');
       const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
-      const [selectedCategory, setSelectedCategory] = useState('all'); // 'all' | 'ja-beginner' | 'ja-intermediate' | 'ja-advanced' | 'en-business' | 'vi-daily'
-      const [currentSelectedVoice, setCurrentSelectedVoice] = useState('journey'); // Default: 'journey' per specification
+      const [selectedCategory, setSelectedCategory] = useState('all');
+      const [currentSelectedVoice, setCurrentSelectedVoice] = useState('journey');
       const [isRecording, setIsRecording] = useState(false);
       const [liveTranscript, setLiveTranscript] = useState('');
       const [evalResult, setEvalResult] = useState(null);
@@ -517,7 +216,7 @@
       const [showPdfModal, setShowPdfModal] = useState(false);
       const [showLogModal, setShowLogModal] = useState(false);
       const [systemLogs, setSystemLogs] = useState([
-        `[${new Date().toLocaleTimeString()}] 🚀 Diagnostic Logger Initialized. Click robot icon anytime to view/download logs.`
+        `[${new Date().toLocaleTimeString()}] 🚀 Diagnostic Logger Initialized. Click robot icon to view/download logs.`
       ]);
 
       const addSystemLog = (msg) => {
@@ -527,15 +226,36 @@
         setSystemLogs(prev => [...prev.slice(-100), line]);
       };
 
-      // Voice Model Selector Dropdown Change Handler
+      const audioBlobCache = useRef({});
+      const activeAudioRef = useRef(null);
+      const recognitionRef = useRef(null);
+      const messagesEndRef = useRef(null);
+      const chatMessagesRef = useRef(null);
+      const textInputRef = useRef(null);
+
+      const [chatMessages, setChatMessages] = useState([
+        {
+          id: 'welcome-api-key',
+          sender: 'ai',
+          lang: 'bilingual',
+          type: 'onboarding_api_key',
+          text: `🔑 Google Gemini API Key Setup / Google Gemini APIキーの設定（せってい）:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu (Bắt buộc):\n🇯🇵 こんにちは！ご使用前（しようまえ）に Google Gemini APIキー（例: AIzaSy...）を下（した）のチャット入力欄（にゅうりょくらん）に入力（にゅうりょく）してください（※設定必須（せっていひっす））:`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+
+      const currentSentence = SAMPLE_SENTENCES[currentSentenceIdx];
+      const dict = UI_DICT[uiLang] || UI_DICT['ja-JP'];
+      const BACKEND_URL = (window.location.hostname.includes('github.io') && !window.location.hostname.includes('vercel.app'))
+        ? 'https://lingobotwebapp.onrender.com'
+        : '';
+
       const handleVoiceChange = (e) => {
         const newVoice = e.target.value;
         setCurrentSelectedVoice(newVoice);
-
-        // Crucial: Clear old audio blob cache on voice model change so next tap fetches freshly generated voice
         audioBlobCache.current = {};
+        addSystemLog(`🔄 Voice Model Changed to: '${newVoice}' (Cleared Cache)`);
 
-        // Check if audio is currently playing
         const isAudioPlaying = playingId !== null || (window.speechSynthesis && window.speechSynthesis.speaking);
         if (isAudioPlaying) {
           const toastMsg = {
@@ -550,18 +270,6 @@
           scrollToBottom();
         }
       };
-
-      const filteredSentences = SAMPLE_SENTENCES.filter(sent => {
-        if (selectedCategory === 'all') return true;
-        return sent.category === selectedCategory;
-      });
-
-      const audioBlobCache = useRef({});
-      const activeAudioRef = useRef(null);
-      const recognitionRef = useRef(null);
-      const messagesEndRef = useRef(null);
-      const chatMessagesRef = useRef(null);
-      const textInputRef = useRef(null);
 
       const focusTextInput = () => {
         setTimeout(() => {
@@ -604,36 +312,13 @@
         }
       }, [chatMessages, onboardingStep, liveTranscript, activeTab, isThinking]);
 
-      // Onboarding Initial Step 0: Gemini API Key Prompt (Mandatory, No Skip, with Furigana)
-      const [chatMessages, setChatMessages] = useState([
-        {
-          id: 'welcome-api-key',
-          sender: 'ai',
-          lang: 'bilingual',
-          type: 'onboarding_api_key',
-          text: `🔑 Google Gemini API Key Setup / Google Gemini APIキーの設定（せってい）:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu (Bắt buộc):\n🇯🇵 こんにちは！ご使用前（しようまえ）に Google Gemini APIキー（例: AIzaSy...）を下（した）のチャット入力欄（にゅうりょくらん）に入力（にゅうりょく）してください（※設定必須（せっていひっす））:`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ]);
-
-      const currentSentence = SAMPLE_SENTENCES[currentSentenceIdx];
-      const dict = UI_DICT[uiLang] || UI_DICT['ja-JP'];
-
-      // Backend API Base URL configuration (Vercel relative path compatibility)
-      const BACKEND_URL = (window.location.hostname.includes('github.io') && !window.location.hostname.includes('vercel.app'))
-        ? 'https://lingobotwebapp.onrender.com'
-        : '';
-
-      // Helper: Strip Furigana text in parentheses before passing to TTS so it reads only plain Kanji text
       const stripFurigana = (str) => {
         if (!str) return '';
         return str.replace(/([\u4E00-\u9FFF\u3005]+)\s*[\（\(][\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+[\）\)]/g, '$1')
                   .replace(/[\（\(][\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+[\）\)]/g, '');
       };
 
-      // Dynamic Speech Player (Edge-TTS vs Standard Web Speech API)
       const playEdgeTts = async (id, text, language) => {
-        // Toggle Stop if clicking the currently playing message
         if (playingId === id) {
           if (window.speechSynthesis && window.speechSynthesis.speaking) {
             window.speechSynthesis.cancel();
@@ -647,7 +332,6 @@
           return;
         }
 
-        // Stop any currently playing audio before starting new audio
         if (window.speechSynthesis && window.speechSynthesis.speaking) {
           window.speechSynthesis.cancel();
         }
@@ -659,14 +343,15 @@
         setPlayingId(null);
 
         const cleanAudioText = stripFurigana(text);
+        const langCode = language || targetLang || 'ja-JP';
+        addSystemLog(`▶️ Play Request: ID='${id}' | Model='${currentSelectedVoice}' | Lang='${langCode}' | Text='${cleanAudioText.slice(0, 15)}...'`);
 
-        // Helper: Play via Browser Native Web Speech API (Final Fallback / Spec 4)
-        const playBrowserNativeSpeech = () => {
+        const playBrowserNativeSpeech = (reason = 'Direct/Fallback') => {
           if (!('speechSynthesis' in window)) {
+            addSystemLog(`❌ Web Speech API Not Supported by Browser`);
             alert('ご使用のブラウザは標準Web Speech APIに対応していません。');
             return;
           }
-          const langCode = language || targetLang || 'ja-JP';
           const utterance = new SpeechSynthesisUtterance(cleanAudioText);
           utterance.lang = langCode;
 
@@ -675,24 +360,24 @@
           const targetVoice = voices.find(v => v.lang.replace('_', '-').startsWith(langPrefix));
           if (targetVoice) utterance.voice = targetVoice;
 
+          addSystemLog(`🔊 Playing Web Speech API (${reason}): Voice='${targetVoice ? targetVoice.name : 'default'}' | Lang='${langCode}'`);
           setPlayingId(id);
-          utterance.onend = () => setPlayingId(null);
-          utterance.onerror = () => setPlayingId(null);
+          utterance.onend = () => { addSystemLog(`⏹️ Web Speech API Play Ended`); setPlayingId(null); };
+          utterance.onerror = (e) => { addSystemLog(`❌ Web Speech API Error: ${e.error}`); setPlayingId(null); };
 
           window.speechSynthesis.speak(utterance);
         };
 
-        // --- SPEC 4 / OPTION 5: WEB SPEECH API DIRECT SELECTION ---
         if (currentSelectedVoice === 'web-speech-api') {
-          playBrowserNativeSpeech();
+          playBrowserNativeSpeech('Direct Option Select');
           return;
         }
 
-        // --- SPEC 3 & SPEC 4: GOOGLE CLOUD TTS API WITH STEPWISE FALLBACK ---
         const cacheKey = `${id}_${currentSelectedVoice}`;
         let blobUrl = audioBlobCache.current[cacheKey];
         if (!blobUrl) {
           setLoadingId(id);
+          addSystemLog(`🌐 Fetching Google Cloud TTS: API='${BACKEND_URL}/api/tts' | VoiceParam='${currentSelectedVoice}'`);
           try {
             const res = await fetch(`${BACKEND_URL}/api/tts`, {
               method: 'POST',
@@ -706,11 +391,16 @@
             });
 
             const contentType = res.headers.get('content-type') || '';
+            const ttsStep = res.headers.get('x-tts-step') || 'unknown';
+            const ttsVoice = res.headers.get('x-tts-voice') || 'unknown';
+
+            addSystemLog(`📡 Server Response: Status=${res.status} | ContentType='${contentType}' | X-TTS-Step='${ttsStep}' | X-TTS-Voice='${ttsVoice}'`);
+
             if (!res.ok || contentType.includes('application/json')) {
               const errData = await res.json().catch(() => ({}));
               setLoadingId(null);
-              console.warn(`[Google Cloud TTS Note -> Fallback to Web Speech API]:`, errData);
-              playBrowserNativeSpeech();
+              addSystemLog(`⚠️ Server TTS Failed/Fallback Signal: Status=${res.status} | Error='${errData.error || 'N/A'}' -> Triggering Web Speech API Fallback`);
+              playBrowserNativeSpeech(`Server Fallback ${res.status}`);
               return;
             }
 
@@ -718,60 +408,32 @@
             blobUrl = URL.createObjectURL(blob);
             audioBlobCache.current[cacheKey] = blobUrl;
             setLoadingId(null);
+            addSystemLog(`✅ Google Cloud TTS Audio Blob Loaded: Size=${blob.size} bytes`);
           } catch (err) {
             setLoadingId(null);
-            console.warn(`[Google Cloud TTS Connection Exception -> Fallback to Web Speech API]: ${err.message}`);
-            playBrowserNativeSpeech();
+            addSystemLog(`💥 Fetch Exception: '${err.message}' -> Triggering Web Speech API Fallback`);
+            playBrowserNativeSpeech('Fetch Exception');
             return;
           }
+        } else {
+          addSystemLog(`⚡ Using Cached Audio Blob for Key: '${cacheKey}'`);
         }
 
         const audio = new Audio(blobUrl);
         activeAudioRef.current = audio;
         setPlayingId(id);
 
-        audio.onended = () => { setPlayingId(null); activeAudioRef.current = null; };
-        audio.onerror = () => { setPlayingId(null); activeAudioRef.current = null; };
+        audio.onended = () => { addSystemLog(`⏹️ MP3 Audio Play Ended`); setPlayingId(null); activeAudioRef.current = null; };
+        audio.onerror = (err) => { addSystemLog(`❌ MP3 Audio Play Error`); setPlayingId(null); activeAudioRef.current = null; };
 
         audio.play().catch(e => {
+          addSystemLog(`❌ MP3 Play Catch Error: '${e.message}' -> Web Speech Fallback`);
           setPlayingId(null);
           activeAudioRef.current = null;
-          playBrowserNativeSpeech();
+          playBrowserNativeSpeech('Audio Play Error');
         });
       };
 
-      // Download MP3
-      const downloadMp3 = async (id, text, language, filename = 'lingobot_voice.mp3') => {
-        let blobUrl = audioBlobCache.current[id];
-        if (!blobUrl) {
-          setLoadingId(id);
-          try {
-            const res = await fetch('/api/tts', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text, language })
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const blob = await res.blob();
-            blobUrl = URL.createObjectURL(blob);
-            audioBlobCache.current[id] = blobUrl;
-            setLoadingId(null);
-          } catch (err) {
-            setLoadingId(null);
-            alert(`Lỗi tải xuống: ${err.message}`);
-            return;
-          }
-        }
-
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      };
-
-      // Handle Step 0 Choice: Gemini API Key (Mandatory - No Skip)
       const handleSubmitApiKey = (inputKey) => {
         const cleanKey = inputKey ? inputKey.trim() : '';
         const isInvalid = !cleanKey || cleanKey.toLowerCase() === 'skip';
@@ -782,7 +444,7 @@
             sender: 'ai',
             isError: true,
             lang: 'bilingual',
-            text: `⚠️ Vui lòng nhập Google Gemini API Key để tiếp tục. (API Key là bắt buộc, không thể bỏ qua)\n⚠️ 継続するには Google Gemini APIキーを入力してください。（※APIキーの入力は必須です。スキップはできません）`,
+            text: `⚠️ Vui lòng nhập Google Gemini API Key để tiếp tục.\n⚠️ 継続するには Google Gemini APIキーを入力してください。（※APIキーの入力は必須です）`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
           setChatMessages(prev => [...prev, warnMsg]);
@@ -815,7 +477,6 @@
         focusTextInput();
       };
 
-      // Handle Step 1 Choice: UI Language
       const handleSelectUiLang = (selectedCode) => {
         setUiLang(selectedCode);
         setOnboardingStep('target_lang');
@@ -845,16 +506,9 @@
         setChatMessages(prev => [...prev, userMsg, aiStep2]);
       };
 
-      // Handle Step 2 Choice: Target Learning Language
-      const handleSelectTargetLang = (selectedCode) => {
+      const handleSelectTargetLang = async (selectedCode) => {
         setTargetLang(selectedCode);
-        setOnboardingStep('complete');
-
-        const step3WelcomeMap = {
-          'en-US': "Wonderful! Target language set to English. Let's practice speaking together! How are you doing today?",
-          'ja-JP': "素晴（すば）らしいですね！目標言語（もくひょうげんご）を【日本語（にほんご）】に設定（せってい）しました。さあ、一緒（いっしょ）に会話練習（かいわれんしゅう）を始（はじ）めましょう！",
-          'vi-VN': "Tuyệt vời! Ngôn ngữ mục tiêu là [Tiếng Việt]. Hãy bắt đầu luyện tập giao tiếp ngay hôm nay nhé!"
-        };
+        setOnboardingStep('completed');
 
         const userMsg = {
           id: 'user-select-target-' + Date.now(),
@@ -863,349 +517,136 @@
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
-        const aiStep3 = {
-          id: 'step3-start-' + Date.now(),
+        const aiCompletedMsg = {
+          id: 'ai-completed-' + Date.now(),
           sender: 'ai',
           lang: selectedCode,
-          text: step3WelcomeMap[selectedCode] || step3WelcomeMap['en-US'],
+          text: selectedCode === 'ja-JP'
+            ? `素晴（すば）らしいですね！目標言語（もくひょうげんご）を【日本語（にほんご）】に設定（せってい）しました。今日（きょう）はどのような場面（ばめん）やシチュエーションで会話練習（かいわれんしゅう）をしたいですか？（例: 空港（くうこう）での荷物（にもつ）預（あず）け、レストランでの注文（ちゅうもん）など）`
+            : selectedCode === 'vi-VN'
+            ? `Tuyệt vời! Đã thiết lập ngôn ngữ mục tiêu là [Tiếng Việt]. Hôm nay bạn muốn luyện tập giao tiếp trong tình huống nào? (Ví dụ: Gửi hành lý ở sân bay, gọi món ở nhà hàng...)`
+            : `Awesome! Target language set to [English]. What scenario would you like to practice today? (e.g. Checking bags at the airport, ordering food at a restaurant)`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
-        setChatMessages(prev => [...prev, userMsg, aiStep3]);
-
-        // Play welcome in target language
-        setTimeout(() => {
-          playEdgeTts(aiStep3.id, aiStep3.text, selectedCode);
-        }, 300);
-      };
-
-      // Reset Chat History
-      const handleResetChat = () => {
-        const resetMap = {
-          'en-US': "Conversation reset! What topic or situation would you like to practice now? (e.g. daily conversation, ordering food, or travel)",
-          'ja-JP': "会話をリセットしました！新しいトピックで会話を始めましょう。どんな場面を練習しますか？（例：日常会話、レストランでの注文、旅行など）",
-          'vi-VN': "Đã làm mới cuộc trò chuyện! Bạn muốn luyện tập chủ đề nào tiếp theo?"
-        };
-
-        const resetMsg = {
-          id: 'ai-reset-' + Date.now(),
-          sender: 'ai',
-          lang: targetLang,
-          text: resetMap[targetLang] || resetMap['en-US'],
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-
-        setChatMessages([resetMsg]);
+        setChatMessages(prev => [...prev, userMsg, aiCompletedMsg]);
         scrollToBottom();
         focusTextInput();
       };
 
-      // Active Connected Gemini Model State
-      const [activeConnectedModel, setActiveConnectedModel] = useState('');
-      const [isThinking, setIsThinking] = useState(false);
-
-      // Send Chat Message to Gemini API / Backend Chat Tutor
-      const handleUserChat = async (userText) => {
-        if (!userText.trim()) return;
+      const handleSendMessage = async (customText = null) => {
+        const textToSend = customText || inputMessage;
+        if (!textToSend.trim()) return;
 
         if (onboardingStep === 'api_key') {
-          handleSubmitApiKey(userText);
-          return;
-        }
-
-        const cleanInput = userText.trim();
-        const lowerInput = cleanInput.toLowerCase();
-
-        // --- SECRET COMMAND: Dynamic TTS Engine Switch ---
-        if (lowerInput === 'tts=gen' || lowerInput === 'tts = gen') {
-          setTtsEngine('gen');
-          const userCmdMsg = {
-            id: 'cmd-user-' + Date.now(),
-            sender: 'user',
-            text: userText,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-          const sysMsg = {
-            id: 'sys-tts-' + Date.now(),
-            sender: 'ai',
-            lang: 'bilingual',
-            text: `🔊 TTSを切り替え（きりかえ）ました：TTS-Gen`,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-          setChatMessages(prev => [...prev, userCmdMsg, sysMsg]);
-          scrollToBottom();
-          focusTextInput();
-          return;
-        }
-
-        if (lowerInput === 'tts=edge' || lowerInput === 'tts = edge') {
-          setTtsEngine('edge');
-          const userCmdMsg = {
-            id: 'cmd-user-' + Date.now(),
-            sender: 'user',
-            text: userText,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-          const sysMsg = {
-            id: 'sys-tts-' + Date.now(),
-            sender: 'ai',
-            lang: 'bilingual',
-            text: `🔊 TTSを切り替え（きりかえ）ました：TTS-Edge`,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-          setChatMessages(prev => [...prev, userCmdMsg, sysMsg]);
-          scrollToBottom();
-          focusTextInput();
+          setInputMessage('');
+          handleSubmitApiKey(textToSend);
           return;
         }
 
         const userMsg = {
           id: 'user-' + Date.now(),
           sender: 'user',
-          text: userText,
+          text: textToSend,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
         setChatMessages(prev => [...prev, userMsg]);
+        if (!customText) setInputMessage('');
         setIsThinking(true);
         scrollToBottom();
 
-        let replyText = '';
-        let connectedModel = '';
-        let directErrorLog = '';
+        const contextAdvice = generateContextAdvice(textToSend, uiLang, targetLang);
 
-        // 1. Direct Browser-to-Gemini REST API Call (Sequential Candidate Trial)
-        if (geminiApiKey && geminiApiKey.trim()) {
-          const candidateModels = [
-            'gemini-3.6-flash',
-            'gemini-3.5-flash',
-            'gemini-flash'
-          ];
-          const uiName = LANG_META[uiLang]?.name || 'Japanese';
-          const targetName = LANG_META[targetLang]?.name || 'English';
-
-          const systemPrompt = `You are LingoBot, a warm, encouraging AI conversation partner in LingoBotWebApp. ` +
-            `The user's interface language is ${uiName} and their target learning language is ${targetName}. ` +
-            `CRITICAL RULE: Always write COMPLETE, fully formed sentences with proper punctuation (. ! ?). Never end mid-sentence. ` +
-            (targetLang === 'ja-JP' ? `CRITICAL RULE FOR JAPANESE: When writing in Japanese, ALWAYS write furigana in parentheses immediately after EVERY Kanji word, for example: 空港（くうこう） or 荷物（にもつ） or お預（あず）かり or 手続（てつづ）き so language learners can easily read the pronunciation! ` : '') +
-            `Always reply naturally, interactively, and concisely (1 to 3 complete sentences) in ${targetName} so the user can practice listening and speaking. ` +
-            `If the user orders food, requests items, or asks for a scenario, roleplay as a friendly conversation partner in that scenario!`;
-
-          const contents = [
-            { role: 'user', parts: [{ text: systemPrompt }] },
-            { role: 'model', parts: [{ text: `Understood! I will always reply with complete, clear sentences in ${targetName}.` }] }
-          ];
-
-          chatMessages.slice(-6).forEach(m => {
-            if (m.text && !m.type && !m.isError) {
-              contents.push({
-                role: m.sender === 'user' ? 'user' : 'model',
-                parts: [{ text: m.text }]
-              });
-            }
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: textToSend,
+              history: chatMessages,
+              uiLang: uiLang,
+              targetLang: targetLang,
+              apiKey: geminiApiKey
+            })
           });
 
-          contents.push({ role: 'user', parts: [{ text: userText }] });
+          const data = await res.json();
+          setIsThinking(false);
 
-          for (const mName of candidateModels) {
-            try {
-              const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${encodeURIComponent(geminiApiKey.trim())}`;
-              const geminiRes = await fetch(geminiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  contents: contents,
-                  generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 800
-                  }
-                })
-              });
-
-              if (geminiRes.ok) {
-                const geminiData = await geminiRes.json();
-                if (geminiData.candidates && geminiData.candidates[0]?.content?.parts[0]?.text) {
-                  replyText = geminiData.candidates[0].content.parts[0].text.trim();
-                  connectedModel = mName;
-                  break;
-                }
-              } else {
-                const errJson = await geminiRes.json().catch(() => ({}));
-                directErrorLog += `[${mName} HTTP ${geminiRes.status}]: ${errJson.error?.message || 'Failed'} | `;
-              }
-            } catch (err) {
-              directErrorLog += `[${mName} Error]: ${err.message} | `;
-            }
+          if (!res.ok || data.error) {
+            const errReply = {
+              id: 'ai-err-' + Date.now(),
+              sender: 'ai',
+              isError: true,
+              text: `⚠️ Lỗi kết nối Gemini API: ${data.error || 'Unknown error'}\nChi tiết: ${data.log || ''}`,
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            setChatMessages(prev => [...prev, errReply]);
+            scrollToBottom();
+            return;
           }
-        }
 
-        // 2. Fallback to Serverless Backend /api/chat if direct call wasn't used or failed
-        if (!replyText) {
-          try {
-            const res = await fetch(`${BACKEND_URL}/api/chat`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                message: userText,
-                history: chatMessages,
-                uiLang: uiLang,
-                targetLang: targetLang,
-                apiKey: geminiApiKey
-              })
-            });
+          if (data.model) setActiveConnectedModel(data.model);
 
-            if (res.ok) {
-              const chatData = await res.json();
-              if (chatData.reply && !chatData.error) {
-                replyText = chatData.reply;
-                connectedModel = chatData.model || 'gemini-flash';
-              } else if (chatData.error) {
-                directErrorLog += `Backend: ${chatData.error} (${chatData.log || ''})`;
-              }
-            } else {
-              const errData = await res.json().catch(() => ({}));
-              directErrorLog += `Backend HTTP ${res.status}: ${errData.error || ''} (${errData.log || ''})`;
-            }
-          } catch (backendErr) {
-            directErrorLog += `Backend Fetch Error: ${backendErr.message}`;
-          }
-        }
-
-        // Parse rate limit retry seconds (e.g. 429 / RESOURCE_EXHAUSTED / Please retry in 24.172228597s)
-        const parseRetryWaitSeconds = (logStr) => {
-          if (!logStr) return null;
-          const lower = logStr.toLowerCase();
-          const isBusy = lower.includes('429') || lower.includes('resource_exhausted') || lower.includes('resourceexhausted') || lower.includes('quota') || lower.includes('rate limit') || lower.includes('too many requests') || lower.includes('please retry in');
-          if (!isBusy) return null;
-
-          const match = lower.match(/(?:please\s+retry\s+in|retry[\s\-_]*(?:after|in)|retry\-after)[\s:=]*(\d+(?:\.\d+)?)\s*s?/i);
-          if (match && match[1]) {
-            return parseFloat(match[1]);
-          }
-          return 5; // Default short 5-second wait if rate limited without explicit seconds
-        };
-
-        const retryWaitSec = parseRetryWaitSeconds(directErrorLog);
-
-        setIsThinking(false);
-
-        // 3. IF SUCCESSFUL: Display AI reply and update Active Connected Model Badge
-        if (replyText) {
-          setActiveConnectedModel(connectedModel);
-
-          const aiMsg = {
+          const aiReply = {
             id: 'ai-' + Date.now(),
             sender: 'ai',
-            lang: targetLang,
-            modelName: connectedModel,
-            text: replyText,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            modelName: data.model,
+            text: data.reply,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            advice: contextAdvice
           };
 
-          setChatMessages(prev => [...prev, aiMsg]);
+          setChatMessages(prev => [...prev, aiReply]);
           scrollToBottom();
           focusTextInput();
 
-          setTimeout(() => {
-            playEdgeTts(aiMsg.id, aiMsg.text, targetLang);
-          }, 300);
-        } else if (retryWaitSec !== null && retryWaitSec <= 20) {
-          // 4. IF BUSY (Retry <= 20s): Display friendly busy message in Vietnamese & Japanese
-          setActiveConnectedModel('混雑中 / Busy');
+          // Auto-play speech for AI reply
+          playEdgeTts(aiReply.id, data.reply, targetLang);
 
-          const busyMsg = {
-            id: 'ai-busy-' + Date.now(),
-            sender: 'ai',
-            isBusy: true,
-            lang: uiLang,
-            text: `⏳ Hệ thống đang bận. Vui lòng chờ trong giây lát...\n⏳ ただいま混雑（こんざつ）中（ちゅう）です。少（すこ）し待（ま）ってください。`,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-
-          setChatMessages(prev => [...prev, busyMsg]);
-          scrollToBottom();
-          focusTextInput();
-        } else {
-          // 5. IF FAILED (Retry > 20s or Fatal Error): Display error bubble + text log file + specific wait prompt
-          setActiveConnectedModel('未接続 / Error');
-
-          const roundedWait = retryWaitSec !== null ? Math.ceil(retryWaitSec) : null;
-          const waitPromptStr = roundedWait ? `\n\n⏳ AIから「約 ${roundedWait} 秒待ってから再試行してください」と要求されています。約 ${roundedWait} 秒ほど待ってから話しかけてください。\n(AI yêu cầu chờ khoảng ${roundedWait} giây trước khi thử lại.)` : '';
-
-          const fullLogText = `========================================\nLingoBotWebApp Error Diagnostic Log\nTime: ${new Date().toLocaleString()}\nWait Timeout: ${retryWaitSec !== null ? retryWaitSec + 's (>20s)' : 'Fatal/Auth Error'}\n========================================\n\n${directErrorLog || 'API Key is missing or invalid.'}`;
-
-          const errorMsg = {
-            id: 'ai-error-' + Date.now(),
+        } catch (err) {
+          setIsThinking(false);
+          const catchErr = {
+            id: 'ai-catch-' + Date.now(),
             sender: 'ai',
             isError: true,
-            errorLogText: fullLogText,
-            lang: uiLang,
-            text: `❌ Đã xảy ra lỗi. Vui lòng kiểm tra nhật ký lỗi.\n❌ エラーが発生（はっせい）しました。ログを確認（かくにん）してください。${waitPromptStr}`,
+            text: `💥 Error: ${err.message}`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
-
-          setChatMessages(prev => [...prev, errorMsg]);
+          setChatMessages(prev => [...prev, catchErr]);
           scrollToBottom();
           focusTextInput();
         }
       };
 
-      // STT Speech Recognition Toggle
-      const toggleRecording = (targetLangCode, onFinalText) => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-          alert('Web Speech API is not supported in this browser. Please use Chrome or Edge.');
-          return;
-        }
-
-        if (isRecording) {
-          if (recognitionRef.current) recognitionRef.current.stop();
-          setIsRecording(false);
-          return;
-        }
-
-        const rec = new SpeechRecognition();
-        recognitionRef.current = rec;
-        rec.lang = targetLangCode;
-        rec.interimResults = true;
-        rec.continuous = false;
-
-        setLiveTranscript('');
-        setEvalResult(null);
-
-        rec.onstart = () => setIsRecording(true);
-
-        rec.onresult = (e) => {
-          let interim = '', final = '';
-          for (let i = e.resultIndex; i < e.results.length; ++i) {
-            if (e.results[i].isFinal) final += e.results[i][0].transcript;
-            else interim += e.results[i][0].transcript;
+      const handleResetChat = () => {
+        setOnboardingStep('api_key');
+        setGeminiApiKey('');
+        setChatMessages([
+          {
+            id: 'welcome-api-key-' + Date.now(),
+            sender: 'ai',
+            lang: 'bilingual',
+            type: 'onboarding_api_key',
+            text: `🔑 Google Gemini API Key Setup / Google Gemini APIキーの設定（せってい）:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt頭 (Bắt buộc):\n🇯🇵 こんにちは！ご使用前（しようまえ）に Google Gemini APIキー（例: AIzaSy...）を下（した）のチャット入力欄（にゅうりょくらん）に入力（にゅうりょく）してください（※設定必須（せっていひっす））:`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }
-          if (interim) setLiveTranscript(interim);
-          if (final) {
-            setLiveTranscript(final);
-            onFinalText(final.trim());
-          }
-        };
-
-        rec.onerror = (e) => { setIsRecording(false); alert(`Mic error: ${e.error}`); };
-        rec.onend = () => setIsRecording(false);
-        rec.start();
+        ]);
+        scrollToBottom();
+        focusTextInput();
       };
 
-      // Export Lesson Summary PDF
       const handleExportPdf = () => {
-        const element = document.getElementById('pdf-report-element');
+        const element = document.getElementById('pdf-report-content');
         if (!element) return;
-
         const opt = {
-          margin:       0.4,
-          filename:     `LingoBot_Lesson_Summary_${Date.now()}.pdf`,
+          margin:       0.3,
+          filename:     `LingoBot_Practice_Report_${new Date().toISOString().slice(0,10)}.pdf`,
           image:        { type: 'jpeg', quality: 0.98 },
           html2canvas:  { scale: 2, useCORS: true },
           jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
-
         html2pdf().set(opt).from(element).save();
       };
 
