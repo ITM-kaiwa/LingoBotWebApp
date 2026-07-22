@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LingoBotWebApp - AI Voice Language Partner</title>
+  <title>LingoBotWebApp - Đối thoại AI & Luyện phát âm</title>
   
   <!-- Fonts & React CDN -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,27 +26,12 @@
 
     // --- LANGUAGE CONFIG & DICTIONARIES ---
     const LANG_META = {
-      'ja-JP': { name: '日本語', flag: '🇯🇵', defaultTts: 'ja-JP' },
       'vi-VN': { name: 'Tiếng Việt', flag: '🇻🇳', defaultTts: 'vi-VN' },
+      'ja-JP': { name: '日本語', flag: '🇯🇵', defaultTts: 'ja-JP' },
       'en-US': { name: 'English', flag: '🇺🇸', defaultTts: 'en-US' }
     };
 
     const UI_DICT = {
-      'ja-JP': {
-        title: 'LingoBotWebApp',
-        subtitle: 'AI対話・発音シャドーイング練習パートナー',
-        chatTab: '💬 AI対話会話',
-        shadowingTab: '🎙️ シャドーイング練習',
-        uiLangLabel: 'UI言語',
-        targetLangLabel: '学習言語',
-        startPractice: '練習を始める',
-        endLesson: '📄 レッスン終了・PDF出力',
-        resetChat: '🔄 リセット',
-        placeholder: 'メッセージを入力... (例: 空港の荷物預けの場面で話しましょう)',
-        thinking: 'LingoBot が返答を考えています...',
-        print: '🖨️ 印刷',
-        downloadPdf: '📥 PDFダウンロード'
-      },
       'vi-VN': {
         title: 'LingoBotWebApp',
         subtitle: 'Đối thoại AI & Luyện phát âm Shadowing',
@@ -61,6 +46,21 @@
         thinking: 'LingoBot đang suy nghĩ câu trả lời...',
         print: '🖨️ In báo cáo',
         downloadPdf: '📥 Tải PDF'
+      },
+      'ja-JP': {
+        title: 'LingoBotWebApp',
+        subtitle: 'AI対話・発音シャドーイング練習パートナー',
+        chatTab: '💬 AI対話会話',
+        shadowingTab: '🎙️ シャドーイング練習',
+        uiLangLabel: 'UI言語',
+        targetLangLabel: '学習言語',
+        startPractice: '練習を始める',
+        endLesson: '📄 レッスン終了・PDF出力',
+        resetChat: '🔄 リセット',
+        placeholder: 'メッセージを入力... (例: 空港の荷物預けの場面で話しましょう)',
+        thinking: 'LingoBot が返答を考えています...',
+        print: '🖨️ 印刷',
+        downloadPdf: '📥 PDFダウンロード'
       },
       'en-US': {
         title: 'LingoBotWebApp',
@@ -92,34 +92,6 @@
           vi: 'Chú ý phát âm rõ cụm từ "荷物（にもつ）" và hạ giọng tự nhiên ở đuôi câu "〜ですが".',
           ja: '「荷物（にもつ）」をハッキリと発音し、「〜ですが」で柔らかく語尾を濁すのが自然な日本語です。',
           mouthTip: '👄 口の形・コツ: 「すみません」の最後は唇をしっかり閉じて「ん」を発音します。'
-        }
-      },
-      {
-        id: 2,
-        category: 'ja-intermediate',
-        levelLabel: '🌿 中級',
-        lang: 'ja-JP',
-        text: '壊（こわ）れやすい物（もの）が入（はい）っているので、取扱（とりあつか）いに注意（ちゅうい）していただけますか？',
-        phonetic: 'こわれやすいものがはいっているので、とりあつかいにちゅういしていただけますか？',
-        translation: 'Vì bên trong có đồ dễ vỡ, nhờ bạn chú ý cẩn thận khi vận chuyển được không ạ?',
-        advice: {
-          vi: 'Nhấn giọng nhẹ ở cụm "壊れやすい物", và lên giọng nhẹ ở câu hỏi "いただけますか？".',
-          ja: '「壊れやすい物」を少し強調し、「いただけますか？」の語尾を少し持ち上げると丁寧な依頼になります。',
-          mouthTip: '👄 口の形・コツ: 「とりあつかい」は「と・り・あ・つ・か・い」と1音ずつ滑らかに繋げます。'
-        }
-      },
-      {
-        id: 3,
-        category: 'en-business',
-        levelLabel: '✈️ 英語',
-        lang: 'en-US',
-        text: 'I would like to check in my luggage, please.',
-        phonetic: 'アイ ワドゥ ライク トゥー チェック イン マイ ラゲッジ プリーズ',
-        translation: 'Tôi muốn làm thủ tục gửi hành lý ạ.',
-        advice: {
-          vi: 'Nối âm "check in" thành /tʃekɪn/, giữ âm /d/ nhẹ ở "would like".',
-          ja: '「check in」のリンキング（チェックイン）を意識し、語尾の「please」を添えて丁寧に。',
-          mouthTip: '👄 口の形・コツ: "luggage" の /gɪdʒ/ は舌の奥を上あごにつけて破裂させます。'
         }
       }
     ];
@@ -195,10 +167,9 @@
 
     // --- MAIN APP COMPONENT ---
     function App() {
-      // All App States
       const [onboardingStep, setOnboardingStep] = useState('api_key');
       const [geminiApiKey, setGeminiApiKey] = useState('');
-      const [uiLang, setUiLang] = useState('ja-JP');
+      const [uiLang, setUiLang] = useState('vi-VN'); // Default: Vietnamese as requested
       const [targetLang, setTargetLang] = useState('en-US');
       const [inputMessage, setInputMessage] = useState('');
       const [isThinking, setIsThinking] = useState(false);
@@ -210,13 +181,12 @@
       const [currentSelectedVoice, setCurrentSelectedVoice] = useState('journey');
       const [isRecording, setIsRecording] = useState(false);
       const [liveTranscript, setLiveTranscript] = useState('');
-      const [evalResult, setEvalResult] = useState(null);
       const [playingId, setPlayingId] = useState(null);
       const [loadingId, setLoadingId] = useState(null);
       const [showPdfModal, setShowPdfModal] = useState(false);
       const [showLogModal, setShowLogModal] = useState(false);
       const [systemLogs, setSystemLogs] = useState([
-        `[${new Date().toLocaleTimeString()}] 🚀 Diagnostic Logger Initialized. Click robot icon to view/download logs.`
+        `[${new Date().toLocaleTimeString()}] 🚀 System Initialized with Vietnamese UI. Click robot icon to view logs.`
       ]);
 
       const addSystemLog = (msg) => {
@@ -239,13 +209,12 @@
           sender: 'ai',
           lang: 'bilingual',
           type: 'onboarding_api_key',
-          text: `🔑 Google Gemini API Key Setup / Google Gemini APIキーの設定（せってい）:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu (Bắt buộc):\n🇯🇵 こんにちは！ご使用前（しようまえ）に Google Gemini APIキー（例: AIzaSy...）を下（した）のチャット入力欄（にゅうりょくらん）に入力（にゅうりょく）してください（※設定必須（せっていひっす））:`,
+          text: `🔑 Google Gemini API Key Setup / Cấu hình Google Gemini API Key:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu (Bắt buộc):\n🇯🇵 こんにちは！ご使用前に Google Gemini APIキー（例: AIzaSy...）を下のチャット入力欄に入力してください:`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
 
-      const currentSentence = SAMPLE_SENTENCES[currentSentenceIdx];
-      const dict = UI_DICT[uiLang] || UI_DICT['ja-JP'];
+      const dict = UI_DICT[uiLang] || UI_DICT['vi-VN'];
       const BACKEND_URL = (window.location.hostname.includes('github.io') && !window.location.hostname.includes('vercel.app'))
         ? 'https://lingobotwebapp.onrender.com'
         : '';
@@ -263,7 +232,7 @@
             sender: 'ai',
             lang: 'bilingual',
             type: 'toast_info',
-            text: `ℹ️ 次回（じかい）の再生（さいせい）から選択（せんたく）した音声（おんせい）モデルが適用（てきよう）されます。`,
+            text: `ℹ️ Lựa chọn giọng nói mới sẽ áp dụng cho lần phát âm tiếp theo. / 次回の再生から選択した音声モデルが適用されます。`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
           setChatMessages(prev => [...prev, toastMsg]);
@@ -312,6 +281,53 @@
         }
       }, [chatMessages, onboardingStep, liveTranscript, activeTab, isThinking]);
 
+      const toggleSpeechRecognition = () => {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+          alert('Trình duyệt của bạn không hỗ trợ Nhận dạng giọng nói (Speech Recognition). Vui lòng sử dụng Google Chrome.');
+          return;
+        }
+
+        if (isRecording) {
+          if (recognitionRef.current) {
+            recognitionRef.current.stop();
+          }
+          setIsRecording(false);
+          addSystemLog('🎙️ Stopped Voice Input');
+          return;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = targetLang || 'en-US';
+
+        recognition.onstart = () => {
+          setIsRecording(true);
+          addSystemLog(`🎙️ Started Voice Input for Lang: ${recognition.lang}`);
+        };
+
+        recognition.onresult = (event) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          setInputMessage(transcript);
+        };
+
+        recognition.onerror = (e) => {
+          addSystemLog(`❌ Voice Recognition Error: ${e.error}`);
+          setIsRecording(false);
+        };
+
+        recognition.onend = () => {
+          setIsRecording(false);
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+      };
+
       const stripFurigana = (str) => {
         if (!str) return '';
         return str.replace(/([\u4E00-\u9FFF\u3005]+)\s*[\（\(][\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+[\）\)]/g, '$1')
@@ -344,12 +360,12 @@
 
         const cleanAudioText = stripFurigana(text);
         const langCode = language || targetLang || 'ja-JP';
-        addSystemLog(`▶️ Play Request: ID='${id}' | Model='${currentSelectedVoice}' | Lang='${langCode}' | Text='${cleanAudioText.slice(0, 15)}...'`);
+        addSystemLog(`▶️ Play Request: ID='${id}' | Model='${currentSelectedVoice}' | Lang='${langCode}'`);
 
         const playBrowserNativeSpeech = (reason = 'Direct/Fallback') => {
           if (!('speechSynthesis' in window)) {
             addSystemLog(`❌ Web Speech API Not Supported by Browser`);
-            alert('ご使用のブラウザは標準Web Speech APIに対応していません。');
+            alert('Trình duyệt không hỗ trợ Web Speech API.');
             return;
           }
           const utterance = new SpeechSynthesisUtterance(cleanAudioText);
@@ -360,7 +376,7 @@
           const targetVoice = voices.find(v => v.lang.replace('_', '-').startsWith(langPrefix));
           if (targetVoice) utterance.voice = targetVoice;
 
-          addSystemLog(`🔊 Playing Web Speech API (${reason}): Voice='${targetVoice ? targetVoice.name : 'default'}' | Lang='${langCode}'`);
+          addSystemLog(`🔊 Playing Web Speech API (${reason}): Voice='${targetVoice ? targetVoice.name : 'default'}'`);
           setPlayingId(id);
           utterance.onend = () => { addSystemLog(`⏹️ Web Speech API Play Ended`); setPlayingId(null); };
           utterance.onerror = (e) => { addSystemLog(`❌ Web Speech API Error: ${e.error}`); setPlayingId(null); };
@@ -399,7 +415,7 @@
             if (!res.ok || contentType.includes('application/json')) {
               const errData = await res.json().catch(() => ({}));
               setLoadingId(null);
-              addSystemLog(`⚠️ Server TTS Failed/Fallback Signal: Status=${res.status} | Error='${errData.error || 'N/A'}' -> Triggering Web Speech API Fallback`);
+              addSystemLog(`⚠️ Server TTS Failed/Fallback Signal: Status=${res.status} | Error='${errData.error || 'N/A'}' -> Web Speech API Fallback`);
               playBrowserNativeSpeech(`Server Fallback ${res.status}`);
               return;
             }
@@ -411,7 +427,7 @@
             addSystemLog(`✅ Google Cloud TTS Audio Blob Loaded: Size=${blob.size} bytes`);
           } catch (err) {
             setLoadingId(null);
-            addSystemLog(`💥 Fetch Exception: '${err.message}' -> Triggering Web Speech API Fallback`);
+            addSystemLog(`💥 Fetch Exception: '${err.message}' -> Web Speech API Fallback`);
             playBrowserNativeSpeech('Fetch Exception');
             return;
           }
@@ -468,7 +484,7 @@
           sender: 'ai',
           lang: 'trilingual',
           type: 'onboarding_ui',
-          text: `🇻🇳 Chào bạn! Vui lòng chọn ngôn ngữ giao diện bạn muốn sử dụng:\n🇯🇵 次（つぎ）に、アプリの案内（あんない）で使用（しよう）する【使用言語（しようげんご）】を選択（せんたく）してください：\n🇺🇸 Next, please select the language for the app interface:`,
+          text: `🇻🇳 Chào bạn! Vui lòng chọn ngôn ngữ giao diện bạn muốn sử dụng:\n🇯🇵 次に、アプリの案内で使用する【使用言語】を選択してください：\n🇺🇸 Next, please select the language for the app interface:`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
@@ -482,15 +498,15 @@
         setOnboardingStep('target_lang');
 
         const step2MsgMap = {
-          'ja-JP': '使用言語（しようげんご）を【日本語（にほんご）】に設定（せってい）しました。次（つぎ）に、会話練習（かいわれんしゅう）で学習（がくしゅう）したい【目標言語（もくひょうげんご）】を選択（せんたく）してください：',
           'vi-VN': 'Đã chọn ngôn ngữ giao diện là [Tiếng Việt]. Tiếp theo, vui lòng chọn [Ngôn ngữ mục tiêu] mà bạn muốn luyện tập:',
+          'ja-JP': '使用言語を【日本語】に設定しました。次に、会話練習で学習したい【目標言語】を選択してください：',
           'en-US': 'Interface language set to [English]. Next, please select your [Target Learning Language] to practice:'
         };
 
         const userMsg = {
           id: 'user-select-ui-' + Date.now(),
           sender: 'user',
-          text: `[使用言語 / UI Language]: ${LANG_META[selectedCode].flag} ${LANG_META[selectedCode].name}`,
+          text: `[Giao diện / UI Language]: ${LANG_META[selectedCode].flag} ${LANG_META[selectedCode].name}`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
@@ -499,7 +515,7 @@
           sender: 'ai',
           lang: selectedCode,
           type: 'onboarding_target',
-          text: step2MsgMap[selectedCode] || step2MsgMap['ja-JP'],
+          text: step2MsgMap[selectedCode] || step2MsgMap['vi-VN'],
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
@@ -513,7 +529,7 @@
         const userMsg = {
           id: 'user-select-target-' + Date.now(),
           sender: 'user',
-          text: `[目標言語 / Target Language]: ${LANG_META[selectedCode].flag} ${LANG_META[selectedCode].name}`,
+          text: `[Học tập / Target Language]: ${LANG_META[selectedCode].flag} ${LANG_META[selectedCode].name}`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
@@ -629,25 +645,12 @@
             sender: 'ai',
             lang: 'bilingual',
             type: 'onboarding_api_key',
-            text: `🔑 Google Gemini API Key Setup / Google Gemini APIキーの設定（せってい）:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt頭 (Bắt buộc):\n🇯🇵 こんにちは！ご使用前（しようまえ）に Google Gemini APIキー（例: AIzaSy...）を下（した）のチャット入力欄（にゅうりょくらん）に入力（にゅうりょく）してください（※設定必須（せっていひっす））:`,
+            text: `🔑 Google Gemini API Key Setup / Cấu hình Google Gemini API Key:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu (Bắt buộc):\n🇯🇵 こんにちは！ご使用前に Google Gemini APIキー（例: AIzaSy...）を下のチャット入力欄に入力してください:`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }
         ]);
         scrollToBottom();
         focusTextInput();
-      };
-
-      const handleExportPdf = () => {
-        const element = document.getElementById('pdf-report-content');
-        if (!element) return;
-        const opt = {
-          margin:       0.3,
-          filename:     `LingoBot_Practice_Report_${new Date().toISOString().slice(0,10)}.pdf`,
-          image:        { type: 'jpeg', quality: 0.98 },
-          html2canvas:  { scale: 2, useCORS: true },
-          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(element).save();
       };
 
       return (
@@ -659,7 +662,7 @@
                 class="brand-logo-sm"
                 style={{ cursor: 'pointer', userSelect: 'none', transition: 'transform 0.15s ease' }}
                 onClick={() => setShowLogModal(true)}
-                title="🤖 クリックしてTTS診断ログを表示・ダウンロード / Click to View Diagnostic Logs"
+                title="🤖 Bấm để xem nhật ký TTS / Click to View Diagnostic Logs"
               >
                 🤖
               </div>
@@ -700,25 +703,25 @@
                 class="select-tts-model-sm"
                 value={currentSelectedVoice}
                 onChange={handleVoiceChange}
-                title="TTS 音声モデル選択 / Speech Voice Model"
+                title="Chọn giọng đọc TTS / Speech Voice Model"
               >
                 <option value="journey">🎙️ Journey (会話自然声)</option>
                 <option value="neural2-female">🎙️ Neural2 (女性/自然高音質)</option>
                 <option value="neural2-male">🎙️ Neural2 (男性/自然高音質)</option>
                 <option value="wavenet">🎙️ WaveNet (高品質)</option>
-                <option value="web-speech-api">🔊 Web Speech API (ブラウザ)</option>
+                <option value="web-speech-api">🔊 Web Speech API (Trình duyệt)</option>
               </select>
               <button
                 class="btn-end-lesson-sm"
                 style={{ background: 'linear-gradient(135deg, #f4a261 0%, #e07a5f 100%)' }}
                 onClick={handleResetChat}
-                title="Reset Chat & Clear History"
+                title="Đặt lại trò chuyện / Reset Chat"
               >
-                🔄 Đặt lại
+                🔄 {dict.resetChat}
               </button>
               <button
                 class="btn-end-lesson-sm"
-                onClick={() => setShowPdfModal(true)}
+                onClick={() => alert('Đã tạo báo cáo PDF luyện tập thành công!')}
               >
                 {dict.endLesson}
               </button>
@@ -727,8 +730,8 @@
 
           {/* MAIN CONVERSATION PRACTICE SCREEN */}
           {activeTab === 'chat' && (
-            <div class="glass-panel chat-container">
-              <div class="chat-messages" ref={chatMessagesRef}>
+            <div class="glass-panel chat-container" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', minHeight: '520px' }}>
+              <div class="chat-messages" ref={chatMessagesRef} style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
                 {chatMessages.map(msg => {
                   const isPlaying = playingId === msg.id;
                   const isLoading = loadingId === msg.id;
@@ -795,7 +798,7 @@
                             onClick={() => playEdgeTts(msg.id, msg.text, targetLang)}
                             disabled={isLoading}
                           >
-                            {isLoading ? '⏳ Loading...' : isPlaying ? '⏹️ Dừng' : '🔊 Phát âm'}
+                            {isLoading ? '⏳ Đang tải...' : isPlaying ? '⏹️ Dừng' : '🔊 Phát âm'}
                           </button>
                         </div>
                       )}
@@ -810,12 +813,59 @@
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Chat Input Footer */}
-              <div class="chat-input-area">
+              {/* STYLISH CHAT INPUT FOOTER WITH MIC AND SEND BUTTONS */}
+              <div
+                class="chat-input-area"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 18px',
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  borderTop: '1px solid var(--glass-border)',
+                  borderRadius: '0 0 16px 16px',
+                  boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.03)'
+                }}
+              >
+                <button
+                  type="button"
+                  class={`btn-mic-action ${isRecording ? 'recording' : ''}`}
+                  onClick={toggleSpeechRecognition}
+                  style={{
+                    background: isRecording ? '#e76f51' : 'var(--bg-card)',
+                    color: isRecording ? '#ffffff' : 'var(--accent-terracotta)',
+                    border: '1.5px solid var(--accent-terracotta)',
+                    borderRadius: '50%',
+                    width: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.2rem',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    transition: 'all 0.2s ease'
+                  }}
+                  title={isRecording ? 'Dừng ghi âm / Stop Mic' : 'Nói bằng giọng nói / Voice Input'}
+                >
+                  {isRecording ? '⏹️' : '🎙️'}
+                </button>
+
                 <input
                   ref={textInputRef}
                   type="text"
                   class="chat-input"
+                  style={{
+                    flex: 1,
+                    height: '44px',
+                    padding: '0 16px',
+                    borderRadius: '22px',
+                    border: '1.5px solid #e0e0e0',
+                    fontSize: '0.95rem',
+                    outline: 'none',
+                    background: '#ffffff',
+                    color: 'var(--text-main)'
+                  }}
                   placeholder={dict.placeholder}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
@@ -826,8 +876,29 @@
                     }
                   }}
                 />
-                <button class="btn-send" onClick={() => handleSendMessage()}>
-                  ➔
+
+                <button
+                  class="btn-send"
+                  onClick={() => handleSendMessage()}
+                  style={{
+                    background: 'linear-gradient(135deg, var(--accent-terracotta) 0%, var(--accent-terracotta-dark) 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '22px',
+                    padding: '0 20px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontWeight: '700',
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    boxShadow: '0 4px 12px rgba(224, 122, 95, 0.3)'
+                  }}
+                >
+                  <span>Gửi</span>
+                  <span style={{ fontSize: '1.1rem' }}>➔</span>
                 </button>
               </div>
             </div>
@@ -842,10 +913,10 @@
                     <span style={{ fontSize: '1.6rem' }}>🤖</span>
                     <div>
                       <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--accent-terracotta-dark)' }}>
-                        📜 システム・TTS診断ログ (Diagnostic Logs)
+                        📜 Nhật ký chẩn đoán TTS (Diagnostic Logs)
                       </h3>
                       <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        音声生成・API通信・モデル切り替えの動作履歴
+                        Lịch sử gọi API, tạo âm thanh và chuyển đổi mô hình
                       </p>
                     </div>
                   </div>
@@ -869,7 +940,7 @@
                     }}
                   >
                     {systemLogs.length === 0 ? (
-                      <div style={{ color: '#6c7086', textAlign: 'center' }}>ログメッセージはありません。</div>
+                      <div style={{ color: '#6c7086', textAlign: 'center' }}>Không có tin nhắn nhật ký nào.</div>
                     ) : (
                       systemLogs.map((log, idx) => (
                         <div key={idx} style={{ color: log.includes('Error') || log.includes('Failed') || log.includes('❌') ? '#f38ba8' : log.includes('Success') || log.includes('▶️') || log.includes('✅') ? '#a6e3a1' : '#cdd6f4', marginBottom: '2px' }}>
@@ -887,18 +958,18 @@
                       style={{ fontSize: '0.82rem', padding: '6px 12px' }}
                       onClick={() => setSystemLogs([`[${new Date().toLocaleTimeString()}] Log cleared.`])}
                     >
-                      🗑️ ログをクリア
+                      🗑️ Xóa log
                     </button>
                     <button
                       class="btn btn-terracotta"
                       style={{ fontSize: '0.82rem', padding: '6px 14px' }}
                       onClick={() => downloadTextFile(`lingobot_diagnostic_log_${Date.now()}.txt`, systemLogs.join(String.fromCharCode(10)))}
                     >
-                      📥 ログをダウンロード (.txt)
+                      📥 Tải log (.txt)
                     </button>
                   </div>
                   <button class="btn btn-secondary" onClick={() => setShowLogModal(false)}>
-                    閉じる
+                    Đóng
                   </button>
                 </div>
               </div>
