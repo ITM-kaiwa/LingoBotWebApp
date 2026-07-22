@@ -15,7 +15,7 @@ import google.generativeai as genai
 app = Flask(__name__)
 CORS(app)
 
-VOICE_OPTION_CATALOG = {
+GOOGLE_CLOUD_TTS_CATALOG = {
     'journey': {
         'ja-JP': 'ja-JP-Neural2-D',
         'vi-VN': 'vi-VN-Wavenet-A',
@@ -53,13 +53,13 @@ def resolve_lang_code(lang_str: str) -> str:
     if l.startswith('vi'): return 'vi-VN'
     return 'en-US'
 
-def call_google_cloud_tts_api(text: str, lang_code: str, voice_name: str, api_key: str) -> bytes:
+def call_google_cloud_tts_api(text: str, lang_code: str, google_voice_name: str, api_key: str) -> bytes:
     url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={api_key}"
     payload = {
         "input": { "text": text },
         "voice": {
             "languageCode": lang_code,
-            "name": voice_name
+            "name": google_voice_name
         },
         "audioConfig": {
             "audioEncoding": "MP3",
@@ -78,41 +78,23 @@ def call_google_cloud_tts_api(text: str, lang_code: str, voice_name: str, api_ke
             return base64.b64decode(res_data["audioContent"])
     return None
 
-def generate_google_cloud_tts_with_stepwise_fallback(text: str, language: str, voice_option_key: str = 'journey', api_key: str = None) -> (bytes, str, str):
+def generate_google_cloud_tts(text: str, language: str, voice_option_key: str = 'journey', api_key: str = None) -> (bytes, str, str):
     lang_code = resolve_lang_code(language)
+    model_key = voice_option_key.lower()
+
+    cat_entry = GOOGLE_CLOUD_TTS_CATALOG.get(model_key, GOOGLE_CLOUD_TTS_CATALOG['journey'])
+    google_voice_name = cat_entry.get(lang_code, cat_entry['en-US'])
+
     clean_key = (api_key or os.getenv('GEMINI_API_KEY') or '').strip()
 
-    if not clean_key:
-        print("[TTS Backend Note] No API key available -> Signaling browser fallback", flush=True)
-        return None, 'browser_fallback', 'none'
-
-    primary_model_dict = VOICE_OPTION_CATALOG.get(voice_option_key, VOICE_OPTION_CATALOG['journey'])
-    primary_voice = primary_model_dict.get(lang_code, primary_model_dict['en-US'])
-    
-    female_fallback_voice = VOICE_OPTION_CATALOG['neural2-female'].get(lang_code, 'en-US-Neural2-F')
-    male_fallback_voice = VOICE_OPTION_CATALOG['neural2-male'].get(lang_code, 'en-US-Neural2-D')
-
-    fallback_sequence = [
-        ('step1_requested', primary_voice),
-        ('step2_neural2_female', female_fallback_voice),
-        ('step3_neural2_male', male_fallback_voice)
-    ]
-
-    seen_voices = set()
-    unique_sequence = []
-    for step_label, voice_name in fallback_sequence:
-        if voice_name not in seen_voices:
-            seen_voices.add(voice_name)
-            unique_sequence.append((step_label, voice_name))
-
-    for step_label, voice_name in unique_sequence:
+    if clean_key:
         try:
-            audio_bytes = call_google_cloud_tts_api(text, lang_code, voice_name, clean_key)
+            audio_bytes = call_google_cloud_tts_api(text, lang_code, google_voice_name, clean_key)
             if audio_bytes and len(audio_bytes) > 200:
-                print(f"[TTS Success ({step_label})] Voice: {voice_name}", flush=True)
-                return audio_bytes, step_label, voice_name
-        except Exception as err:
-            print(f"[TTS Try Failed ({step_label} - {voice_name})]: {str(err)}", flush=True)
+                print(f"[Google Cloud TTS Success] Voice: {google_voice_name}", flush=True)
+                return audio_bytes, 'google-cloud-tts', google_voice_name
+        except Exception as gc_err:
+            print(f"[Google Cloud TTS API Error] ({google_voice_name}): {str(gc_err)}", flush=True)
 
     return None, 'browser_fallback', 'none'
 
@@ -128,14 +110,14 @@ def tts_endpoint():
         if not text:
             return jsonify({'error': 'Parameter "text" is required.'}), 400
 
-        print(f"[TTS Endpoint Request] OptionKey: '{voice_option_key}' | Lang: '{language}' | Text: '{text[:30]}...'", flush=True)
+        print(f"[Google Cloud TTS Request] OptionKey: '{voice_option_key}' | Lang: '{language}' | Text: '{text[:30]}...'", flush=True)
 
-        mp3_bytes, step_used, voice_used = generate_google_cloud_tts_with_stepwise_fallback(text, language, voice_option_key, api_key)
+        mp3_bytes, step_used, voice_used = generate_google_cloud_tts(text, language, voice_option_key, api_key)
 
         if not mp3_bytes or step_used == 'browser_fallback':
             return jsonify({
                 "fallback_to_browser": True,
-                "error": "Google Cloud TTS completely unavailable or quota exceeded."
+                "error": "Google Cloud TTS service is unavailable. Falling back to browser Speech Synthesis."
             }), 503
 
         buffer = io.BytesIO(mp3_bytes)
@@ -253,5 +235,5 @@ def serve_static(path):
     return send_from_directory('public', 'index.html')
 
 if __name__ == '__main__':
-    print("🚀 Vocalise Edge AI Server starting on http://localhost:5100 (Stepwise Fallback TTS)")
+    print("🚀 Vocalise Edge AI Server starting on http://localhost:5100 (100% Pure Google Cloud TTS Dedicated)")
     app.run(host='0.0.0.0', port=5100, debug=False)
