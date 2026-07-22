@@ -541,12 +541,13 @@
 
           const systemPrompt = `You are LingoBot, a warm, encouraging AI conversation partner in LingoBotWebApp. ` +
             `The user's interface language is ${uiName} and their target learning language is ${targetName}. ` +
-            `Always reply naturally, interactively, and concisely (1 to 3 sentences) in ${targetName} so the user can practice listening and speaking. ` +
+            `CRITICAL RULE: Always write COMPLETE, fully formed sentences with proper punctuation (. ! ?). Never end mid-sentence or cut off phrases. ` +
+            `Always reply naturally, interactively, and concisely (1 to 3 complete sentences) in ${targetName} so the user can practice listening and speaking. ` +
             `If the user orders food, requests pizza/drinks, or asks for a scenario, roleplay as a friendly conversation partner in that scenario!`;
 
           const contents = [
             { role: 'user', parts: [{ text: systemPrompt }] },
-            { role: 'model', parts: [{ text: `Understood! I am ready to be your AI conversation partner in ${targetName}.` }] }
+            { role: 'model', parts: [{ text: `Understood! I will always reply with complete, clear sentences in ${targetName}.` }] }
           ];
 
           chatMessages.slice(-6).forEach(m => {
@@ -570,7 +571,7 @@
                   contents: contents,
                   generationConfig: {
                     temperature: 0.7,
-                    maxOutputTokens: 250
+                    maxOutputTokens: 800
                   }
                 })
               });
