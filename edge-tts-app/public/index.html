@@ -649,7 +649,6 @@
             betterList: [
               "「ありがとうございました。よろしくお願いします。」",
               "「ご対応いただき、ありがとうございました！」"
-            ],
             explanation: isUiVi ? "Kết hợp 'ありがとうございました' với 'よろしくお願いします' tạo cảm giác rất chu đáo."
                                  : "「はい、どうもありがとうございました」で十分完璧なお礼です！最後に「よろしくお願いします」と一言添えると、荷物を預ける際のやり取りとして非常に爽やかです。",
             usage: isUiVi ? "Mẫu câu: ありがとうございました + よろしくお願いします."
@@ -866,14 +865,34 @@
       const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'shadowing'
       const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
       const [selectedCategory, setSelectedCategory] = useState('all'); // 'all' | 'ja-beginner' | 'ja-intermediate' | 'ja-advanced' | 'en-business' | 'vi-daily'
-      const [ttsEngine, setTtsEngine] = useState('edge'); // 'edge' | 'gen' (Standard Web Speech API)
-      const [selectedTtsVoice, setSelectedTtsVoice] = useState('neural2-b'); // 'neural2-b' | 'neural2-c' | 'journey' | 'wavenet' | 'gen'
+      const [currentSelectedVoice, setCurrentSelectedVoice] = useState('journey'); // Default: 'journey' per specification
       const [isRecording, setIsRecording] = useState(false);
       const [liveTranscript, setLiveTranscript] = useState('');
       const [evalResult, setEvalResult] = useState(null);
       const [playingId, setPlayingId] = useState(null);
       const [loadingId, setLoadingId] = useState(null);
       const [showPdfModal, setShowPdfModal] = useState(false);
+
+      // Voice Model Selector Dropdown Change Handler
+      const handleVoiceChange = (e) => {
+        const newVoice = e.target.value;
+        setCurrentSelectedVoice(newVoice);
+
+        // Check if audio is currently playing
+        const isAudioPlaying = playingId !== null || (window.speechSynthesis && window.speechSynthesis.speaking);
+        if (isAudioPlaying) {
+          const toastMsg = {
+            id: 'toast-' + Date.now(),
+            sender: 'ai',
+            lang: 'bilingual',
+            type: 'toast_info',
+            text: `ℹ️ 次回（じかい）の再生（さいせい）から選択（せんたく）した音声（おんせい）モデルが適用（てきよう）されます。`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setChatMessages(prev => [...prev, toastMsg]);
+          scrollToBottom();
+        }
+      };
 
       const filteredSentences = SAMPLE_SENTENCES.filter(sent => {
         if (selectedCategory === 'all') return true;
@@ -984,8 +1003,8 @@
 
         const cleanAudioText = stripFurigana(text);
 
-        // --- TIER 3: BROWSER NATIVE WEB SPEECH API DIRECT CALL ---
-        if (selectedTtsVoice === 'gen') {
+        // Helper: Play via Browser Native Web Speech API (Final Fallback / Spec 4)
+        const playBrowserNativeSpeech = () => {
           if (!('speechSynthesis' in window)) {
             alert('ご使用のブラウザは標準Web Speech APIに対応していません。');
             return;
@@ -1004,11 +1023,16 @@
           utterance.onerror = () => setPlayingId(null);
 
           window.speechSynthesis.speak(utterance);
+        };
+
+        // --- SPEC 4 / OPTION 5: WEB SPEECH API DIRECT SELECTION ---
+        if (currentSelectedVoice === 'web-speech-api') {
+          playBrowserNativeSpeech();
           return;
         }
 
-        // --- TIER 1 & TIER 2: GOOGLE CLOUD TTS (Neural2/Journey/WaveNet) API ---
-        const cacheKey = id + '_' + selectedTtsVoice;
+        // --- SPEC 3 & SPEC 4: GOOGLE CLOUD TTS API WITH STEPWISE FALLBACK ---
+        const cacheKey = id + '_' + currentSelectedVoice;
         let blobUrl = audioBlobCache.current[cacheKey];
         if (!blobUrl) {
           setLoadingId(id);
@@ -1019,39 +1043,30 @@
               body: JSON.stringify({
                 text: cleanAudioText,
                 language: language || targetLang || 'ja-JP',
-                voiceModel: selectedTtsVoice,
+                voice: currentSelectedVoice,
                 apiKey: geminiApiKey
               })
             });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            if (!res.ok) {
+              const errData = await res.json().catch(() => ({}));
+              if (errData.fallback_to_browser || res.status === 503) {
+                setLoadingId(null);
+                console.warn(`[Google Cloud TTS Failed (503/fallback_to_browser) -> Browser Speech Synthesis Fallback]`);
+                playBrowserNativeSpeech();
+                return;
+              }
+              throw new Error(`HTTP ${res.status}`);
+            }
+
             const blob = await res.blob();
             blobUrl = URL.createObjectURL(blob);
             audioBlobCache.current[cacheKey] = blobUrl;
             setLoadingId(null);
           } catch (err) {
             setLoadingId(null);
-            console.warn(`[Tier 1/2 Google Cloud TTS API Failed -> Tier 3 Web Speech API Fallback]: ${err.message}`);
-
-            // Tier 3 Graceful Fallback: Browser Native Web Speech API
-            if ('speechSynthesis' in window) {
-              const langCode = language || targetLang || 'ja-JP';
-              const utterance = new SpeechSynthesisUtterance(cleanAudioText);
-              utterance.lang = langCode;
-
-              const voices = window.speechSynthesis.getVoices();
-              const langPrefix = langCode.split('-')[0];
-              const targetVoice = voices.find(v => v.lang.replace('_', '-').startsWith(langPrefix));
-              if (targetVoice) utterance.voice = targetVoice;
-
-              setPlayingId(id);
-              utterance.onend = () => setPlayingId(null);
-              utterance.onerror = () => setPlayingId(null);
-
-              window.speechSynthesis.speak(utterance);
-              return;
-            }
-
-            alert(`Lỗi phát âm thanh: ${err.message}`);
+            console.warn(`[Google Cloud TTS Connection Exception -> Browser Fallback]: ${err.message}`);
+            playBrowserNativeSpeech();
             return;
           }
         }
@@ -1063,7 +1078,11 @@
         audio.onended = () => { setPlayingId(null); activeAudioRef.current = null; };
         audio.onerror = () => { setPlayingId(null); activeAudioRef.current = null; };
 
-        audio.play().catch(e => { setPlayingId(null); activeAudioRef.current = null; });
+        audio.play().catch(e => {
+          setPlayingId(null);
+          activeAudioRef.current = null;
+          playBrowserNativeSpeech();
+        });
       };
 
       // Download MP3
@@ -1576,15 +1595,15 @@
               )}
               <select
                 class="select-tts-model-sm"
-                value={selectedTtsVoice}
-                onChange={(e) => setSelectedTtsVoice(e.target.value)}
+                value={currentSelectedVoice}
+                onChange={handleVoiceChange}
                 title="TTS 音声モデル選択 / Speech Voice Model"
               >
-                <option value="neural2-b">🎙️ Neural2 (女性/自然高音質)</option>
-                <option value="neural2-c">🎙️ Neural2 (男性/自然高音質)</option>
                 <option value="journey">🎙️ Journey (会話自然声)</option>
+                <option value="neural2-female">🎙️ Neural2 (女性/自然高音質)</option>
+                <option value="neural2-male">🎙️ Neural2 (男性/自然高音質)</option>
                 <option value="wavenet">🎙️ WaveNet (高品質)</option>
-                <option value="gen">🔊 Web Speech API (ブラウザ標準)</option>
+                <option value="web-speech-api">🔊 Web Speech API (ブラウザ)</option>
               </select>
               <button
                 class="btn-end-lesson-sm"
