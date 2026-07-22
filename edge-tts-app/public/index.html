@@ -533,8 +533,9 @@
         // 1. Direct Browser-to-Gemini REST API Call (Sequential Candidate Trial)
         if (geminiApiKey && geminiApiKey.trim()) {
           const candidateModels = [
-            'gemini-flash',
-            'gemini-3.5-flash'
+            'gemini-3.6-flash',
+            'gemini-3.5-flash',
+            'gemini-flash'
           ];
           const uiName = LANG_META[uiLang]?.name || 'Japanese';
           const targetName = LANG_META[targetLang]?.name || 'English';
