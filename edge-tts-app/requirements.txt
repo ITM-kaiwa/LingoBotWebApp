@@ -2,3 +2,5 @@ flask==3.0.3
 flask-cors==4.0.1
 google-genai
 edge-tts==6.1.12
+aiohttp==3.9.5
+websockets==12.0

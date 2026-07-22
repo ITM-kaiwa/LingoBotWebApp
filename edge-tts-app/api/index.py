@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 import edge_tts
+import aiohttp
 from google import genai
 from google.genai import types
 
@@ -26,6 +27,13 @@ VOICE_MAP = {
     'fr': 'fr-FR-DeniseNeural',
 }
 
+# Fallback voices if Microsoft blocks or fails the primary voice
+FALLBACK_VOICE_MAP = {
+    'ja-JP-NanamiNeural': 'ja-JP-KeitaNeural',
+    'vi-VN-HoaiMyNeural': 'vi-VN-NamMinhNeural',
+    'en-US-AriaNeural': 'en-US-GuyNeural'
+}
+
 DEFAULT_VOICE = 'en-US-AriaNeural'
 
 LANG_NAMES = {
@@ -37,27 +45,44 @@ LANG_NAMES = {
     'vi-vn': 'Vietnamese (Tiếng Việt)'
 }
 
-async def _save_edge_tts_async(text: str, voice: str) -> bytes:
-    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as fp:
-        temp_path = fp.name
+async def _save_edge_tts_async(text: str, primary_voice: str) -> bytes:
+    voices_to_try = [primary_voice]
+    if primary_voice in FALLBACK_VOICE_MAP:
+        voices_to_try.append(FALLBACK_VOICE_MAP[primary_voice])
 
-    try:
-        communicate = edge_tts.Communicate(text, voice)
-        await communicate.save(temp_path)
-
-        with open(temp_path, "rb") as f:
-            audio_bytes = f.read()
-        return audio_bytes
-    finally:
-        if os.path.exists(temp_path):
+    last_error = None
+    for attempt_voice in voices_to_try:
+        for attempt in range(2):  # Retry up to 2 times per voice
+            temp_path = None
             try:
-                os.remove(temp_path)
-            except Exception:
-                pass
+                with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as fp:
+                    temp_path = fp.name
+
+                communicate = edge_tts.Communicate(text, attempt_voice)
+                await communicate.save(temp_path)
+
+                with open(temp_path, "rb") as f:
+                    audio_bytes = f.read()
+
+                if audio_bytes and len(audio_bytes) > 200:
+                    print(f"[Edge TTS Success] Voice: '{attempt_voice}' | Size: {len(audio_bytes)} bytes", flush=True)
+                    return audio_bytes
+            except Exception as e:
+                last_error = e
+                print(f"[Edge TTS Warning] Voice '{attempt_voice}' Attempt {attempt+1} failed: {str(e)}", flush=True)
+                await asyncio.sleep(0.2)
+            finally:
+                if temp_path and os.path.exists(temp_path):
+                    try:
+                        os.remove(temp_path)
+                    except Exception:
+                        pass
+
+    if last_error:
+        raise last_error
+    raise RuntimeError("Edge-TTS generated empty audio bytes for all candidate voices.")
 
 def generate_tts_bytes(text: str, voice: str) -> bytes:
-    # Run async Edge-TTS in a dedicated worker thread with a isolated asyncio event loop
-    # to prevent "event loop already running" or thread conflicts in Vercel Serverless environment
     def thread_worker():
         new_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(new_loop)
@@ -68,14 +93,14 @@ def generate_tts_bytes(text: str, voice: str) -> bytes:
 
     with ThreadPoolExecutor(max_workers=1) as executor:
         future = executor.submit(thread_worker)
-        return future.result(timeout=20)
+        return future.result(timeout=25)
 
 @app.route('/', methods=['GET'])
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({
         "status": "healthy",
-        "service": "LingoBotWebApp Vercel Serverless API (Isolated Thread Edge-TTS)",
+        "service": "LingoBotWebApp Vercel Serverless API (Resilient Voice Fallback Edge-TTS)",
         "python_version": sys.version
     })
 
@@ -98,7 +123,7 @@ def tts_endpoint():
                 prefix = language.split('-')[0]
                 voice = VOICE_MAP.get(prefix, DEFAULT_VOICE)
 
-        print(f"[Edge TTS Vercel] Lang: '{language}' -> Voice: '{voice}' | Text: '{text[:25]}...'")
+        print(f"[Edge TTS Vercel Request] Lang: '{language}' -> Primary Voice: '{voice}' | Text: '{text[:30]}...'", flush=True)
 
         mp3_bytes = generate_tts_bytes(text, voice)
 
@@ -120,8 +145,8 @@ def tts_endpoint():
 
     except Exception as e:
         err_detail = traceback.format_exc()
-        print(f"[TTS Error Traceback]:\n{err_detail}")
-        return jsonify({'error': str(e), 'detail': err_detail}), 500
+        print(f"[TTS ERROR TRACEBACK]:\n{err_detail}", flush=True)
+        return jsonify({'error': f"TTS Generation Failed: {str(e)}", 'detail': err_detail}), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat_endpoint():
@@ -201,7 +226,7 @@ def chat_endpoint():
             except Exception as m_err:
                 err_msg = f"{m_name}: {str(m_err)}"
                 attempt_logs.append(err_msg)
-                print(f"[google-genai Try Failed] {err_msg}")
+                print(f"[google-genai Try Failed] {err_msg}", flush=True)
 
         if reply_text:
             return jsonify({'reply': reply_text, 'model': used_model, 'source': 'google-genai-sdk'})
@@ -213,7 +238,7 @@ def chat_endpoint():
         }), 502
 
     except Exception as e:
-        print(f"[Chat Error Traceback]:\n{traceback.format_exc()}")
+        print(f"[Chat Error Traceback]:\n{traceback.format_exc()}", flush=True)
         return jsonify({'error': str(e), 'log': traceback.format_exc()}), 500
 
 if __name__ == '__main__':

@@ -1026,6 +1026,9 @@
             setLoadingId(null);
             console.warn(`[Edge-TTS API Failed -> Web Speech API Fallback]: ${err.message}`);
 
+            // Automatically update UI header button state to 'gen' when falling back
+            setTtsEngine('gen');
+
             // Automatic fallback to browser native Web Speech API if Edge-TTS server endpoint fails (e.g. HTTP 500)
             if ('speechSynthesis' in window) {
               const langCode = language || targetLang || 'ja-JP';
