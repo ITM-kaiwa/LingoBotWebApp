@@ -153,35 +153,89 @@
       }
     ];
 
-    // Helper: Generate structured expression & grammar advice for Lesson Summary PDF Report
+    // Enhanced Helper: Generate rich, useful expression & grammar advice for Lesson Summary PDF Report
     function generateExpressionAdvice(text, targetLang) {
-      const lower = text ? text.toLowerCase().trim() : '';
+      const trimmed = text ? text.trim() : '';
+      const lower = trimmed.toLowerCase();
+      const words = lower.split(/\s+/).filter(Boolean);
 
-      if (lower.includes('pizza') || lower.includes('food') || lower.includes('order') || lower.includes('eat')) {
+      // Category 1: Very short / single word response (e.g. "yes", "ok", "thanks", "hello")
+      if (words.length <= 2) {
+        if (['hi', 'hello', 'hey', 'chào'].some(w => lower.includes(w))) {
+          return {
+            category: "単語のみの挨拶 (Short Greeting)",
+            better: "Hello there! It's great to talk with you today.",
+            explanation: "単語ひとつの挨拶だけでなく、『It's great to...』や『How are you doing?』を添えると親しみやすさと会話の流暢さが一気に高まります。",
+            usage: "【発話のコツ】挨拶＋相手へのポジティブな一言（例: Good to see you!）をセットで使う習慣をつけましょう。",
+            example: "Hi! I'm really looking forward to our conversation today.",
+            exampleTrans: "こんにちは！今日の会話練習をとても楽しみにしています。"
+          };
+        } else if (['yes', 'yeah', 'ok', 'okay', 'sure', 'có'].some(w => lower.includes(w))) {
+          return {
+            category: "短い相槌 (Short Agreement)",
+            better: "Yes, absolutely! / That sounds like a wonderful idea.",
+            explanation: "'Yes' や 'OK' の単語だけの返答から、感情や共感を表す副詞（'absolutely', 'definitely'）や感想を付け足すと文脈が豊かになります。",
+            usage: "【発展フレーズ】'Yes, that's right!' や 'Sure, I'd love to!' を使うと肯定的なニュアンスが自然に伝わります。",
+            example: "Yes, absolutely! I completely agree with your point.",
+            exampleTrans: "はい、まさにその通りです！おっしゃる通りだと思います。"
+          };
+        } else {
+          return {
+            category: "短文発話の拡張 (Expanding Short Input)",
+            better: `That's right, I think "${trimmed}" is very important for us.`,
+            explanation: "1〜2単語で回答が終わると対話が途切れがちになります。主語＋動詞（S+V）を備えた完全な文章（Full Sentence）を心がけましょう。",
+            usage: "【発話フレームワーク】'I think...' や 'In my opinion...' から始めることでフルセンテンスを組み立てやすくなります。",
+            example: `I believe "${trimmed}" is an essential part of effective communication.`,
+            exampleTrans: `私は「${trimmed}」が円滑なコミュニケーションに不可欠な要素だと考えています。`
+          };
+        }
+      }
+
+      // Category 2: Ordering / Requesting / Wanting (e.g. "I want...", "give me...", "order pizza")
+      if (['want', 'give me', 'order', 'pizza', 'food', 'coffee', 'buy', 'eat', 'drink'].some(w => lower.includes(w))) {
         return {
-          better: "I'd like to order a pizza, please.",
-          explanation: "注文の際は 'I would like to have...' よりも 'I'd like to order...' や 'Can I get...' と伝えるのが自然で丁寧です。",
-          usage: "パターン『I'd like to + 動詞』は飲食店やお店でのリクエスト全般で日常的に使えます。",
-          example: "I'd like to order a pepperoni pizza with extra cheese, please.",
-          exampleTrans: "ペパロニピザにチーズを追加で注文したいです。"
-        };
-      } else if (lower.includes('fine') || lower.includes('how are you') || lower.includes('doing')) {
-        return {
-          better: "I'm doing well, thank you. How about yourself?",
-          explanation: "'I am fine' だけでも通じますが、'I'm doing well' や 'How about yourself?' と聞き返すとよりフレンドリーな会話が弾みます。",
-          usage: "挨拶の返答の後に相手に質問を投げかけることで対話がスムーズに継続します。",
-          example: "I'm doing great! How has your week been so far?",
-          exampleTrans: "とても順調ですよ！今週はいかがですか？"
-        };
-      } else {
-        return {
-          better: targetLang.startsWith('en') ? `Could you please tell me more about ${text}?` : `『${text}』について教えていただけますか？`,
-          explanation: "相手との対話をさらに深めるために、質問形式や具体的な情景を加えるとより豊かなコミュニケーションになります。",
-          usage: "相手の返答を引き出すフレーズ『Could you tell me more about...』を活用しましょう。",
-          example: targetLang.startsWith('en') ? `I'd love to learn more about that topic.` : `そのトピックについてぜひ詳しく知りたいです。`,
-          exampleTrans: "そのトピックについてぜひ詳しく知りたいです。"
+          category: "注文・リクエスト表現 (Polite Ordering)",
+          better: "I'd like to order a pepperoni pizza, please. / Could I have a cup of coffee?",
+          explanation: "'I want...' は直接的すぎて少し子供っぽく聞こえる場合があります。お店やレストランでは 'I'd like to...' や 'Could I get...?' を使うのが大人で丁寧なマナーです。",
+          usage: "【丁寧な依頼パターン】『I'd like + [名詞/動詞] + , please.』は海外旅行や飲食店での必須フレーズです。",
+          example: "Could I please get a hot latte and a slice of cheese pizza?",
+          exampleTrans: "温かいラテとチーズピザを1枚いただけますか？"
         };
       }
+
+      // Category 3: Daily Greetings / Check-ins (e.g. "how are you", "I am fine")
+      if (['how are you', 'fine', 'good', 'doing well', 'thanks', 'thank you'].some(w => lower.includes(w))) {
+        return {
+          category: "挨拶・近況の受け答え (Polite Greeting Exchange)",
+          better: "I'm doing really well, thank you for asking! How has your day been so far?",
+          explanation: "'I am fine' だけでも通じますが、自分の状態を語った後に 'How about you?' や 'How has your day been?' と聞き返すことで会話のキャッチボールが成立します。",
+          usage: "【対話継続の法則】自分の近況（1文）＋ 感謝の言葉（1文）＋ 相手への質問（1文）の3点セットが好印象を与えます。",
+          example: "I'm having a great week! Thanks for asking. What have you been up to recently?",
+          exampleTrans: "今週はとても充実しています！聞いてくれてありがとう。最近はどう過ごしていましたか？"
+        };
+      }
+
+      // Category 4: Questions (e.g. "what", "where", "how", "why", "when")
+      if (['what', 'where', 'how', 'why', 'when', 'who', 'can you', 'could you'].some(w => lower.includes(w))) {
+        return {
+          category: "質問・疑問文の表現 (Formulating Questions)",
+          better: "Could you please explain how this works? / I was wondering if you could help me.",
+          explanation: "直接的な質問文に 'Could you please...?' や 'I was wondering if...' という丁寧な前置きを付けると、ビジネスやフォーマルな場でも使える洗練された英語になります。",
+          usage: "【丁寧な質問フレーズ】『Do you happen to know...?』（ひょっとして〜ご存知ですか？）を使うと柔らかいアプローチができます。",
+          example: "Could you tell me what the best approach for this situation would be?",
+          exampleTrans: "この状況において何が最善のアプローチか教えていただけますか？"
+        };
+      }
+
+      // Category 5: General thoughts & Opinions
+      return {
+        category: "意見・感想の表現強化 (Natural & Fluent Expression)",
+        better: `From my perspective, ${trimmed}. What do you think about it?`,
+        explanation: "自分の考えを述べた後に 'What do you think?' や 'Do you agree?' と付け加えることで、AIパートナーとの対話が深まります。また 'really', 'definitely', 'personally' などの強調副詞を使うと表現に深みが出ます。",
+        usage: "【会話の深め方】『To be honest,...』（正直なところ…）や 『From my experience,...』（私の経験上…）から始めると具体性が増します。",
+        example: `Personally, I feel that ${trimmed} makes a significant difference.`,
+        exampleTrans: `個人的には、${trimmed}が大きな違いをもたらすと感じています。`
+      };
     }
 
     // Pronunciation Levenshtein Evaluator
@@ -1183,17 +1237,30 @@
 
                   {/* Detailed Expression & Grammar Advice Section */}
                   <div class="pdf-section" style={{ borderTop: '2px solid var(--accent-amber)', paddingTop: '16px' }}>
-                    <div class="pdf-section-title">💡 表現・文法アドバイス ＆ 改善ポイント / Expression & Grammar Advice</div>
+                    <div class="pdf-section-title">💡 レッスン振り返りアドバイス ＆ 表現の改善ポイント / Expression & Grammar Advice</div>
                     {chatMessages.filter(m => m.sender === 'user' && !m.type).map((m, idx) => {
                       const adviceItem = generateExpressionAdvice(m.text, targetLang);
                       return (
-                        <div key={idx} class="pdf-advice-item">
-                          <div class="user-said">❌ あなたの発話 / You said: "{m.text}"</div>
-                          <div class="better-say">✅ より自然でふさわしい表現 / Better Expression: "{adviceItem.better}"</div>
-                          <div class="pdf-advice-detail">
-                            <div><strong>解説 / Explanation:</strong> {adviceItem.explanation}</div>
-                            <div><strong>使い方 / Usage Context:</strong> {adviceItem.usage}</div>
-                            <div><strong>例文 / Example Sentence:</strong> <em>"{adviceItem.example}"</em> ({adviceItem.exampleTrans})</div>
+                        <div key={idx} class="pdf-advice-item" style={{ background: '#ffffff', border: '1px solid #e8ded0', borderLeft: '4px solid #e07a5f', borderRadius: '12px', padding: '16px', marginBottom: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', background: 'rgba(224, 122, 95, 0.12)', color: '#e07a5f' }}>
+                              📌 {adviceItem.category}
+                            </span>
+                            <span style={{ fontSize: '0.78rem', color: '#8e7c6d' }}>#発話分析 {idx + 1}</span>
+                          </div>
+
+                          <div class="user-said" style={{ color: '#cf1322', fontWeight: 600, fontSize: '0.92rem', marginBottom: '6px' }}>
+                            🗣️ 実際の発話 / Your Input: "{m.text}"
+                          </div>
+                          
+                          <div class="better-say" style={{ color: '#2a9d8f', fontWeight: 700, fontSize: '1.02rem', marginBottom: '8px', background: 'rgba(42, 157, 143, 0.08)', padding: '8px 12px', borderRadius: '6px' }}>
+                            ✨ ネイティブおすすめ表現 / Recommended Expression: "{adviceItem.better}"
+                          </div>
+                          
+                          <div class="pdf-advice-detail" style={{ fontSize: '0.88rem', color: '#4a3e35', lineHeight: 1.6 }}>
+                            <div style={{ marginBottom: '4px' }}><strong>📝 解説 ＆ 改善理由:</strong> {adviceItem.explanation}</div>
+                            <div style={{ marginBottom: '4px' }}><strong>💡 表現の活用ポイント:</strong> {adviceItem.usage}</div>
+                            <div><strong>🌟 応用実践例文:</strong> <em>"{adviceItem.example}"</em> <span style={{ color: '#8e7c6d' }}>({adviceItem.exampleTrans})</span></div>
                           </div>
                         </div>
                       );
