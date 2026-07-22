@@ -1547,6 +1547,18 @@
               )}
               <button
                 class="btn-end-lesson-sm"
+                style={{
+                  background: ttsEngine === 'edge' ? 'var(--grad-terracotta)' : 'linear-gradient(135deg, #2a9d8f 0%, #264653 100%)',
+                  color: '#ffffff',
+                  fontWeight: '700'
+                }}
+                onClick={() => setTtsEngine(prev => prev === 'edge' ? 'gen' : 'edge')}
+                title="Toggle TTS Engine (Edge-TTS vs Standard Gen)"
+              >
+                🔊 {ttsEngine === 'edge' ? 'Edge' : 'Gen'}
+              </button>
+              <button
+                class="btn-end-lesson-sm"
                 style={{ background: 'linear-gradient(135deg, #f4a261 0%, #e07a5f 100%)' }}
                 onClick={handleResetChat}
                 title="Reset Chat & Clear History"
