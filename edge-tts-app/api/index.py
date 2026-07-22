@@ -1,38 +1,31 @@
-import asyncio
 import io
 import os
 import sys
 import json
+import base64
 import tempfile
+import urllib.request
+import urllib.parse
 import traceback
-from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
-import edge_tts
-import aiohttp
+from gtts import gTTS
 import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
 
-VOICE_MAP = {
-    'en': 'en-US-AriaNeural',
-    'en-us': 'en-US-AriaNeural',
-    'ja': 'ja-JP-NanamiNeural',
-    'ja-jp': 'ja-JP-NanamiNeural',
-    'vi': 'vi-VN-HoaiMyNeural',
-    'vi-vn': 'vi-VN-HoaiMyNeural',
-    'es': 'es-ES-ElviraNeural',
-    'fr': 'fr-FR-DeniseNeural',
+# Google Cloud Text-to-Speech Neural2 / WaveNet voice mapping
+GC_VOICE_MAP = {
+    'ja': { 'languageCode': 'ja-JP', 'name': 'ja-JP-Neural2-B' },
+    'ja-jp': { 'languageCode': 'ja-JP', 'name': 'ja-JP-Neural2-B' },
+    'vi': { 'languageCode': 'vi-VN', 'name': 'vi-VN-Wavenet-A' },
+    'vi-vn': { 'languageCode': 'vi-VN', 'name': 'vi-VN-Wavenet-A' },
+    'en': { 'languageCode': 'en-US', 'name': 'en-US-Neural2-F' },
+    'en-us': { 'languageCode': 'en-US', 'name': 'en-US-Neural2-F' },
 }
 
-FALLBACK_VOICE_MAP = {
-    'ja-JP-NanamiNeural': 'ja-JP-KeitaNeural',
-    'vi-VN-HoaiMyNeural': 'vi-VN-NamMinhNeural',
-    'en-US-AriaNeural': 'en-US-GuyNeural'
-}
-
-DEFAULT_VOICE = 'en-US-AriaNeural'
+DEFAULT_GC_VOICE = { 'languageCode': 'en-US', 'name': 'en-US-Neural2-F' }
 
 LANG_NAMES = {
     'en': 'English',
@@ -43,62 +36,66 @@ LANG_NAMES = {
     'vi-vn': 'Vietnamese (Tiếng Việt)'
 }
 
-async def _save_edge_tts_async(text: str, primary_voice: str) -> bytes:
-    voices_to_try = [primary_voice]
-    if primary_voice in FALLBACK_VOICE_MAP:
-        voices_to_try.append(FALLBACK_VOICE_MAP[primary_voice])
+def generate_google_cloud_tts(text: str, language: str, api_key: str = None) -> bytes:
+    lang_key = language.lower()
+    voice_config = GC_VOICE_MAP.get(lang_key)
+    if not voice_config:
+        prefix = lang_key.split('-')[0]
+        voice_config = GC_VOICE_MAP.get(prefix, DEFAULT_GC_VOICE)
 
-    last_error = None
-    for attempt_voice in voices_to_try:
-        for attempt in range(2):
-            temp_path = None
-            try:
-                with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as fp:
-                    temp_path = fp.name
-
-                communicate = edge_tts.Communicate(text, attempt_voice)
-                await communicate.save(temp_path)
-
-                with open(temp_path, "rb") as f:
-                    audio_bytes = f.read()
-
-                if audio_bytes and len(audio_bytes) > 200:
-                    print(f"[Edge TTS Success] Voice: '{attempt_voice}' | Size: {len(audio_bytes)} bytes", flush=True)
-                    return audio_bytes
-            except Exception as e:
-                last_error = e
-                print(f"[Edge TTS Warning] Voice '{attempt_voice}' Attempt {attempt+1} failed: {str(e)}", flush=True)
-                await asyncio.sleep(0.2)
-            finally:
-                if temp_path and os.path.exists(temp_path):
-                    try:
-                        os.remove(temp_path)
-                    except Exception:
-                        pass
-
-    if last_error:
-        raise last_error
-    raise RuntimeError("Edge-TTS generated empty audio bytes for all candidate voices.")
-
-def generate_tts_bytes(text: str, voice: str) -> bytes:
-    def thread_worker():
-        new_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(new_loop)
+    # 1. Try Google Cloud Text-to-Speech REST API (Neural2 / WaveNet) using API Key if provided
+    clean_key = (api_key or os.getenv('GEMINI_API_KEY') or '').strip()
+    if clean_key:
         try:
-            return new_loop.run_until_complete(_save_edge_tts_async(text, voice))
-        finally:
-            new_loop.close()
+            url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={clean_key}"
+            payload = {
+                "input": { "text": text },
+                "voice": voice_config,
+                "audioConfig": {
+                    "audioEncoding": "MP3",
+                    "speakingRate": 1.0,
+                    "pitch": 0.0
+                }
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode('utf-8'),
+                headers={'Content-Type': 'application/json'}
+            )
+            with urllib.request.urlopen(req, timeout=8) as response:
+                res_data = json.loads(response.read().decode('utf-8'))
+                if "audioContent" in res_data:
+                    audio_bytes = base64.b64decode(res_data["audioContent"])
+                    print(f"[Google Cloud TTS Neural2/WaveNet Success] Voice: {voice_config['name']}", flush=True)
+                    return audio_bytes
+        except Exception as gc_err:
+            print(f"[Google Cloud TTS REST API Warning]: {str(gc_err)} -> Falling back to gTTS", flush=True)
 
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(thread_worker)
-        return future.result(timeout=25)
+    # 2. Universal Resilient Fallback: gTTS (Google Translate Voice API)
+    lang_code = voice_config['languageCode'].split('-')[0]
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as fp:
+        temp_path = fp.name
+
+    try:
+        tts = gTTS(text=text, lang=lang_code, slow=False)
+        tts.save(temp_path)
+        with open(temp_path, "rb") as f:
+            audio_bytes = f.read()
+        print(f"[gTTS Fallback Success] Lang: {lang_code}", flush=True)
+        return audio_bytes
+    finally:
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
 
 @app.route('/', methods=['GET'])
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({
         "status": "healthy",
-        "service": "LingoBotWebApp Vercel Serverless API (google-generativeai SDK)",
+        "service": "LingoBotWebApp Vercel API (Google Cloud TTS Neural2/WaveNet & gTTS)",
         "python_version": sys.version
     })
 
@@ -108,25 +105,17 @@ def tts_endpoint():
         data = request.get_json() or {}
         text = data.get('text', '').strip()
         language = data.get('language', 'en').strip().lower()
-        custom_voice = data.get('voice', None)
+        api_key = data.get('apiKey', '')
 
         if not text:
             return jsonify({'error': 'Parameter "text" is required.'}), 400
 
-        if custom_voice:
-            voice = custom_voice
-        else:
-            voice = VOICE_MAP.get(language)
-            if not voice:
-                prefix = language.split('-')[0]
-                voice = VOICE_MAP.get(prefix, DEFAULT_VOICE)
+        print(f"[Google Cloud TTS Request] Lang: '{language}' | Text: '{text[:30]}...'", flush=True)
 
-        print(f"[Edge TTS Vercel Request] Lang: '{language}' -> Primary Voice: '{voice}' | Text: '{text[:30]}...'", flush=True)
-
-        mp3_bytes = generate_tts_bytes(text, voice)
+        mp3_bytes = generate_google_cloud_tts(text, language, api_key)
 
         if not mp3_bytes:
-            return jsonify({'error': 'Failed to generate MP3 stream from Edge TTS.'}), 500
+            return jsonify({'error': 'Failed to generate MP3 audio from Google Cloud TTS.'}), 500
 
         buffer = io.BytesIO(mp3_bytes)
         buffer.seek(0)
@@ -135,16 +124,16 @@ def tts_endpoint():
             buffer,
             mimetype='audio/mpeg',
             as_attachment=False,
-            download_name='lingobot_voice.mp3'
+            download_name='lingobot_google_voice.mp3'
         )
         response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['X-TTS-Voice'] = voice
+        response.headers['X-TTS-Engine'] = 'Google Cloud TTS'
         return response
 
     except Exception as e:
         err_detail = traceback.format_exc()
         print(f"[TTS ERROR TRACEBACK]:\n{err_detail}", flush=True)
-        return jsonify({'error': f"TTS Generation Failed: {str(e)}", 'detail': err_detail}), 500
+        return jsonify({'error': f"Google Cloud TTS Generation Failed: {str(e)}", 'detail': err_detail}), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat_endpoint():
