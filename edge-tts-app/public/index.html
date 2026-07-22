@@ -649,7 +649,7 @@
           sender: 'ai',
           lang: 'trilingual',
           type: 'onboarding_ui',
-          text: `🇻🇳 Chào bạn! Vui lòng chọn ngôn ngữ giao diện bạn muốn sử dụng:\n🇯🇵 次に、アプリの案内で使用する【使用言語】を選択してください：\n🇺🇸 Next, please select the language for the app interface:`,
+          text: `🇻🇳 Chào bạn! Vui lòng chọn ngôn ngữ giao diện bạn muốn sử dụng:\n🇯🇵 次（つぎ）に、アプリの案内（あんない）で使用（しよう）する【使用言語（しようげんご）】を選択（せんたく）してください：\n🇺🇸 Next, please select the language for the app interface:`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
@@ -664,7 +664,7 @@
         setOnboardingStep('target_lang');
 
         const step2MsgMap = {
-          'ja-JP': '使用言語を【日本語】に設定しました。次に、会話練習で学習したい【目標言語】を選択してください：',
+          'ja-JP': '使用言語（しようげんご）を【日本語（にほんご）】に設定（せってい）しました。次（つぎ）に、会話練習（かいわれんしゅう）で学習（がくしゅう）したい【目標言語（もくひょうげんご）】を選択（せんたく）してください：',
           'vi-VN': 'Đã chọn ngôn ngữ giao diện là [Tiếng Việt]. Tiếp theo, vui lòng chọn [Ngôn ngữ mục tiêu] mà bạn muốn luyện tập:',
           'en-US': 'Interface language set to [English]. Next, please select your [Target Learning Language] to practice:'
         };
@@ -695,7 +695,7 @@
 
         const step3WelcomeMap = {
           'en-US': "Wonderful! Target language set to English. Let's practice speaking together! How are you doing today?",
-          'ja-JP': "素晴らしいですね！目標言語を【日本語】に設定しました。さあ、一緒に会話練習を始めましょう！",
+          'ja-JP': "素晴（すば）らしいですね！目標言語（もくひょうげんご）を【日本語（にほんご）】に設定（せってい）しました。さあ、一緒（いっしょ）に会話練習（かいわれんしゅう）を始（はじ）めましょう！",
           'vi-VN': "Tuyệt vời! Ngôn ngữ mục tiêu là [Tiếng Việt]. Hãy bắt đầu luyện tập giao tiếp ngay hôm nay nhé!"
         };
 
@@ -868,18 +868,18 @@
           }
         }
 
-        // Parse rate limit retry seconds (e.g. 429 / RESOURCE_EXHAUSTED / Retry-After)
+        // Parse rate limit retry seconds (e.g. 429 / RESOURCE_EXHAUSTED / Please retry in 24.172228597s)
         const parseRetryWaitSeconds = (logStr) => {
           if (!logStr) return null;
           const lower = logStr.toLowerCase();
-          const isBusy = lower.includes('429') || lower.includes('resource_exhausted') || lower.includes('resourceexhausted') || lower.includes('quota') || lower.includes('rate limit') || lower.includes('too many requests');
+          const isBusy = lower.includes('429') || lower.includes('resource_exhausted') || lower.includes('resourceexhausted') || lower.includes('quota') || lower.includes('rate limit') || lower.includes('too many requests') || lower.includes('please retry in');
           if (!isBusy) return null;
 
-          const match = lower.match(/(?:retry[\s\-_]*(?:after|in)|retry\-after)[\s:=]*(\d+(?:\.\d+)?)\s*s?/);
+          const match = lower.match(/(?:please\s+retry\s+in|retry[\s\-_]*(?:after|in)|retry\-after)[\s:=]*(\d+(?:\.\d+)?)\s*s?/i);
           if (match && match[1]) {
             return parseFloat(match[1]);
           }
-          return 5; // Default short 5-second wait if rate limited
+          return 5; // Default short 5-second wait if rate limited without explicit seconds
         };
 
         const retryWaitSec = parseRetryWaitSeconds(directErrorLog);
@@ -915,7 +915,7 @@
             sender: 'ai',
             isBusy: true,
             lang: uiLang,
-            text: `⏳ Hệ thống đang bận. Vui lòng chờ trong giây lát...\n⏳ ただいま混雑中です。お待ちください。`,
+            text: `⏳ Hệ thống đang bận. Vui lòng chờ trong giây lát...\n⏳ ただいま混雑（こんざつ）中（ちゅう）です。少（すこ）し待（ま）ってください。`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
 
@@ -923,8 +923,11 @@
           scrollToBottom();
           focusTextInput();
         } else {
-          // 5. IF FAILED (Retry > 20s or Fatal Error): Display concise error bubble with downloadable text log file
+          // 5. IF FAILED (Retry > 20s or Fatal Error): Display error bubble + text log file + specific wait prompt
           setActiveConnectedModel('未接続 / Error');
+
+          const roundedWait = retryWaitSec !== null ? Math.ceil(retryWaitSec) : null;
+          const waitPromptStr = roundedWait ? `\n\n⏳ AIから「約 ${roundedWait} 秒待ってから再試行してください」と要求されています。約 ${roundedWait} 秒ほど待ってから話しかけてください。\n(AI yêu cầu chờ khoảng ${roundedWait} giây trước khi thử lại.)` : '';
 
           const fullLogText = `========================================\nLingoBotWebApp Error Diagnostic Log\nTime: ${new Date().toLocaleString()}\nWait Timeout: ${retryWaitSec !== null ? retryWaitSec + 's (>20s)' : 'Fatal/Auth Error'}\n========================================\n\n${directErrorLog || 'API Key is missing or invalid.'}`;
 
@@ -934,7 +937,7 @@
             isError: true,
             errorLogText: fullLogText,
             lang: uiLang,
-            text: `❌ Đã xảy ra lỗi. Vui lòng kiểm tra nhật ký lỗi.\n❌ エラーが発生しました。ログを確認してください。`,
+            text: `❌ Đã xảy ra lỗi. Vui lòng kiểm tra nhật ký lỗi.\n❌ エラーが発生（はっせい）しました。ログを確認（かくにん）してください。${waitPromptStr}`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
 
@@ -1081,7 +1084,7 @@
                             🇻🇳 Tiếng Việt
                           </button>
                           <button class="btn btn-terracotta" onClick={() => handleSelectUiLang('ja-JP')}>
-                            🇯🇵 日本語
+                            <FuriganaText text="🇯🇵 日本語（にほんご）" />
                           </button>
                           <button class="btn btn-terracotta" onClick={() => handleSelectUiLang('en-US')}>
                             🇺🇸 English
@@ -1096,7 +1099,7 @@
                             🇻🇳 Tiếng Việt (Vietnamese)
                           </button>
                           <button class="btn btn-sage" onClick={() => handleSelectTargetLang('ja-JP')}>
-                            🇯🇵 日本語 (Japanese)
+                            <FuriganaText text="🇯🇵 日本語（にほんご） (Japanese)" />
                           </button>
                           <button class="btn btn-sage" onClick={() => handleSelectTargetLang('en-US')}>
                             🇺🇸 English (US English)
