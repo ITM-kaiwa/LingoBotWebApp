@@ -428,6 +428,42 @@
     ];
 
     // --- CONTEXT ADVICE GENERATOR ---
+        // --- HELPER COMPONENT FOR FURIGANA RENDERING ---
+    const FuriganaText = ({ text }) => {
+      if (!text) return null;
+      const regex = /([\u4E00-\u9FFF\u3005]+)\s*[\（\(]([\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+)[\）\)]/g;
+      const parts = [];
+      let lastIndex = 0;
+      let match;
+
+      while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push({ type: 'text', content: text.substring(lastIndex, match.index) });
+        }
+        parts.push({ type: 'kanji', kanji: match[1], reading: match[2] });
+        lastIndex = regex.lastIndex;
+      }
+      if (lastIndex < text.length) {
+        parts.push({ type: 'text', content: text.substring(lastIndex) });
+      }
+
+      return (
+        <span>
+          {parts.map((p, idx) => {
+            if (p.type === 'text') return <span key={idx}>{p.content}</span>;
+            return (
+              <ruby key={idx} style={{ rubyPosition: 'over' }}>
+                {p.kanji}
+                <rt style={{ fontSize: '0.62em', color: 'var(--accent-terracotta-dark)', fontWeight: 'bold' }}>
+                  {p.reading}
+                </rt>
+              </ruby>
+            );
+          })}
+        </span>
+      );
+    };
+
     function generateContextAdvice(userInput, uiLang, targetLang) {
       if (!userInput) return null;
       const trimmed = userInput.trim();
