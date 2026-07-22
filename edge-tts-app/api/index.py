@@ -5,6 +5,7 @@ import sys
 import json
 import tempfile
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 import edge_tts
@@ -36,8 +37,7 @@ LANG_NAMES = {
     'vi-vn': 'Vietnamese (Tiếng Việt)'
 }
 
-async def generate_tts_bytes_async(text: str, voice: str) -> bytes:
-    # Use temporary file in /tmp directory for reliable file saving in Vercel Serverless environment
+async def _save_edge_tts_async(text: str, voice: str) -> bytes:
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as fp:
         temp_path = fp.name
 
@@ -56,23 +56,26 @@ async def generate_tts_bytes_async(text: str, voice: str) -> bytes:
                 pass
 
 def generate_tts_bytes(text: str, voice: str) -> bytes:
-    try:
-        return asyncio.run(generate_tts_bytes_async(text, voice))
-    except Exception:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+    # Run async Edge-TTS in a dedicated worker thread with a isolated asyncio event loop
+    # to prevent "event loop already running" or thread conflicts in Vercel Serverless environment
+    def thread_worker():
+        new_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(new_loop)
         try:
-            audio_bytes = loop.run_until_complete(generate_tts_bytes_async(text, voice))
-            return audio_bytes
+            return new_loop.run_until_complete(_save_edge_tts_async(text, voice))
         finally:
-            loop.close()
+            new_loop.close()
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(thread_worker)
+        return future.result(timeout=20)
 
 @app.route('/', methods=['GET'])
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({
         "status": "healthy",
-        "service": "LingoBotWebApp Vercel Serverless API (tempfile Edge-TTS)",
+        "service": "LingoBotWebApp Vercel Serverless API (Isolated Thread Edge-TTS)",
         "python_version": sys.version
     })
 
@@ -116,8 +119,9 @@ def tts_endpoint():
         return response
 
     except Exception as e:
-        print(f"[TTS Error Traceback]:\n{traceback.format_exc()}")
-        return jsonify({'error': str(e), 'log': traceback.format_exc()}), 500
+        err_detail = traceback.format_exc()
+        print(f"[TTS Error Traceback]:\n{err_detail}")
+        return jsonify({'error': str(e), 'detail': err_detail}), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat_endpoint():
@@ -128,7 +132,6 @@ def chat_endpoint():
         ui_lang = data.get('uiLang', 'ja-JP').strip().lower()
         target_lang = data.get('targetLang', 'en-US').strip().lower()
 
-        # Clean API Key
         raw_api_key = data.get('apiKey', '') or os.getenv('GEMINI_API_KEY', '')
         api_key = raw_api_key.strip().replace('\r', '').replace('\n', '').replace(' ', '')
 

@@ -1024,6 +1024,27 @@
             setLoadingId(null);
           } catch (err) {
             setLoadingId(null);
+            console.warn(`[Edge-TTS API Failed -> Web Speech API Fallback]: ${err.message}`);
+
+            // Automatic fallback to browser native Web Speech API if Edge-TTS server endpoint fails (e.g. HTTP 500)
+            if ('speechSynthesis' in window) {
+              const langCode = language || targetLang || 'ja-JP';
+              const utterance = new SpeechSynthesisUtterance(cleanAudioText);
+              utterance.lang = langCode;
+
+              const voices = window.speechSynthesis.getVoices();
+              const langPrefix = langCode.split('-')[0];
+              const targetVoice = voices.find(v => v.lang.replace('_', '-').startsWith(langPrefix));
+              if (targetVoice) utterance.voice = targetVoice;
+
+              setPlayingId(id);
+              utterance.onend = () => setPlayingId(null);
+              utterance.onerror = () => setPlayingId(null);
+
+              window.speechSynthesis.speak(utterance);
+              return;
+            }
+
             alert(`Lỗi phát âm thanh: ${err.message}`);
             return;
           }
