@@ -112,9 +112,437 @@
     };
 
     const SAMPLE_SENTENCES = [
+      // --- 1. 初級後半レベル (N4-N3相当 / 10文) ---
       {
         id: 1,
+        category: 'ja-beginner',
+        levelLabel: '🌱 初級後半',
+        lang: 'ja-JP',
+        text: '雨（あめ）が降（ふ）ったら、タクシーで行（い）きましょう。',
+        phonetic: 'あめがふったら、たくしーでいきましょう。',
+        translation: 'Nếu trời mưa, chúng ta hãy đi bằng taxi.',
+        advice: {
+          vi: 'Chú ý nối âm tự nhiên ở cụm "降ったら" (futtara) và hạ giọng nhẹ ở cuối câu "行きましょう".',
+          ja: '「降ったら」の促音（小「っ」）のリズムと、「行きましょう」の丁寧な下降イントネーションに注意しましょう。',
+          mouthTip: '👄 口の形・コツ: 「ふったら」の「っ」では息を短く止め、「いきましょう」は口を大きめに動かします。'
+        }
+      },
+      {
+        id: 2,
+        category: 'ja-beginner',
+        levelLabel: '🌱 初級後半',
+        lang: 'ja-JP',
+        text: 'パスポートを失（な）くしてしまって、とても困（こま）りました。',
+        phonetic: 'ぱすぽーとをなくしてしまって、とてもこまりました。',
+        translation: 'Tôi đã lỡ làm mất hộ chiếu nên rất rắc rối.',
+        advice: {
+          vi: 'Phát âm rõ cụm "~てしまう" (lỡ làm gì đó) thể hiện sự tiếc nuối, giữ nhịp mượt mà.',
+          ja: '「〜てしまって」の残念なニュアンスを込めつつ、「困りました」へ自然に繋げます。',
+          mouthTip: '👄 口の形・コツ: 「パスポート」の「ポー」の長音をしっかり伸ばし、「しまって」の促音で息を止めます。'
+        }
+      },
+      {
+        id: 3,
+        category: 'ja-beginner',
+        levelLabel: '🌱 初級後半',
+        lang: 'ja-JP',
+        text: '先輩（せんぱい）に引（ひ）っ越（こ）しを手伝（てつだ）ってもらいました。',
+        phonetic: 'せんぱいにひっこしをてつだってもらいました。',
+        translation: 'Tôi đã được tiền bối giúp đỡ chuyển nhà.',
+        advice: {
+          vi: 'Chú ý cấu trúc cho nhận "~てもらいました", phát âm rõ trợ từ "に" chỉ người giúp đỡ.',
+          ja: '「先輩に」の助詞「に」を明瞭に発音し、「手伝ってもらいました」をスムーズに唱えます。',
+          mouthTip: '👄 口の形・コツ: 「ひっこし」と「てつだって」で連続する促音のリズムを意識しましょう。'
+        }
+      },
+      {
+        id: 4,
+        category: 'ja-beginner',
+        levelLabel: '🌱 初級後半',
+        lang: 'ja-JP',
+        text: 'もっと早（はや）く連絡（れんらく）してくれれば良（よ）かったです。',
+        phonetic: 'もっとはやくれんらくしてくれればよかったです。',
+        translation: 'Giá mà bạn liên lạc sớm hơn thì tốt biết mấy.',
+        advice: {
+          vi: 'Dùng thể điều kiện "~ければ良かったです" thể hiện sự tiếc nuối, hạ ngữ điệu ở cuối câu.',
+          ja: '仮定形「〜くれれば」から「良かったです」への語尾のニュアンスに注意します。',
+          mouthTip: '👄 口の形・コツ: 「れんらく」の「ん」は舌の後ろを上顎につけて発声します。'
+        }
+      },
+      {
+        id: 5,
+        category: 'ja-beginner',
+        levelLabel: '🌱 初級後半',
+        lang: 'ja-JP',
+        text: 'この服（ふく）は安（やす）くても、質（しつ）があまり良（よ）くありません。',
+        phonetic: 'このふくはやすぐても、しつがあまりよくありません。',
+        translation: 'Bộ quần áo này dù rẻ nhưng chất lượng không tốt lắm.',
+        advice: {
+          vi: 'Ngắt nhịp nhẹ sau "安くても" (dù rẻ), phát âm câu phủ định "良くありません" rõ ràng.',
+          ja: '逆説「安くても」の直後で少し息を整え、「良くありません」へ繋げます。',
+          mouthTip: '👄 口の形・コツ: 「しつ」の「つ」は歯の間から息を吹き出すように発音します。'
+        }
+      },
+      {
+        id: 6,
+        category: 'ja-beginner',
+        levelLabel: '🌱 初級後半',
+        lang: 'ja-JP',
+        text: '後（うし）ろの人（ひと）に足（あし）を踏（ふ）まれて痛（いた）かったです。',
+        phonetic: 'うしろのひとにあしをふまれていたかったです。',
+        translation: 'Tôi bị người phía sau giẫm vào chân nên rất đau.',
+        advice: {
+          vi: 'Thể bị động "踏まれて" (bị giẫm), chú ý nhấn trọng âm nhẹ ở từ "痛かったです".',
+          ja: '受身形「踏まれて」を正確に発音し、感情を込めて「痛かったです」と結びます。',
+          mouthTip: '👄 口の形・コツ: 「あしをふまれて」は音をつなげて流れるように発音します。'
+        }
+      },
+      {
+        id: 7,
+        category: 'ja-beginner',
+        levelLabel: '🌱 初級後半',
+        lang: 'ja-JP',
+        text: '部長（ぶちょう）は私（わたし）に新（あたら）しいプロジェクトを担当（たんとう）させました。',
+        phonetic: 'ぶちょうはわたしにあたらしいぷろじぇくとをたんとうさせました。',
+        translation: 'Trưởng phòng đã giao cho tôi đảm nhận dự án mới.',
+        advice: {
+          vi: 'Thể sai khiến "担当させました" (giao đảm nhận), phát âm tách biệt "担当" và "させました".',
+          ja: '使役形「担当させました」の音節を崩さず丁寧に発音します。',
+          mouthTip: '👄 口の形・コツ: 「プロジェクト」の外来音「ジェ」は唇を少し丸めて発音します。'
+        }
+      },
+      {
+        id: 8,
+        category: 'ja-beginner',
+        levelLabel: '🌱 初級後半',
+        lang: 'ja-JP',
+        text: '会議（かいぎ）が終わったら、すぐにメールで報告（ほうこく）してください。',
+        phonetic: 'かいぎがおわったら、すぐにめーるでほうこくしてください。',
+        translation: 'Khi cuộc họp kết thúc, hãy báo cáo ngay qua email.',
+        advice: {
+          vi: 'Mẫu câu chỉ thị lịch sự "~てください", ngắt nhịp nhẹ sau "終わったら".',
+          ja: '「終わったら」の後の読点で一息置き、「報告してください」をはっきり伝えます。',
+          mouthTip: '👄 口の形・コツ: 「ほうこく」の長音（ほう）と促音（こく）を正確にコントロールします。'
+        }
+      },
+      {
+        id: 9,
+        category: 'ja-beginner',
+        levelLabel: '🌱 初級後半',
+        lang: 'ja-JP',
+        text: '風邪（かぜ）を引（ひ）かないように、温（あたた）かい服（ふく）を着（き）てください。',
+        phonetic: 'かぜをひかないように、あたたかいふくをきてください。',
+        translation: 'Để không bị cảm lạnh, bạn hãy mặc áo ấm nhé.',
+        advice: {
+          vi: 'Mẫu câu mục đích "~ように", phát âm mềm mại mang tính khuyên bảo quan tâm.',
+          ja: '「〜ように」の気遣いのニュアンスを大切にし、「温かい服を」をなめらかに唱えます。',
+          mouthTip: '👄 口の形・コツ: 「あたたかい」の「た」の連音で口が固くならないよう注意します。'
+        }
+      },
+      {
+        id: 10,
+        category: 'ja-beginner',
+        levelLabel: '🌱 初級後半',
+        lang: 'ja-JP',
+        text: '日本（にほん）へ行（い）く前（まえ）に、ひらがなとカタカナを覚（おぼ）えておきます。',
+        phonetic: 'にほんへいくまえに、ひらがなとかたかなをおぼえておきます。',
+        translation: 'Trước khi đi Nhật, tôi sẽ học thuộc Hiragana và Katakana.',
+        advice: {
+          vi: 'Cấu trúc chuẩn bị trước "~ておく", phát âm mượt cụm "ひらがなとカタカナ".',
+          ja: '「〜前に」で一度区切り、「覚えておきます」の準備の意図を込めて発音します。',
+          mouthTip: '👄 口の形・コツ: 「にほんへ」の助詞「へ」は「え」と発音します。'
+        }
+      },
+
+      // --- 2. 中級レベル (CEFR B1-B2 / N3-N2相当 / 10文) ---
+      {
+        id: 11,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
+        lang: 'ja-JP',
+        text: 'お忙（いそが）しいところ恐縮（きょうしゅく）ですが、確認（かくにん）していただけますでしょうか。',
+        phonetic: 'おいそがしいところきょうしゅくですが、かくにんしていただけますでしょうか。',
+        translation: 'Tôi xin lỗi vì đã làm phiền lúc bạn bận, nhưng bạn có thể kiểm tra giúp tôi được không?',
+        advice: {
+          vi: 'Mẫu câu kính ngữ doanh nghiệp chuẩn, giọng điệu hạ nhẹ ở "恐縮ですが" thể hiện sự khiêm tốn.',
+          ja: 'ビジネス敬語の定番。「恐縮ですが」で語尾を少し和らげ、丁寧な疑問形にします。',
+          mouthTip: '👄 口の形・コツ: 「きょうしゅく」の拗音「きょ」「しゅ」は息を鼻から抜かずに発声します。'
+        }
+      },
+      {
+        id: 12,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
+        lang: 'ja-JP',
+        text: 'プロジェクトの進捗状況（しんちょくじょうきょう）に応（おう）じて、スケジュールを調整（ちょうせい）する予定（よてい）です。',
+        phonetic: 'ぷろじぇくとのしんちょくじょうきょうにおうじて、すけじゅーるをちょうせいするよていです。',
+        translation: 'Tùy thuộc vào tiến độ của dự án, chúng tôi dự định sẽ điều chỉnh lịch trình.',
+        advice: {
+          vi: 'Cụm từ "進捗状況に応じて" ghép nối phức tạp, chú ý không ngắt âm giữa "進捗" và "状況".',
+          ja: '熟語連号「進捗状況」のリズムを一定にし、「応じて」で一呼吸置きます。',
+          mouthTip: '👄 口の形・コツ: 「しんちょく」の促音「っ」と「じょうきょう」の拗音を正確に意識します。'
+        }
+      },
+      {
+        id: 13,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
+        lang: 'ja-JP',
+        text: '新商品（しんしょうひん）の開発（かいはつ）に伴（ともな）い、市場調査（しじょうちょうさ）をやり直（なお）すことになりました。',
+        phonetic: 'しんしょうひんのかいはつにともない、しじょうちょうさをやりなおすことになりました。',
+        translation: 'Cùng với việc phát triển sản phẩm mới, chúng tôi đã quyết định làm lại nghiên cứu thị trường.',
+        advice: {
+          vi: 'Mẫu cấu trúc "~に伴い" (cùng với), đọc rõ cụm "やり直すことになりました".',
+          ja: '「〜に伴い」で文節の繋がりを意識し、決定事項の語尾「〜ことになりました」を落ち着いて発音します。',
+          mouthTip: '👄 口の形・コツ: 「しんしょうひん」の「ん」音を連続して滑らかに発音します。'
+        }
+      },
+      {
+        id: 14,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
+        lang: 'ja-JP',
+        text: '予期（よき）せぬトラブルが発生（はっせい）したため、対応（たいおう）に追（お）われています。',
+        phonetic: 'よきせぬとらぶるがはっせいしたため、たいおうにおわれています。',
+        translation: 'Do sự cố bất ngờ xảy ra nên chúng tôi đang cuống cuồng xử lý.',
+        advice: {
+          vi: 'Cụm quán ngữ "対応に追われています", phát âm rõ "予期せぬ" (ngoài dự kiến).',
+          ja: '「予期せぬトラブル」をひとかたまりで捉え、「追われています」で受身の緊迫感を表します。',
+          mouthTip: '👄 口の形・コツ: 「はっせい」の促音と「たいおう」の母音（あ・い・お・う）を正確に口を開きます。'
+        }
+      },
+      {
+        id: 15,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
+        lang: 'ja-JP',
+        text: 'お客様（きゃくさま）からのご要望（ようぼう）には、できる限（かぎ）り柔軟（じゅうなん）に対応（たいおう）いたします。',
+        phonetic: 'おきゃくさまからのごようぼうには、できるかぎりじゅうなんにたいおういたします。',
+        translation: 'Đối với yêu cầu của khách hàng, chúng tôi sẽ linh hoạt đáp ứng trong khả năng có thể.',
+        advice: {
+          vi: 'Kính ngữ phục vụ khách hàng "対応いたします", phát âm rõ từ "柔軟に" (linh hoạt).',
+          ja: '謙譲表現「いたします」を含み、お客様第一の姿勢を丁寧なトーンで表現します。',
+          mouthTip: '👄 口の形・コツ: 「じゅうなん」の「じゅ」は口唇を突き出さず自然に横に開きます。'
+        }
+      },
+      {
+        id: 16,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
+        lang: 'ja-JP',
+        text: '今回（こんかい）の失敗（しっぱい）を教訓（きょうくん）にして、次回（じかい）は万全（ばんぜん）の態勢（たいせい）で臨（のぞ）みます。',
+        phonetic: 'こんかいのしっぱいをきょうくんにして、じかいはばんぜんのたいせいでぞみます。',
+        translation: 'Rút kinh nghiệm từ thất bại lần này, lần tới chúng tôi sẽ chuẩn bị thật chu đáo.',
+        advice: {
+          vi: 'Các từ Hán Việt cao cấp như "教訓", "万全", "態勢", chú ý độ dai của âm "ん".',
+          ja: '「教訓にして」の後にポーズを置き、「万全の態勢で臨みます」の決意を込めます。',
+          mouthTip: '👄 口の形・コツ: 「しっぱい」の「っ」と「ぱい」の破裂音をしっかり弾ませます。'
+        }
+      },
+      {
+        id: 17,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
+        lang: 'ja-JP',
+        text: '専門家（せんもんか）のアドバイスに従（したが）って、作業（さぎょう）の手順（てじゅん）を見直（みなお）しました。',
+        phonetic: 'せんもんかのあどばいすにしたがって、さぎょうのてじゅんをみなおしました。',
+        translation: 'Theo lời khuyên của chuyên gia, chúng tôi đã xem xét lại quy trình làm việc.',
+        advice: {
+          vi: 'Mẫu câu "~に従って" (theo như), chú ý phát âm từ mượn "アドバイス".',
+          ja: '「〜に従って」で前提を指し、「作業の手順を見直しました」へすっきりと繋げます。',
+          mouthTip: '👄 口の形・コツ: 「さぎょう」の「ぎょ」と「てじゅん」の「じゅ」の濁音を明瞭にします。'
+        }
+      },
+      {
+        id: 18,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
+        lang: 'ja-JP',
+        text: 'たとえ時間（じかん）がかかったとしても、最後（さいご）までやり抜（ぬ）くつもりです。',
+        phonetic: 'たとえじかんがかかったとしても、さいごまでやりぬくつもりです。',
+        translation: 'Cho dù có mất thời gian đi nữa, tôi vẫn dự định sẽ làm đến cùng.',
+        advice: {
+          vi: 'Mẫu câu giả định "たとえ〜としても", nhấn mạnh ở động từ phức hợp "やり抜く".',
+          ja: '「たとえ〜としても」の強く固い意志を込め、「やり抜くつもりです」をしっかり言い切ります。',
+          mouthTip: '👄 口の形・コツ: 「やりぬく」の「ぬ」は息を鼻に抜かずに口の奥で発音します。'
+        }
+      },
+      {
+        id: 19,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
+        lang: 'ja-JP',
+        text: '予備知識（よびちしき）がないまま会議（かいぎ）に参加（さんか）しても、議論（ぎろん）についていけません。',
+        phonetic: 'よびちしきがないままかいぎにさんかしても、ぎろんについていけません。',
+        translation: 'Dù có tham gia cuộc họp mà không có kiến thức nền tảng thì cũng không thể theo kịp cuộc thảo luận.',
+        advice: {
+          vi: 'Cụm "~ないまま" và thể khả năng phủ định "ついていけません", ngắt giọng hợp lý.',
+          ja: '「〜ないまま」で条件の不足を示し、「ついていけません」を感情を抑えて述べます。',
+          mouthTip: '👄 口の形・コツ: 「よびちしき」の「ちしき」で無声化（息だけの発音）に注意します。'
+        }
+      },
+      {
+        id: 20,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級',
+        lang: 'ja-JP',
+        text: 'この地域（ちいき）は交通（こうつう）の便（べん）が良（よ）く、住（す）みやすい環境（かんきょう）が整（ととの）っています。',
+        phonetic: 'このちいきはこうつうのべんがよく、すみやすいかんきょうがととのっています。',
+        translation: 'Khu vực này giao thuận tiện và có môi trường sống rất tốt.',
+        advice: {
+          vi: 'Phát âm mượt mà các từ Hán Việt "交通の便", "環境", "整っています".',
+          ja: '「交通の便が良い」の並列関係を整え、「整っています」で爽やかに締めくくります。',
+          mouthTip: '👄 口の形・コツ: 「こうつう」の長音（こう・つう）を二音節分しっかり伸ばします。'
+        }
+      },
+
+      // --- 3. 上級レベル (CEFR C1-C2 / N1-超N1相当 / 10文) ---
+      {
+        id: 21,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級',
+        lang: 'ja-JP',
+        text: '既存（きそん）の枠組（わくぐ）みにとらわれることなく、革新的（かくしんてき）なアイデアを生（う）み出（だ）すことが求（もと）められています。',
+        phonetic: 'きそんのわくぐみにとらわれることなく、かくしんてきないであをうみだすことがもとめられています。',
+        translation: 'Chúng ta được yêu cầu phải tạo ra những ý tưởng đột phá mà không bị gò bó bởi các khuôn mẫu có sẵn.',
+        advice: {
+          vi: 'Văn phong trang trọng, ngắt nhịp tinh tế ở "とらわれることなく" và "生み出すことが".',
+          ja: '「〜にとらわれることなく」の固い書面語のリズムを崩さず、流暢な韻律（プロソディ）で発音します。',
+          mouthTip: '👄 口の形・コツ: 「わくぐみ」の「ぐみ」は濁音を喉の奥から響かせて発声します。'
+        }
+      },
+      {
+        id: 22,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級',
+        lang: 'ja-JP',
+        text: '市場（しじょう）の急速（きゅうそく）な変化（へんか）に即座（そくざ）に対応（たいおう）できるよう、組織全体（そしきぜんたい）の柔軟性（じゅうなんせい）を高（たか）める必要（ひつよう）があります。',
+        phonetic: 'しじょうのきゅうそくなへんかにそくざにたいおうできるよう、そしきぜんたいのじゅうなんせいをたかめるひつようがあります。',
+        translation: 'Cần phải nâng cao tính linh hoạt của toàn bộ tổ chức để có thể ứng phó tức thì với những thay đổi nhanh chóng của thị trường.',
+        advice: {
+          vi: 'Câu dài với nhiều thuật ngữ kinh tế, lấy hơi sâu ở ngắt câu "~できるよう".',
+          ja: '複文長文のため、「対応できるよう」の直前でしっかり呼吸を整えるのがポイントです。',
+          mouthTip: '👄 口の形・コツ: 「きゅうそく」「じゅうなんせい」の拗音の連続で口がもつれないよう注意します。'
+        }
+      },
+      {
+        id: 23,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級',
+        lang: 'ja-JP',
+        text: '一見（いっけん）すると画期的（かっきてき）な提案（ていあん）に見（み）えるが、実現可能性（じつげんかのうせい）の観点（かんてん）から疑問（ぎもん）が残（のこ）る。',
+        phonetic: 'いっけんするとかっきてきなていあんにみえるが、じつげんかのうせいのかんてんからぎもんがのこる。',
+        translation: 'Thoạt nhìn thì có vẻ là một đề xuất mang tính bước ngoặt, nhưng đứng từ góc độ tính khả thi thì vẫn còn nhiều nghi vấn.',
+        advice: {
+          vi: 'Giọng điệu nén lại ở "見えるが", nhấn mạnh cụm từ trừu tượng "実現可能性の観点から".',
+          ja: '「見えるが」で批判的・冷静なトーンに切り替え、「疑問が残る」で簡潔に断定します。',
+          mouthTip: '👄 口の形・コツ: 「かっきてき」の促音「っ」の溜めを正確にキープします。'
+        }
+      },
+      {
+        id: 24,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級',
+        lang: 'ja-JP',
+        text: '多様（たよう）な価値観（かちかん）を尊重（そんちょう）しつつ、共通（きょうつう）の目標（もくひょう）に向（む）かって結集（けっしゅう）することが不可欠（ふかけつ）です。',
+        phonetic: 'たようなかちかんをそんちょうしつつ、きょうつうのもくひょうにむかってけっしゅうすることがふかけつです。',
+        translation: 'Điều thiết yếu là phải đoàn kết hướng tới mục tiêu chung trong khi vẫn tôn trọng các giá trị đa dạng.',
+        advice: {
+          vi: 'Cấu trúc đồng thời "~しつつ", ngắt câu mềm mại để giữ năng lượng cho "不可欠です".',
+          ja: '「〜しつつ」で文脈を繋ぎ、「結集することが不可欠です」を力強く説得力を持って発音します。',
+          mouthTip: '👄 口の形・コツ: 「けっしゅう」「ふかけつ」の「け」音の歯切れの良さを意識します。'
+        }
+      },
+      {
+        id: 25,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級',
+        lang: 'ja-JP',
+        text: '長年（ながねん）の研究成果（けんきゅうせいか）が実（み）を結（むす）び、業界（ぎょうかい）に大（おお）きな変革（へんかく）をもたらす技術（ぎじゅつ）が誕生（たんじょう）した。',
+        phonetic: 'ながねんのけんきゅうせいかがみをおすび、ぎょうかいにおおきなへんかくをもたらすぎじゅつがたんじょうした。',
+        translation: 'Thành quả nghiên cứu nhiều năm đã đơm hoa kết trái, mang lại sự ra đời của công nghệ tạo nên bước ngoặt lớn trong ngành.',
+        advice: {
+          vi: 'Thành ngữ "実を結び" (đơm hoa kết trái), mang sắc thái trang trọng ca ngợi thành tựu.',
+          ja: '慣用表現「実を結び」の祝意のイントネーションから、「誕生した」の力強い着地へ導きます。',
+          mouthTip: '👄 口の形・コツ: 「へんかく」「たんじょう」の鼻濁音・長音を綺麗に響かせます。'
+        }
+      },
+      {
+        id: 26,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級',
+        lang: 'ja-JP',
+        text: '短期的な利益（りえき）のみを追求（ついきゅう）する姿勢（しせい）は、長期的な企業（きぎょう）の信頼（しんらい）を損（そこ）なう恐（おそ）れがあります。',
+        phonetic: 'たんきてきなりえきのみをついきゅうするしせいは、ちょうきてきなきぎょうのしんらいをそこなうおそれがあります。',
+        translation: 'Thái độ chỉ chạy theo lợi ích ngắn hạn có nguy cơ làm tổn hại đến uy tín lâu dài của doanh nghiệp.',
+        advice: {
+          vi: 'Phát âm tương phản giữa "短期的" và "長期的", nhấn mạnh cụm cảnh báo "損なう恐れがあります".',
+          ja: '対比構造「短期的」対「長期的」のメリハリをつけ、警鐘を鳴らすトーンで発音します。',
+          mouthTip: '👄 口の形・コツ: 「そこなう」の「そ」は口をすぼめず息を前歯から吐き出します。'
+        }
+      },
+      {
+        id: 27,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級',
+        lang: 'ja-JP',
+        text: 'グローバル化（か）が進展（しんてん）する中で、地域（ちいき）の文化（ぶんか）や歴史（れきし）を正（ただ）しく継承（けいしょう）していくことが問（と）われている。',
+        phonetic: 'ぐろーばるかがしんてんするなかで、ちいきのぶんかやれきしをただしくけいしょうしていくことがとわれている。',
+        translation: 'Trong bối cảnh toàn cầu hóa đang tiến triển, việc tiếp nối đúng đắn văn hóa và lịch sử địa phương đang là một thách thức đặt ra.',
+        advice: {
+          vi: 'Văn phong báo chí / luận thuyết, chú ý ngắt nhịp ở "進展する中で".',
+          ja: '「進展する中で」で大きな前提を提示し、「問われている」で重厚な問いかけを表現します。',
+          mouthTip: '👄 口の形・コツ: 「けいしょう」の「けい」は「けー」と伸ばしすぎず拍を保ちます。'
+        }
+      },
+      {
+        id: 28,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級',
+        lang: 'ja-JP',
+        text: '不確実性（ふかくじつせい）の高い現代社会（げんだいしゃかい）においては、先（さき）を見通（みとお）す洞察力（どうさつりょく）と迅速（じんそく）な決断力（けつだんりょく）が欠（か）かせない。',
+        phonetic: 'ふかくじつせいのたかいげんだいしゃかいにおいては、さきをみとおすどうさつりょくとじんそくなけつだんりょくがかせない。',
+        translation: 'Trong xã hội hiện đại đầy biến động, năng lực nhìn xa trông rộng và sự quyết đoán nhanh chóng là không thể thiếu.',
+        advice: {
+          vi: 'Phát âm mượt cụm danh từ "洞察力と迅速な決断力", giữ nhịp thở ổn định.',
+          ja: '四字熟語的な表現「洞察力」「決断力」をはっきりと対比させ、説得力を高めます。',
+          mouthTip: '👄 口の形・コツ: 「どうさつりょく」「けつだんりょく」の「りょく」のラ行を舌先で素早く弾きます。'
+        }
+      },
+      {
+        id: 29,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級',
+        lang: 'ja-JP',
+        text: '持続可能（じぞくかのう）な社会（しゃかい）の実現（じつげん）に向けて、環境負荷（かんきょうふか）の低減（ていげん）に真摯（しんし）に取り組み（とりくみ）でまいります。',
+        phonetic: 'じぞくかのうなしゃかいのじつげんにむけて、かんきょうふかのていげんにしんしにとりくんでまいります。',
+        translation: 'Hướng tới việc thực hiện một xã hội phát triển bền vững, chúng tôi sẽ chân thành nỗ lực giảm thiểu tác động đến môi trường.',
+        advice: {
+          vi: 'Tuyên bố cam kết của doanh nghiệp (SDGs), phát âm khiêm nhường và trang trọng "取り組んでまいります".',
+          ja: '企業理念の公式宣誓文。「真摯に取り組んでまいります」で真心のこもった丁寧さを出します。',
+          mouthTip: '👄 口の形・コツ: 「しんし」の無声化と「まいります」の謙譲表現を端正に発音します。'
+        }
+      },
+      {
+        id: 30,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級',
+        lang: 'ja-JP',
+        text: '概念（がいねん）の定義（ていぎ）を明確（めいかく）に整理（せいり）しないまま議論（ぎろん）を重ねても、平行線（へいこうせん）をたどるに過（す）ぎない。',
+        phonetic: 'がいねんのていぎをめいかくにせいりしないままぎろんをかさねても、へいこうせんをたどるにすぎない。',
+        translation: 'Dù có thảo luận nhiều lần mà không làm rõ định nghĩa của các khái niệm thì cũng chỉ rơi vào bế tắc mà thôi.',
+        advice: {
+          vi: 'Quán ngữ "平行線をたどる" (rơi vào bế tắc / đi theo đường song song), ngắt câu ở "重ねても".',
+          ja: '論理的な批判文。「平行線をたどるに過ぎない」でクールに結論を述べます。',
+          mouthTip: '👄 口の形・コツ: 「がいねん」「ていぎ」「めいかく」「せいり」と二字熟語のテンポを崩さず唱えます。'
+        }
+      },
+
+      // --- 4. 英語 & ベトナム語のサンプル ---
+      {
+        id: 31,
         category: 'en-business',
+        levelLabel: '🇺🇸 English',
         lang: 'en-US',
         text: "We need to optimize our workflow to deliver the project on schedule.",
         phonetic: "wiː niːd tuː ˈɒptɪmaɪz ˈaʊə ˈwɜːkfləʊ tuː dɪˈlɪvə ðə ˈprɒdʒɛkt ɒn ˈʃɛdjuːl",
@@ -126,21 +554,9 @@
         }
       },
       {
-        id: 2,
-        category: 'ja-daily',
-        lang: 'ja-JP',
-        text: "ネイティブの音声ボイスを活用して、自然なスピーキング会話練習を行いましょう。",
-        phonetic: "ねぃてぃぶ の おんせい を かつようして、しぜんな すぴーきんぐ かいわ れんしゅう を おこないましょう。",
-        translation: "Hãy luyện tập nói tự nhiên bằng giọng đọc AI chuẩn native.",
-        advice: {
-          vi: "Chú ý phát âm rõ các âm đuôi 'せい' (se-i) và 'しょう' (sho-u) kéo dài vừa phải.",
-          ja: "「活用して（かつようして）」の 'つ' は息を歯の間から押し出すイメージで短く促音化させます。",
-          mouthTip: "👄 口の形・コツ: 「スピーキング」の 'ス' は唇を横に引き、息を小さく吐き出します。"
-        }
-      },
-      {
-        id: 3,
+        id: 32,
         category: 'vi-daily',
+        levelLabel: '🇻🇳 Tiếng Việt',
         lang: 'vi-VN',
         text: "Chào mừng bạn đến với LingoBotWebApp! Hãy bắt đầu luyện tập hội thoại ngay hôm nay.",
         phonetic: "Chao mung ban den voi LingoBotWebApp! Hay bat dau luyen tap hoi thoai ngay hom nay.",
@@ -449,12 +865,19 @@
 
       const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'shadowing'
       const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
+      const [selectedCategory, setSelectedCategory] = useState('all'); // 'all' | 'ja-beginner' | 'ja-intermediate' | 'ja-advanced' | 'en-business' | 'vi-daily'
+      const [ttsEngine, setTtsEngine] = useState('edge'); // 'edge' | 'gen' (Standard Web Speech API)
       const [isRecording, setIsRecording] = useState(false);
       const [liveTranscript, setLiveTranscript] = useState('');
       const [evalResult, setEvalResult] = useState(null);
       const [playingId, setPlayingId] = useState(null);
       const [loadingId, setLoadingId] = useState(null);
       const [showPdfModal, setShowPdfModal] = useState(false);
+
+      const filteredSentences = SAMPLE_SENTENCES.filter(sent => {
+        if (selectedCategory === 'all') return true;
+        return sent.category === selectedCategory;
+      });
 
       const audioBlobCache = useRef({});
       const activeAudioRef = useRef(null);
@@ -529,10 +952,13 @@
                   .replace(/[\（\(][\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+[\）\)]/g, '');
       };
 
-      // Edge TTS Player (Toggle stop if pressed again while playing, strips furigana for pure audio)
+      // Dynamic Speech Player (Edge-TTS vs Standard Web Speech API)
       const playEdgeTts = async (id, text, language) => {
         // Toggle Stop if clicking the currently playing message
         if (playingId === id) {
+          if (window.speechSynthesis && window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+          }
           if (activeAudioRef.current) {
             activeAudioRef.current.pause();
             activeAudioRef.current.currentTime = 0;
@@ -543,6 +969,9 @@
         }
 
         // Stop any currently playing audio before starting new audio
+        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+        }
         if (activeAudioRef.current) {
           activeAudioRef.current.pause();
           activeAudioRef.current.currentTime = 0;
@@ -552,6 +981,31 @@
 
         const cleanAudioText = stripFurigana(text);
 
+        // --- MODE A: STANDARD WEB SPEECH API (TTS=Gen) ---
+        if (ttsEngine === 'gen') {
+          if (!('speechSynthesis' in window)) {
+            alert('ご使用のブラウザは標準Web Speech APIに対応していません。');
+            return;
+          }
+          const langCode = language || targetLang || 'ja-JP';
+          const utterance = new SpeechSynthesisUtterance(cleanAudioText);
+          utterance.lang = langCode;
+
+          // Select matching native voice if available
+          const voices = window.speechSynthesis.getVoices();
+          const langPrefix = langCode.split('-')[0];
+          const targetVoice = voices.find(v => v.lang.replace('_', '-').startsWith(langPrefix));
+          if (targetVoice) utterance.voice = targetVoice;
+
+          setPlayingId(id);
+          utterance.onend = () => setPlayingId(null);
+          utterance.onerror = () => setPlayingId(null);
+
+          window.speechSynthesis.speak(utterance);
+          return;
+        }
+
+        // --- MODE B: EDGE-TTS HIGH QUALITY VOICE API (TTS=Edge) ---
         let blobUrl = audioBlobCache.current[id];
         if (!blobUrl) {
           setLoadingId(id);
@@ -753,6 +1207,52 @@
 
         if (onboardingStep === 'api_key') {
           handleSubmitApiKey(userText);
+          return;
+        }
+
+        const cleanInput = userText.trim();
+        const lowerInput = cleanInput.toLowerCase();
+
+        // --- SECRET COMMAND: Dynamic TTS Engine Switch ---
+        if (lowerInput === 'tts=gen' || lowerInput === 'tts = gen') {
+          setTtsEngine('gen');
+          const userCmdMsg = {
+            id: 'cmd-user-' + Date.now(),
+            sender: 'user',
+            text: userText,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          const sysMsg = {
+            id: 'sys-tts-' + Date.now(),
+            sender: 'ai',
+            lang: 'bilingual',
+            text: `🔊 TTSを切り替え（きりかえ）ました：TTS-Gen`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setChatMessages(prev => [...prev, userCmdMsg, sysMsg]);
+          scrollToBottom();
+          focusTextInput();
+          return;
+        }
+
+        if (lowerInput === 'tts=edge' || lowerInput === 'tts = edge') {
+          setTtsEngine('edge');
+          const userCmdMsg = {
+            id: 'cmd-user-' + Date.now(),
+            sender: 'user',
+            text: userText,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          const sysMsg = {
+            id: 'sys-tts-' + Date.now(),
+            sender: 'ai',
+            lang: 'bilingual',
+            text: `🔊 TTSを切り替え（きりかえ）ました：TTS-Edge`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setChatMessages(prev => [...prev, userCmdMsg, sysMsg]);
+          scrollToBottom();
+          focusTextInput();
           return;
         }
 
@@ -1226,26 +1726,62 @@
               {/* Sidebar Library */}
               <div class="glass-panel sentence-sidebar">
                 <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)', marginBottom: '8px' }}>
-                  📚 {dict.shadowingTab} Library
+                  📚 {dict.shadowingTab} Library ({filteredSentences.length})
+                </div>
+
+                {/* Level / Category Filter Chips */}
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                  {[
+                    { id: 'all', label: 'すべて / All' },
+                    { id: 'ja-beginner', label: '🌱 初級' },
+                    { id: 'ja-intermediate', label: '🌿 中級' },
+                    { id: 'ja-advanced', label: '🌳 上級' },
+                    { id: 'en-business', label: '🇺🇸 Eng' },
+                    { id: 'vi-daily', label: '🇻🇳 Việt' }
+                  ].map(cat => (
+                    <button
+                      key={cat.id}
+                      class="badge-sm"
+                      style={{
+                        cursor: 'pointer',
+                        border: selectedCategory === cat.id ? '1px solid var(--accent-terracotta)' : '1px solid var(--border-warm)',
+                        background: selectedCategory === cat.id ? 'var(--accent-terracotta)' : '#ffffff',
+                        color: selectedCategory === cat.id ? '#ffffff' : 'var(--text-main)',
+                        padding: '4px 8px',
+                        fontSize: '0.72rem',
+                        fontWeight: 600
+                      }}
+                      onClick={() => setSelectedCategory(cat.id)}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
                 </div>
 
                 <div class="sentence-list">
-                  {SAMPLE_SENTENCES.map((sent, idx) => (
-                    <div
-                      key={sent.id}
-                      class={`sentence-item ${idx === currentSentenceIdx ? 'active' : ''}`}
-                      onClick={() => {
-                        setCurrentSentenceIdx(idx);
-                        setEvalResult(null);
-                        setLiveTranscript('');
-                      }}
-                    >
-                      <div class="sentence-item-text">{sent.text}</div>
-                      <div class="sentence-item-meta">
-                        <span>{LANG_META[sent.lang]?.flag} {sent.lang}</span>
+                  {filteredSentences.map((sent) => {
+                    const globalIdx = SAMPLE_SENTENCES.indexOf(sent);
+                    const isSelected = globalIdx === currentSentenceIdx;
+                    return (
+                      <div
+                        key={sent.id}
+                        class={`sentence-item ${isSelected ? 'active' : ''}`}
+                        onClick={() => {
+                          setCurrentSentenceIdx(globalIdx);
+                          setEvalResult(null);
+                          setLiveTranscript('');
+                        }}
+                      >
+                        <div class="sentence-item-text">
+                          <FuriganaText text={sent.text} />
+                        </div>
+                        <div class="sentence-item-meta">
+                          <span class="badge-sm badge-sage" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>{sent.levelLabel || sent.lang}</span>
+                          <span>{LANG_META[sent.lang]?.flag}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1256,10 +1792,12 @@
                     <div class="target-label">
                       ✨ Target Sentence ({LANG_META[currentSentence.lang]?.name})
                     </div>
-                    <span class="badge badge-sage">{currentSentence.lang}</span>
+                    <span class="badge badge-sage" style={{ fontSize: '0.8rem' }}>{currentSentence.levelLabel || currentSentence.lang}</span>
                   </div>
 
-                  <div class="target-text">{currentSentence.text}</div>
+                  <div class="target-text" style={{ fontSize: '1.25rem', lineHeight: '1.7' }}>
+                    <FuriganaText text={currentSentence.text} />
+                  </div>
                   
                   {currentSentence.phonetic && (
                     <div style={{ marginTop: '8px', fontSize: '0.88rem', fontFamily: 'var(--font-mono)', color: 'var(--text-dim)' }}>
