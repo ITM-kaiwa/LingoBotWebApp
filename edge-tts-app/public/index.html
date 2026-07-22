@@ -124,8 +124,7 @@
           ja: "「optimize」の 'p' は唇を密着させてから息を弾ませ、「workflow」の 'w' は唇を丸めて発音します。",
           mouthTip: "👄 口の形・コツ: 『optimize』は頭音 'op' をしっかり大きく縦に開け、『deliver』の 'v' は上歯で下唇を軽く押さえます。"
         }
-      },
-      {
+{
         id: 2,
         category: 'ja-daily',
         lang: 'ja-JP',
@@ -153,7 +152,7 @@
       }
     ];
 
-    // Multi-Language Target & UI Aware Expression & Grammar Advice Generator
+    // Multi-Language Target & UI Aware Expression & Grammar Advice Generator (Non-repetitive)
     function generateExpressionAdvice(text, targetLang, uiLang) {
       const trimmed = text ? text.trim() : '';
       const lower = trimmed.toLowerCase();
@@ -162,45 +161,96 @@
 
       // 1. TARGET LANGUAGE: JAPANESE (ja-JP) - Natural Customer-side Polite Phrasing (丁寧語)
       if (tLangPrefix === 'ja') {
-        if (trimmed.includes('こちらです') || trimmed.includes('これです') || trimmed.includes('はい')) {
+        // Scenario / Setting setup message (e.g. "空港での会話にしましょう", "レストラン")
+        if (trimmed.includes('会話にしましょう') || trimmed.includes('シチュエーション') || trimmed.includes('設定') || trimmed.includes('テーマ')) {
           return {
-            category: isUiVi ? "Diễn đạt đưa đồ tự nhiên / 自然な提示・手渡しの表現" : "自然で気持ちの良い提示表現",
-            better: "はい、こちらでお願いします。 / はい、どうぞ。",
-            explanation: isUiVi ? "Khi đưa hộ chiếu hay hành lý cho nhân viên, nói 'はい、こちらでお願いします' hoặc 'はい、どうぞ' rất tự nhiên và lịch sự."
-                                 : "「はい、こちらです」も自然で十分丁寧な表現です！さらに「こちらでお願いします」や「はい、どうぞ」と添えて手渡すと、より親切で気持ちの良いやり取りになります。",
-            usage: isUiVi ? "Mẫu câu: [Vật] + でお願いします."
-                           : "【自然な手渡し】「こちらでお願いします」「はい、どうぞ」が日常的で最適です。",
-            example: "はい、パスポートと搭乗券です。よろしくお願いします。",
-            exampleTrans: isUiVi ? "Vâng, đây là hộ chiếu và thẻ lên máy bay ạ." : "（パスポートを手渡す自然な例文）"
+            category: isUiVi ? "Thiết lập tình huống / 場面設定の提示" : "会話場面・役割設定の提示",
+            betterList: [
+              "「今日は空港カウンターのシチュエーションで練習させてください。」",
+              "「空港でのチェックインのやり取りでお願いします。」"
+            ],
+            explanation: isUiVi ? "Khi bắt đầu một kịch bản luyện tập, hãy nêu rõ tình huống để AI nhập vai chính xác."
+                                 : "会話練習のスタート時に「〜のシチュエーションでお願いします」や「〜の場面で練習させてください」と明確に伝えると、AIパートナーもスムーズに役に入りやすくなります。",
+            usage: isUiVi ? "Mẫu câu: [Tình huống] + でお願いします."
+                           : "【設定のコツ】「〜の場面で」「〜役でお願いします」と具体的に伝えると効果的です。",
+            example: "今日は空港の荷物預け入れの場面で会話練習をお願いします。",
+            exampleTrans: isUiVi ? "Hôm nay xin hãy cùng luyện tập ở kịch bản gửi hành lý ở sân bay." : "（自然なシチュエーション提示の例文）"
           };
-        } else if (trimmed.includes('わかりました') || trimmed.includes('いいですか') || trimmed.includes('了解')) {
+        }
+        // Special requests with reasons (e.g. "ギターなんです", "貸していただけますか", "お願い")
+        else if (trimmed.includes('ギター') || trimmed.includes('楽器') || trimmed.includes('貸して') || trimmed.includes('特別')) {
           return {
-            category: isUiVi ? "Xác nhận tự nhiên / 自然な確認の表現" : "自然な確認・質問の丁寧語",
-            better: "はい、わかりました。これで大丈夫でしょうか？ / これで合っていますか？",
-            explanation: isUiVi ? "Khi hỏi lại nhân viên xem đã đúng chưa, dùng 'これで大丈夫でしょうか？' mềm mỏng và tự nhiên."
-                                 : "「はい、わかりました。これでいいですか？」もとても自然で十分です！より柔らかく確認したい時は「これで大丈夫でしょうか？」や「これで合っていますか？」と尋ねるのもおすすめです。",
+            category: isUiVi ? "Yêu cầu đặc biệt kèm lý do / 理由を伴うお願い" : "理由を伴う自然なお願い表現",
+            betterList: [
+              "「実はギターがありまして、専用ケースはお借りできますか？」",
+              "「壊れやすい楽器なので、ケースの貸出は可能でしょうか？」"
+            ],
+            explanation: isUiVi ? "Nêu lý do trước (dụng cụ dễ vỡ) rồi hỏi 'ケースはお借りできますか？' rất tự nhiên."
+                                 : "「〜なんです」で状況・理由を話してから「〜はお借りできますか？」「〜は可能でしょうか？」と尋ねるのは、相手に配慮した非常にスムーズで自然な丁寧語です。",
+            usage: isUiVi ? "Mẫu câu: [Lý do] + なので、[Yêu cầu] + は可能でしょうか？"
+                           : "【柔らかい依頼】「〜なので、〜は可能でしょうか？」「〜はお借りできますか？」を活用しましょう。",
+            example: "実は大切な楽器なので、専用のケースをお借りすることはできますか？",
+            exampleTrans: isUiVi ? "Thật ra đây là nhạc cụ quan trọng, tôi có thể mượn hộp chuyên dụng được không ạ?" : "（理由を添えた丁寧な依頼例文）"
+          };
+        }
+        // Handing over items (e.g. "こちらです", "これです", "はい")
+        else if (trimmed.includes('こちらです') || trimmed.includes('これです')) {
+          return {
+            category: isUiVi ? "Trao đồ tự nhiên / 提示・手渡しの表現" : "自然な手渡し・提示の表現",
+            betterList: [
+              "「はい、こちらでお願いします。」",
+              "「はい、どうぞご覧ください。」"
+            ],
+            explanation: isUiVi ? "Nói 'はい、こちらでお願いします' khi đưa đồ cho nhân viên rất tự nhiên."
+                                 : "「はい、こちらです」も自然で十分完璧な表現です！手渡す際に「こちらでお願いします」や「はい、どうぞ」と添えると、より親切でスムーズなやり取りになります。",
+            usage: isUiVi ? "Mẫu câu: [Vật] + でお願いします."
+                           : "【自然な手渡し】「こちらでお願いします」「はい、どうぞ」が日常会話に最適です。",
+            example: "はい、パスポートと搭乗券です。よろしくお願いします。",
+            exampleTrans: isUiVi ? "Vâng, đây là hộ chiếu và thẻ lên máy bay ạ." : "（手渡す際の自然な例文）"
+          };
+        }
+        // Confirming questions (e.g. "わかりました", "いいですか", "大丈夫")
+        else if (trimmed.includes('わかりました') || trimmed.includes('いいですか') || trimmed.includes('確認')) {
+          return {
+            category: isUiVi ? "Xác nhận tự nhiên / 確認の表現" : "自然な確認・問いかけの丁寧語",
+            betterList: [
+              "「はい、わかりました。これで大丈夫でしょうか？」",
+              "「かしこまりました。こちらで合っていますか？」"
+            ],
+            explanation: isUiVi ? "Hỏi 'これで大丈夫でしょうか？' thay vì 'いいですか' nghe mềm mỏng và lịch sự hơn."
+                                 : "「はい、わかりました。これでいいですか？」も十分自然です！さらに柔らかく確認したい時は「これで大丈夫でしょうか？」や「これで合っていますか？」と尋ねるのもおすすめです。",
             usage: isUiVi ? "Cấu trúc: [Nội dung] + で大丈夫でしょうか？"
                            : "【柔らかい確認】「〜で大丈夫でしょうか？」「〜で合っていますか？」を活用しましょう。",
-            example: "はい、わかりました。記入しましたが、これで大丈夫でしょうか？",
-            exampleTrans: isUiVi ? "Vâng, tôi hiểu rồi. Tôi đã điền xong, thế này đã ổn chưa ạ?" : "（記入後の自然な確認の例文）"
+            example: "はい、わかりました。記入完了しましたが、これで大丈夫でしょうか？",
+            exampleTrans: isUiVi ? "Vâng tôi hiểu rồi. Tôi đã điền xong, thế này đã ổn chưa ạ?" : "（記入後の自然な確認例文）"
           };
-        } else if (trimmed.includes('ありがとう') || trimmed.includes('感謝')) {
+        }
+        // Gratitude & Closing (e.g. "ありがとう", "感謝")
+        else if (trimmed.includes('ありがとう') || trimmed.includes('感謝')) {
           return {
-            category: isUiVi ? "Cảm ơn tự nhiên / 自然なお礼の表現" : "自然なお礼と挨拶の表現",
-            better: "ありがとうございました。よろしくお願いします。 / どうもありがとう！",
-            explanation: isUiVi ? "Nói 'ありがとうございました' kết hợp 'よろしくお願いします' khi gửi hành lý rất tự nhiên."
-                                 : "「はい、どうもありがとうございました」で十分丁寧で完璧なお礼です！最後に「よろしくお願いします」と一言添えると、荷物を預ける際のやり取りとして非常に爽やかです。",
+            category: isUiVi ? "Cảm ơn tự nhiên / お礼の表現" : "自然なお礼と締めくくりの言葉",
+            betterList: [
+              "「ありがとうございました。よろしくお願いします。」",
+              "「ご対応いただき、ありがとうございました！」"
+            ],
+            explanation: isUiVi ? "Kết hợp 'ありがとうございました' với 'よろしくお願いします' tạo cảm giác rất chu đáo."
+                                 : "「はい、どうもありがとうございました」で十分完璧なお礼です！最後に「よろしくお願いします」と一言添えると、荷物を預ける際のやり取りとして非常に爽やかです。",
             usage: isUiVi ? "Mẫu câu: ありがとうございました + よろしくお願いします."
-                           : "【自然なお礼】「ありがとうございました。よろしくお願いします」が心地よいやり取りを作ります。",
+                           : "【自然なお礼】「ありがとうございました。よろしくお願いします」が心地よい会話を作ります。",
             example: "ご対応ありがとうございました。それでは、よろしくお願いします。",
             exampleTrans: isUiVi ? "Cảm ơn bạn đã hỗ trợ. Nhờ bạn giúp tôi nhé." : "（やり取りの終わりのお礼例文）"
           };
-        } else {
+        }
+        // General natural input
+        else {
           return {
-            category: isUiVi ? "Giao tiếp tiếng Nhật tự nhiên" : "自然な日本語のやり取り",
-            better: `『${trimmed}』ですね。よろしくお願いします。`,
-            explanation: isUiVi ? "Giao tiếp với nhân viên chỉ cần dùng thể 丁寧語 (Desu/Masu) tự nhiên, không cần dùng kính ngữ quá mức."
-                                 : "お客側の立場としては過剰な敬語は不要で、自然な丁寧語（〜です・〜ます調）で十分気持ちが伝わります。語尾に「よろしくお願いします」を添えるとスムーズです。",
+            category: isUiVi ? "Giao tiếp tiếng Nhật tự nhiên" : "日常対話の自然なまとめ",
+            betterList: [
+              `「『${trimmed}』ですね。よろしくお願いします。」`,
+              `「『${trimmed}』でお願いします。」`
+            ],
+            explanation: isUiVi ? "Chỉ cần dùng thể 丁寧語 (Desu/Masu) tự nhiên, không cần dồn quá nhiều kính ngữ không cần thiết."
+                                 : "利用客側の立場としては過剰な敬語は不要で、自然な丁寧語（〜です・〜ます調）で十分気持ちが伝わります。語尾に「よろしくお願いします」を添えるとスムーズです。",
             usage: isUiVi ? "Cấu trúc: [Ý kiến/Yêu cầu] + よろしくお願いします."
                            : "【自然な丁寧語】〜です・〜ます ＋「よろしくお願いします」の組み合わせで十分です。",
             example: `はい、${trimmed}。よろしくお願いします。`,
@@ -1269,8 +1319,17 @@
                             🗣️ 実際の発話 / Your Input: "{m.text}"
                           </div>
                           
-                          <div class="better-say" style={{ color: '#2a9d8f', fontWeight: 700, fontSize: '1.02rem', marginBottom: '8px', background: 'rgba(42, 157, 143, 0.08)', padding: '8px 12px', borderRadius: '6px' }}>
-                            ✨ おすすめの洗練された表現 / Recommended Expression: "{adviceItem.better}"
+                          <div class="better-say" style={{ color: '#2a9d8f', fontWeight: 700, fontSize: '0.98rem', marginBottom: '10px', background: 'rgba(42, 157, 143, 0.08)', padding: '10px 14px', borderRadius: '8px' }}>
+                            <div style={{ marginBottom: '4px' }}>✨ おすすめの洗練された表現 / Recommended Expression:</div>
+                            {adviceItem.betterList ? (
+                              <ul style={{ margin: '4px 0 0 18px', padding: 0 }}>
+                                {adviceItem.betterList.map((expr, eIdx) => (
+                                  <li key={eIdx} style={{ listStyleType: 'disc', marginTop: '2px' }}>{expr}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <div>{adviceItem.better}</div>
+                            )}
                           </div>
                           
                           <div class="pdf-advice-detail" style={{ fontSize: '0.88rem', color: '#4a3e35', lineHeight: 1.6 }}>
