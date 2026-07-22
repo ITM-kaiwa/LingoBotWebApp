@@ -879,6 +879,9 @@
         const newVoice = e.target.value;
         setCurrentSelectedVoice(newVoice);
 
+        // Crucial: Clear old audio blob cache on voice model change so next tap fetches freshly generated voice
+        audioBlobCache.current = {};
+
         // Check if audio is currently playing
         const isAudioPlaying = playingId !== null || (window.speechSynthesis && window.speechSynthesis.speaking);
         if (isAudioPlaying) {
