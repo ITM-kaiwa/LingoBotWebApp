@@ -625,6 +625,22 @@
           }
         }
 
+        // Parse rate limit retry seconds (e.g. 429 / RESOURCE_EXHAUSTED / Retry-After)
+        const parseRetryWaitSeconds = (logStr) => {
+          if (!logStr) return null;
+          const lower = logStr.toLowerCase();
+          const isBusy = lower.includes('429') || lower.includes('resource_exhausted') || lower.includes('resourceexhausted') || lower.includes('quota') || lower.includes('rate limit') || lower.includes('too many requests');
+          if (!isBusy) return null;
+
+          const match = lower.match(/(?:retry[\s\-_]*(?:after|in)|retry\-after)[\s:=]*(\d+(?:\.\d+)?)\s*s?/);
+          if (match && match[1]) {
+            return parseFloat(match[1]);
+          }
+          return 5; // Default short 5-second wait if rate limited
+        };
+
+        const retryWaitSec = parseRetryWaitSeconds(directErrorLog);
+
         setIsThinking(false);
 
         // 3. IF SUCCESSFUL: Display AI reply and update Active Connected Model Badge
@@ -647,11 +663,27 @@
           setTimeout(() => {
             playEdgeTts(aiMsg.id, aiMsg.text, targetLang);
           }, 300);
+        } else if (retryWaitSec !== null && retryWaitSec <= 20) {
+          // 4. IF BUSY (Retry <= 20s): Display friendly busy message in Vietnamese & Japanese
+          setActiveConnectedModel('混雑中 / Busy');
+
+          const busyMsg = {
+            id: 'ai-busy-' + Date.now(),
+            sender: 'ai',
+            isBusy: true,
+            lang: uiLang,
+            text: `⏳ Hệ thống đang bận. Vui lòng chờ trong giây lát...\n⏳ ただいま混雑中です。お待ちください。`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+
+          setChatMessages(prev => [...prev, busyMsg]);
+          scrollToBottom();
+          focusTextInput();
         } else {
-          // 4. IF FAILED: Display concise error bubble with downloadable text log file
+          // 5. IF FAILED (Retry > 20s or Fatal Error): Display concise error bubble with downloadable text log file
           setActiveConnectedModel('未接続 / Error');
 
-          const fullLogText = `========================================\nLingoBotWebApp Error Diagnostic Log\nTime: ${new Date().toLocaleString()}\n========================================\n\n${directErrorLog || 'API Key is missing or invalid.'}`;
+          const fullLogText = `========================================\nLingoBotWebApp Error Diagnostic Log\nTime: ${new Date().toLocaleString()}\nWait Timeout: ${retryWaitSec !== null ? retryWaitSec + 's (>20s)' : 'Fatal/Auth Error'}\n========================================\n\n${directErrorLog || 'API Key is missing or invalid.'}`;
 
           const errorMsg = {
             id: 'ai-error-' + Date.now(),
