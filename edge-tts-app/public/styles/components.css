@@ -636,3 +636,26 @@
     font-size: 1.1rem !important;
   }
 }
+
+/* Universal Button Press-down Sink Effect (ボタン押下時の沈み込みエフェクト) */
+button,
+.btn,
+.nav-tab-sm,
+.mic-button,
+.option-btn {
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease !important;
+  user-select: none;
+}
+
+button:active,
+.btn:active,
+.nav-tab-sm:active,
+.btn-primary:active,
+.btn-secondary:active,
+.btn-terracotta:active,
+.btn-accent-amber:active,
+.mic-button:active,
+.option-btn:active {
+  transform: translateY(2.5px) scale(0.96) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+}
