@@ -3,6 +3,7 @@ import io
 import os
 import sys
 import json
+import tempfile
 import traceback
 from flask import Flask, request, send_file, send_from_directory, jsonify
 from flask_cors import CORS
@@ -35,13 +36,35 @@ LANG_NAMES = {
     'vi-vn': 'Vietnamese (Tiếng Việt)'
 }
 
-async def generate_tts_bytes(text: str, voice: str) -> bytes:
-    communicate = edge_tts.Communicate(text, voice)
-    audio_data = bytearray()
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            audio_data.extend(chunk["data"])
-    return bytes(audio_data)
+async def generate_tts_bytes_async(text: str, voice: str) -> bytes:
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as fp:
+        temp_path = fp.name
+
+    try:
+        communicate = edge_tts.Communicate(text, voice)
+        await communicate.save(temp_path)
+
+        with open(temp_path, "rb") as f:
+            audio_bytes = f.read()
+        return audio_bytes
+    finally:
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
+
+def generate_tts_bytes(text: str, voice: str) -> bytes:
+    try:
+        return asyncio.run(generate_tts_bytes_async(text, voice))
+    except Exception:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            audio_bytes = loop.run_until_complete(generate_tts_bytes_async(text, voice))
+            return audio_bytes
+        finally:
+            loop.close()
 
 @app.route('/api/tts', methods=['POST'])
 def tts_endpoint():
@@ -64,10 +87,7 @@ def tts_endpoint():
 
         print(f"[Edge TTS] Lang: '{language}' -> Voice: '{voice}' | Text: '{text[:25]}...'")
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        mp3_bytes = loop.run_until_complete(generate_tts_bytes(text, voice))
-        loop.close()
+        mp3_bytes = generate_tts_bytes(text, voice)
 
         if not mp3_bytes:
             return jsonify({'error': 'Failed to generate MP3 stream from Edge TTS.'}), 500
@@ -87,7 +107,7 @@ def tts_endpoint():
 
     except Exception as e:
         print(f"[TTS Error Traceback]:\n{traceback.format_exc()}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e), 'log': traceback.format_exc()}), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat_endpoint():
@@ -194,5 +214,5 @@ def serve_static(path):
     return send_from_directory('public', 'index.html')
 
 if __name__ == '__main__':
-    print("🚀 Vocalise Edge AI Server starting on http://localhost:5100 (google-genai SDK)")
+    print("🚀 Vocalise Edge AI Server starting on http://localhost:5100 (tempfile Edge-TTS)")
     app.run(host='0.0.0.0', port=5100, debug=False)

@@ -3,8 +3,9 @@ import io
 import os
 import sys
 import json
+import tempfile
 import traceback
-from flask import Flask, request, send_file, send_from_directory, jsonify
+from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 import edge_tts
 from google import genai
@@ -35,20 +36,43 @@ LANG_NAMES = {
     'vi-vn': 'Vietnamese (Tiếng Việt)'
 }
 
-async def generate_tts_bytes(text: str, voice: str) -> bytes:
-    communicate = edge_tts.Communicate(text, voice)
-    audio_data = bytearray()
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            audio_data.extend(chunk["data"])
-    return bytes(audio_data)
+async def generate_tts_bytes_async(text: str, voice: str) -> bytes:
+    # Use temporary file in /tmp directory for reliable file saving in Vercel Serverless environment
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as fp:
+        temp_path = fp.name
+
+    try:
+        communicate = edge_tts.Communicate(text, voice)
+        await communicate.save(temp_path)
+
+        with open(temp_path, "rb") as f:
+            audio_bytes = f.read()
+        return audio_bytes
+    finally:
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
+
+def generate_tts_bytes(text: str, voice: str) -> bytes:
+    try:
+        return asyncio.run(generate_tts_bytes_async(text, voice))
+    except Exception:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            audio_bytes = loop.run_until_complete(generate_tts_bytes_async(text, voice))
+            return audio_bytes
+        finally:
+            loop.close()
 
 @app.route('/', methods=['GET'])
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({
         "status": "healthy",
-        "service": "LingoBotWebApp Vercel Serverless API (google-genai SDK)",
+        "service": "LingoBotWebApp Vercel Serverless API (tempfile Edge-TTS)",
         "python_version": sys.version
     })
 
@@ -73,10 +97,7 @@ def tts_endpoint():
 
         print(f"[Edge TTS Vercel] Lang: '{language}' -> Voice: '{voice}' | Text: '{text[:25]}...'")
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        mp3_bytes = loop.run_until_complete(generate_tts_bytes(text, voice))
-        loop.close()
+        mp3_bytes = generate_tts_bytes(text, voice)
 
         if not mp3_bytes:
             return jsonify({'error': 'Failed to generate MP3 stream from Edge TTS.'}), 500
@@ -96,7 +117,7 @@ def tts_endpoint():
 
     except Exception as e:
         print(f"[TTS Error Traceback]:\n{traceback.format_exc()}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e), 'log': traceback.format_exc()}), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat_endpoint():
@@ -131,7 +152,6 @@ def chat_endpoint():
             f"If the user asks a question about vocabulary or grammar in {ui_name}, provide a short helpful explanation in {ui_name} followed by a practice question in {target_name}."
         )
 
-        # Initialize new google-genai Client
         client = genai.Client(api_key=api_key)
 
         candidate_models = [
@@ -143,7 +163,6 @@ def chat_endpoint():
         used_model = None
         attempt_logs = []
 
-        # Construct contents with history
         contents = []
         for item in history[-6:]:
             sender = item.get('sender', 'user')
@@ -155,7 +174,6 @@ def chat_endpoint():
                     parts=[types.Part.from_text(text=text)]
                 ))
         
-        # Append latest user message
         contents.append(types.Content(
             role="user",
             parts=[types.Part.from_text(text=user_message)]
