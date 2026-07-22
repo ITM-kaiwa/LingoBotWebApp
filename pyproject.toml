@@ -1,0 +1,2 @@
+[tool.vercel]
+entrypoint = "edge-tts-app/api/index.py"
