@@ -942,8 +942,10 @@
       const currentSentence = SAMPLE_SENTENCES[currentSentenceIdx];
       const dict = UI_DICT[uiLang] || UI_DICT['ja-JP'];
 
-      // Render.com Backend API URL configuration for GitHub Pages deployment
-      const RENDER_BACKEND_URL = window.location.hostname.includes('github.io') ? 'https://lingobotwebapp.onrender.com' : '';
+      // Backend API Base URL configuration (Vercel relative path compatibility)
+      const BACKEND_URL = (window.location.hostname.includes('github.io') && !window.location.hostname.includes('vercel.app'))
+        ? 'https://lingobotwebapp.onrender.com'
+        : '';
 
       // Helper: Strip Furigana text in parentheses before passing to TTS so it reads only plain Kanji text
       const stripFurigana = (str) => {
@@ -1010,7 +1012,7 @@
         if (!blobUrl) {
           setLoadingId(id);
           try {
-            const res = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
+            const res = await fetch(`${BACKEND_URL}/api/tts`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ text: cleanAudioText, language })
@@ -1336,10 +1338,10 @@
           }
         }
 
-        // 2. Fallback to Render Backend /api/chat if direct call wasn't used or failed
+        // 2. Fallback to Serverless Backend /api/chat if direct call wasn't used or failed
         if (!replyText) {
           try {
-            const res = await fetch(`${RENDER_BACKEND_URL}/api/chat`, {
+            const res = await fetch(`${BACKEND_URL}/api/chat`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
