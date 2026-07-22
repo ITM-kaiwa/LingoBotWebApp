@@ -1036,7 +1036,7 @@
         }
 
         // --- SPEC 3 & SPEC 4: GOOGLE CLOUD TTS API WITH STEPWISE FALLBACK ---
-        const cacheKey = id + '_' + currentSelectedVoice;
+        const cacheKey = `${id}_${currentSelectedVoice}`;
         let blobUrl = audioBlobCache.current[cacheKey];
         if (!blobUrl) {
           setLoadingId(id);
@@ -1046,21 +1046,19 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 text: cleanAudioText,
-                language: language || targetLang || 'ja-JP',
+                language: langCode,
                 voice: currentSelectedVoice,
                 apiKey: geminiApiKey
               })
             });
 
-            if (!res.ok) {
+            const contentType = res.headers.get('content-type') || '';
+            if (!res.ok || contentType.includes('application/json')) {
               const errData = await res.json().catch(() => ({}));
-              if (errData.fallback_to_browser || res.status === 503) {
-                setLoadingId(null);
-                console.warn(`[Google Cloud TTS Failed (503/fallback_to_browser) -> Browser Speech Synthesis Fallback]`);
-                playBrowserNativeSpeech();
-                return;
-              }
-              throw new Error(`HTTP ${res.status}`);
+              setLoadingId(null);
+              console.warn(`[Google Cloud TTS Note -> Fallback to Web Speech API]:`, errData);
+              playBrowserNativeSpeech();
+              return;
             }
 
             const blob = await res.blob();
@@ -1069,7 +1067,7 @@
             setLoadingId(null);
           } catch (err) {
             setLoadingId(null);
-            console.warn(`[Google Cloud TTS Connection Exception -> Browser Fallback]: ${err.message}`);
+            console.warn(`[Google Cloud TTS Connection Exception -> Fallback to Web Speech API]: ${err.message}`);
             playBrowserNativeSpeech();
             return;
           }
