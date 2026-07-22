@@ -867,6 +867,7 @@
       const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
       const [selectedCategory, setSelectedCategory] = useState('all'); // 'all' | 'ja-beginner' | 'ja-intermediate' | 'ja-advanced' | 'en-business' | 'vi-daily'
       const [ttsEngine, setTtsEngine] = useState('edge'); // 'edge' | 'gen' (Standard Web Speech API)
+      const [selectedTtsVoice, setSelectedTtsVoice] = useState('neural2-b'); // 'neural2-b' | 'neural2-c' | 'journey' | 'wavenet' | 'gen'
       const [isRecording, setIsRecording] = useState(false);
       const [liveTranscript, setLiveTranscript] = useState('');
       const [evalResult, setEvalResult] = useState(null);
@@ -983,8 +984,8 @@
 
         const cleanAudioText = stripFurigana(text);
 
-        // --- MODE A: STANDARD WEB SPEECH API (TTS=Gen) ---
-        if (ttsEngine === 'gen') {
+        // --- TIER 3: BROWSER NATIVE WEB SPEECH API DIRECT CALL ---
+        if (selectedTtsVoice === 'gen') {
           if (!('speechSynthesis' in window)) {
             alert('ご使用のブラウザは標準Web Speech APIに対応していません。');
             return;
@@ -993,7 +994,6 @@
           const utterance = new SpeechSynthesisUtterance(cleanAudioText);
           utterance.lang = langCode;
 
-          // Select matching native voice if available
           const voices = window.speechSynthesis.getVoices();
           const langPrefix = langCode.split('-')[0];
           const targetVoice = voices.find(v => v.lang.replace('_', '-').startsWith(langPrefix));
@@ -1007,29 +1007,32 @@
           return;
         }
 
-        // --- MODE B: EDGE-TTS HIGH QUALITY VOICE API (TTS=Edge) ---
-        let blobUrl = audioBlobCache.current[id];
+        // --- TIER 1 & TIER 2: GOOGLE CLOUD TTS (Neural2/Journey/WaveNet) API ---
+        const cacheKey = id + '_' + selectedTtsVoice;
+        let blobUrl = audioBlobCache.current[cacheKey];
         if (!blobUrl) {
           setLoadingId(id);
           try {
             const res = await fetch(`${BACKEND_URL}/api/tts`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text: cleanAudioText, language })
+              body: JSON.stringify({
+                text: cleanAudioText,
+                language: language || targetLang || 'ja-JP',
+                voiceModel: selectedTtsVoice,
+                apiKey: geminiApiKey
+              })
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const blob = await res.blob();
             blobUrl = URL.createObjectURL(blob);
-            audioBlobCache.current[id] = blobUrl;
+            audioBlobCache.current[cacheKey] = blobUrl;
             setLoadingId(null);
           } catch (err) {
             setLoadingId(null);
-            console.warn(`[Edge-TTS API Failed -> Web Speech API Fallback]: ${err.message}`);
+            console.warn(`[Tier 1/2 Google Cloud TTS API Failed -> Tier 3 Web Speech API Fallback]: ${err.message}`);
 
-            // Automatically update UI header button state to 'gen' when falling back
-            setTtsEngine('gen');
-
-            // Automatic fallback to browser native Web Speech API if Edge-TTS server endpoint fails (e.g. HTTP 500)
+            // Tier 3 Graceful Fallback: Browser Native Web Speech API
             if ('speechSynthesis' in window) {
               const langCode = language || targetLang || 'ja-JP';
               const utterance = new SpeechSynthesisUtterance(cleanAudioText);
@@ -1571,18 +1574,18 @@
                   🤖 {activeConnectedModel}
                 </span>
               )}
-              <button
-                class="btn-end-lesson-sm"
-                style={{
-                  background: ttsEngine === 'edge' ? 'var(--grad-terracotta)' : 'linear-gradient(135deg, #2a9d8f 0%, #264653 100%)',
-                  color: '#ffffff',
-                  fontWeight: '700'
-                }}
-                onClick={() => setTtsEngine(prev => prev === 'edge' ? 'gen' : 'edge')}
-                title="Toggle TTS Engine (Google Cloud Neural2/WaveNet vs Standard Gen)"
+              <select
+                class="select-tts-model-sm"
+                value={selectedTtsVoice}
+                onChange={(e) => setSelectedTtsVoice(e.target.value)}
+                title="TTS 音声モデル選択 / Speech Voice Model"
               >
-                🔊 {ttsEngine === 'edge' ? 'Google' : 'Gen'}
-              </button>
+                <option value="neural2-b">🎙️ Neural2 (女性/自然高音質)</option>
+                <option value="neural2-c">🎙️ Neural2 (男性/自然高音質)</option>
+                <option value="journey">🎙️ Journey (会話自然声)</option>
+                <option value="wavenet">🎙️ WaveNet (高品質)</option>
+                <option value="gen">🔊 Web Speech API (ブラウザ標準)</option>
+              </select>
               <button
                 class="btn-end-lesson-sm"
                 style={{ background: 'linear-gradient(135deg, #f4a261 0%, #e07a5f 100%)' }}
