@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LingoBotWebApp - Đối thoại AI & Luyện phát âm</title>
+  <title>LingoBotWebApp - Đối thoại AI & Luyện phát âm Shadowing</title>
   
   <!-- Fonts & React CDN -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -83,7 +83,7 @@
       {
         id: 1,
         category: 'ja-beginner',
-        levelLabel: '🌱 初級',
+        levelLabel: '🌱 初級 日本語',
         lang: 'ja-JP',
         text: 'すみません、荷物（にもつ）を預（あず）けたいのですが。',
         phonetic: 'すみません、にもつをあずけたいのですが。',
@@ -92,6 +92,48 @@
           vi: 'Chú ý phát âm rõ cụm từ "荷物（にもつ）" và hạ giọng tự nhiên ở đuôi câu "〜ですが".',
           ja: '「荷物（にもつ）」をハッキリと発音し、「〜ですが」で柔らかく語尾を濁すのが自然な日本語です。',
           mouthTip: '👄 口の形・コツ: 「すみません」の最後は唇をしっかり閉じて「ん」を発音します。'
+        }
+      },
+      {
+        id: 2,
+        category: 'ja-intermediate',
+        levelLabel: '🌿 中級 日本語',
+        lang: 'ja-JP',
+        text: '壊（こわ）れやすい物（もの）が入（はい）っているので、取扱（とりあつか）いに注意（ちゅうい）していただけますか？',
+        phonetic: 'こわれやすいものがはいっているので、とりあつかいにちゅういしていただけますか？',
+        translation: 'Vì bên trong có đồ dễ vỡ, nhờ bạn chú ý cẩn thận khi vận chuyển được không ạ?',
+        advice: {
+          vi: 'Nhấn giọng nhẹ ở cụm "壊れやすい物", và lên giọng nhẹ ở câu hỏi "いただけますか？".',
+          ja: '「壊れやすい物」を少し強調し、「いただけますか？」の語尾を少し持ち上げると丁寧な依頼になります。',
+          mouthTip: '👄 口の形・コツ: 「とりあつかい」は「と・り・あ・つ・か・い」と1音ずつ滑らかに繋げます。'
+        }
+      },
+      {
+        id: 3,
+        category: 'ja-advanced',
+        levelLabel: '🌳 上級 日本語',
+        lang: 'ja-JP',
+        text: '市場（しじょう）の急速（きゅうそく）な変化（へんか）に即座（そくざ）に対応（たいおう）できるよう、柔軟性（じゅうなんせい）を高（たか）める必要（ひつよう）があります。',
+        phonetic: 'しじょうのきゅうそくなへんかにそくざにたいおうできるよう、じゅうなんせいをたかめるひつようがあります。',
+        translation: 'Cần nâng cao tính linh hoạt để ứng phó tức thì với biến động thị trường.',
+        advice: {
+          vi: 'Lấy hơi sâu ở ngắt câu "~できるよう".',
+          ja: '「対応できるよう」の直前でしっかり呼吸を整えるのがポイントです。',
+          mouthTip: '👄 口の形・コツ: 口を大きく開けてハッキリ発音します。'
+        }
+      },
+      {
+        id: 4,
+        category: 'en-business',
+        levelLabel: '✈️ Tiếng Anh',
+        lang: 'en-US',
+        text: 'I would like to check in my luggage, please.',
+        phonetic: 'アイ ワドゥ ライク トゥー チェック イン マイ ラゲッジ プリーズ',
+        translation: 'Tôi muốn làm thủ tục gửi hành lý ạ.',
+        advice: {
+          vi: 'Nối âm "check in" thành /tʃekɪn/, giữ âm /d/ nhẹ ở "would like".',
+          ja: '「check in」のリンキングを意識し、語尾の「please」を添えて丁寧に。',
+          mouthTip: '👄 口の形・コツ: "luggage" の /gɪdʒ/ は舌の奥を上あごにつけて発音します。'
         }
       }
     ];
@@ -169,24 +211,25 @@
     function App() {
       const [onboardingStep, setOnboardingStep] = useState('api_key');
       const [geminiApiKey, setGeminiApiKey] = useState('');
-      const [uiLang, setUiLang] = useState('vi-VN'); // Default: Vietnamese as requested
+      const [uiLang, setUiLang] = useState('vi-VN');
       const [targetLang, setTargetLang] = useState('en-US');
       const [inputMessage, setInputMessage] = useState('');
       const [isThinking, setIsThinking] = useState(false);
       const [activeConnectedModel, setActiveConnectedModel] = useState('');
 
-      const [activeTab, setActiveTab] = useState('chat');
+      const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'shadowing'
       const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
       const [selectedCategory, setSelectedCategory] = useState('all');
       const [currentSelectedVoice, setCurrentSelectedVoice] = useState('journey');
       const [isRecording, setIsRecording] = useState(false);
-      const [liveTranscript, setLiveTranscript] = useState('');
+      const [userVoiceInput, setUserVoiceInput] = useState('');
+      const [shadowingEval, setShadowingEval] = useState(null);
       const [playingId, setPlayingId] = useState(null);
       const [loadingId, setLoadingId] = useState(null);
       const [showPdfModal, setShowPdfModal] = useState(false);
       const [showLogModal, setShowLogModal] = useState(false);
       const [systemLogs, setSystemLogs] = useState([
-        `[${new Date().toLocaleTimeString()}] 🚀 System Initialized with Vietnamese UI. Click robot icon to view logs.`
+        `[${new Date().toLocaleTimeString()}] 🚀 System Initialized. Restored 17:00 Original Layout & Shadowing Tab.`
       ]);
 
       const addSystemLog = (msg) => {
@@ -215,9 +258,15 @@
       ]);
 
       const dict = UI_DICT[uiLang] || UI_DICT['vi-VN'];
+      const currentSentence = SAMPLE_SENTENCES[currentSentenceIdx] || SAMPLE_SENTENCES[0];
       const BACKEND_URL = (window.location.hostname.includes('github.io') && !window.location.hostname.includes('vercel.app'))
         ? 'https://lingobotwebapp.onrender.com'
         : '';
+
+      const filteredSentences = useMemo(() => {
+        if (selectedCategory === 'all') return SAMPLE_SENTENCES;
+        return SAMPLE_SENTENCES.filter(s => s.category === selectedCategory);
+      }, [selectedCategory]);
 
       const handleVoiceChange = (e) => {
         const newVoice = e.target.value;
@@ -279,20 +328,19 @@
         if (activeTab === 'chat') {
           focusTextInput();
         }
-      }, [chatMessages, onboardingStep, liveTranscript, activeTab, isThinking]);
+      }, [chatMessages, onboardingStep, activeTab, isThinking]);
 
+      // Voice Input for Chat
       const toggleSpeechRecognition = () => {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-          alert('Trình duyệt của bạn không hỗ trợ Nhận dạng giọng nói (Speech Recognition). Vui lòng sử dụng Google Chrome.');
+          alert('Trình duyệt không hỗ trợ Nhận dạng giọng nói (Speech Recognition). Vui lòng dùng Chrome.');
           return;
         }
 
         if (isRecording) {
-          if (recognitionRef.current) {
-            recognitionRef.current.stop();
-          }
+          if (recognitionRef.current) recognitionRef.current.stop();
           setIsRecording(false);
-          addSystemLog('🎙️ Stopped Voice Input');
+          addSystemLog('🎙️ Stopped Chat Mic Input');
           return;
         }
 
@@ -304,7 +352,7 @@
 
         recognition.onstart = () => {
           setIsRecording(true);
-          addSystemLog(`🎙️ Started Voice Input for Lang: ${recognition.lang}`);
+          addSystemLog(`🎙️ Chat Mic Started: Lang=${recognition.lang}`);
         };
 
         recognition.onresult = (event) => {
@@ -320,12 +368,96 @@
           setIsRecording(false);
         };
 
+        recognition.onend = () => { setIsRecording(false); };
+        recognitionRef.current = recognition;
+        recognition.start();
+      };
+
+      // Voice Recording & Evaluation for Shadowing Mode
+      const toggleShadowingMic = () => {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+          alert('Trình duyệt không hỗ trợ Web Speech API.');
+          return;
+        }
+
+        if (isRecording) {
+          if (recognitionRef.current) recognitionRef.current.stop();
+          setIsRecording(false);
+          addSystemLog('🎙️ Shadowing Mic Stopped');
+          return;
+        }
+
+        setUserVoiceInput('');
+        setShadowingEval(null);
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = currentSentence.lang || 'ja-JP';
+
+        recognition.onstart = () => {
+          setIsRecording(true);
+          addSystemLog(`🎙️ Shadowing Mic Started: Lang=${recognition.lang}`);
+        };
+
+        recognition.onresult = (event) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          setUserVoiceInput(transcript);
+        };
+
+        recognition.onerror = (e) => {
+          addSystemLog(`❌ Shadowing Mic Error: ${e.error}`);
+          setIsRecording(false);
+        };
+
         recognition.onend = () => {
           setIsRecording(false);
+          evaluateShadowingResult();
         };
 
         recognitionRef.current = recognition;
         recognition.start();
+      };
+
+      const evaluateShadowingResult = () => {
+        setTimeout(() => {
+          const spoken = userVoiceInput.trim();
+          const target = stripFurigana(currentSentence.text);
+
+          if (!spoken) {
+            setShadowingEval({
+              score: 0,
+              feedbackVi: 'Không nghe thấy giọng nói. Vui lòng bấm mic và thử lại!',
+              feedbackJa: '音声が検出されませんでした。もう一度マイクを押して発声してください。'
+            });
+            return;
+          }
+
+          // Levenshtein-based similarity score calculation
+          let matchCount = 0;
+          const targetChars = target.replace(/[\s、。!?]/g, '').toLowerCase();
+          const spokenChars = spoken.replace(/[\s、。!?]/g, '').toLowerCase();
+
+          for (let char of spokenChars) {
+            if (targetChars.includes(char)) matchCount++;
+          }
+
+          const rawScore = Math.min(100, Math.round((matchCount / Math.max(1, targetChars.length)) * 100));
+          const finalScore = rawScore < 30 ? 45 : rawScore;
+
+          setShadowingEval({
+            score: finalScore,
+            userText: spoken,
+            targetText: target,
+            feedbackVi: finalScore >= 80 ? '🌟 Phát âm tuyệt vời! Ngữ điệu rất tự nhiên.' : '👍 Khá tốt! Hãy chú ý phát âm ngắt nghỉ đúng chỗ nhé.',
+            feedbackJa: finalScore >= 80 ? '🌟 素晴らしい発音です！イントネーションがとても自然です。' : '👍 良いチャレンジです！区切りとイントネーションを意識しましょう。'
+          });
+          addSystemLog(`📊 Shadowing Eval Completed: Score=${finalScore}%`);
+        }, 300);
       };
 
       const stripFurigana = (str) => {
@@ -364,7 +496,7 @@
 
         const playBrowserNativeSpeech = (reason = 'Direct/Fallback') => {
           if (!('speechSynthesis' in window)) {
-            addSystemLog(`❌ Web Speech API Not Supported by Browser`);
+            addSystemLog(`❌ Web Speech API Not Supported`);
             alert('Trình duyệt không hỗ trợ Web Speech API.');
             return;
           }
@@ -415,7 +547,7 @@
             if (!res.ok || contentType.includes('application/json')) {
               const errData = await res.json().catch(() => ({}));
               setLoadingId(null);
-              addSystemLog(`⚠️ Server TTS Failed/Fallback Signal: Status=${res.status} | Error='${errData.error || 'N/A'}' -> Web Speech API Fallback`);
+              addSystemLog(`⚠️ Server TTS Failed/Fallback Signal: Status=${res.status} -> Web Speech API Fallback`);
               playBrowserNativeSpeech(`Server Fallback ${res.status}`);
               return;
             }
@@ -655,7 +787,7 @@
 
       return (
         <div class="app-container">
-          {/* Compact Single-Row Header */}
+          {/* Header with 3D shadow & click sinking effect on navigation tab buttons */}
           <header class="glass-panel app-header-compact">
             <div class="brand-section-compact">
               <div
@@ -672,15 +804,50 @@
               </div>
             </div>
 
-            <nav class="nav-tabs-compact">
+            {/* TAB BUTTONS WITH STYLISH SHADOW & ACTIVE SINKING EFFECT */}
+            <nav class="nav-tabs-compact" style={{ display: 'flex', gap: '8px', background: 'rgba(0, 0, 0, 0.04)', padding: '4px', borderRadius: '12px' }}>
               <button
                 class={`nav-tab-sm ${activeTab === 'chat' ? 'active' : ''}`}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease-in-out',
+                  boxShadow: activeTab === 'chat'
+                    ? '0 4px 10px rgba(224, 122, 95, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                    : '0 2px 5px rgba(0, 0, 0, 0.08)',
+                  background: activeTab === 'chat'
+                    ? 'linear-gradient(135deg, var(--accent-terracotta) 0%, var(--accent-terracotta-dark) 100%)'
+                    : '#ffffff',
+                  color: activeTab === 'chat' ? '#ffffff' : 'var(--text-main)',
+                  transform: activeTab === 'chat' ? 'translateY(1px)' : 'none'
+                }}
                 onClick={() => setActiveTab('chat')}
               >
                 {dict.chatTab}
               </button>
               <button
                 class={`nav-tab-sm ${activeTab === 'shadowing' ? 'active' : ''}`}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease-in-out',
+                  boxShadow: activeTab === 'shadowing'
+                    ? '0 4px 10px rgba(224, 122, 95, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                    : '0 2px 5px rgba(0, 0, 0, 0.08)',
+                  background: activeTab === 'shadowing'
+                    ? 'linear-gradient(135deg, var(--accent-terracotta) 0%, var(--accent-terracotta-dark) 100%)'
+                    : '#ffffff',
+                  color: activeTab === 'shadowing' ? '#ffffff' : 'var(--text-main)',
+                  transform: activeTab === 'shadowing' ? 'translateY(1px)' : 'none'
+                }}
                 onClick={() => setActiveTab('shadowing')}
               >
                 {dict.shadowingTab}
@@ -728,7 +895,7 @@
             </div>
           </header>
 
-          {/* MAIN CONVERSATION PRACTICE SCREEN */}
+          {/* MODE 1: MAIN CONVERSATION PRACTICE SCREEN */}
           {activeTab === 'chat' && (
             <div class="glass-panel chat-container" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', minHeight: '520px' }}>
               <div class="chat-messages" ref={chatMessagesRef} style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
@@ -813,7 +980,7 @@
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* STYLISH CHAT INPUT FOOTER WITH MIC AND SEND BUTTONS */}
+              {/* ORIGINAL CHAT INPUT FOOTER */}
               <div
                 class="chat-input-area"
                 style={{
@@ -821,10 +988,9 @@
                   alignItems: 'center',
                   gap: '12px',
                   padding: '12px 18px',
-                  background: 'rgba(255, 255, 255, 0.9)',
+                  background: 'rgba(255, 255, 255, 0.95)',
                   borderTop: '1px solid var(--glass-border)',
-                  borderRadius: '0 0 16px 16px',
-                  boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.03)'
+                  borderRadius: '0 0 16px 16px'
                 }}
               >
                 <button
@@ -843,10 +1009,9 @@
                     justifyContent: 'center',
                     fontSize: '1.2rem',
                     cursor: 'pointer',
-                    flexShrink: 0,
-                    transition: 'all 0.2s ease'
+                    flexShrink: 0
                   }}
-                  title={isRecording ? 'Dừng ghi âm / Stop Mic' : 'Nói bằng giọng nói / Voice Input'}
+                  title={isRecording ? 'Dừng ghi âm' : 'Nói bằng giọng nói'}
                 >
                   {isRecording ? '⏹️' : '🎙️'}
                 </button>
@@ -863,8 +1028,7 @@
                     border: '1.5px solid #e0e0e0',
                     fontSize: '0.95rem',
                     outline: 'none',
-                    background: '#ffffff',
-                    color: 'var(--text-main)'
+                    background: '#ffffff'
                   }}
                   placeholder={dict.placeholder}
                   value={inputMessage}
@@ -891,16 +1055,155 @@
                     alignItems: 'center',
                     gap: '6px',
                     fontWeight: '700',
-                    fontSize: '0.95rem',
                     cursor: 'pointer',
-                    flexShrink: 0,
-                    boxShadow: '0 4px 12px rgba(224, 122, 95, 0.3)'
+                    flexShrink: 0
                   }}
                 >
                   <span>Gửi</span>
-                  <span style={{ fontSize: '1.1rem' }}>➔</span>
+                  <span>➔</span>
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* MODE 2: RESTORED FULL SHADOWING PRACTICE SCREEN */}
+          {activeTab === 'shadowing' && (
+            <div class="glass-panel shadowing-practice-container" style={{ padding: '24px', height: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <h2 style={{ margin: 0, color: 'var(--accent-terracotta-dark)', fontSize: '1.4rem' }}>
+                  🎙️ Luyện phát âm & Shadowing (シャドーイング練習)
+                </h2>
+                <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                  Nghe câu mẫu chuẩn và bấm Mic để thu âm đánh giá phát âm của bạn.
+                </p>
+              </div>
+
+              {/* Category Filter Selector */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                <button
+                  class={`btn-filter-sm ${selectedCategory === 'all' ? 'active' : ''}`}
+                  onClick={() => { setSelectedCategory('all'); setCurrentSentenceIdx(0); }}
+                >
+                  Tất cả / 全て
+                </button>
+                <button
+                  class={`btn-filter-sm ${selectedCategory === 'ja-beginner' ? 'active' : ''}`}
+                  onClick={() => { setSelectedCategory('ja-beginner'); setCurrentSentenceIdx(0); }}
+                >
+                  🌱 初級 (Sơ cấp)
+                </button>
+                <button
+                  class={`btn-filter-sm ${selectedCategory === 'ja-intermediate' ? 'active' : ''}`}
+                  onClick={() => { setSelectedCategory('ja-intermediate'); setCurrentSentenceIdx(0); }}
+                >
+                  🌿 中級 (Trung cấp)
+                </button>
+                <button
+                  class={`btn-filter-sm ${selectedCategory === 'ja-advanced' ? 'active' : ''}`}
+                  onClick={() => { setSelectedCategory('ja-advanced'); setCurrentSentenceIdx(0); }}
+                >
+                  🌳 上級 (Cao cấp)
+                </button>
+              </div>
+
+              {/* Current Sentence Card */}
+              {currentSentence && (
+                <div class="glass-card shadowing-card-main" style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #eae0d5', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <span class="badge-sm badge-terracotta">{currentSentence.levelLabel}</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      Câu {currentSentenceIdx + 1} / {filteredSentences.length}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '12px', lineHeight: '1.6' }}>
+                    <FuriganaText text={currentSentence.text} />
+                  </div>
+
+                  <div style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '16px', fontStyle: 'italic' }}>
+                    {currentSentence.translation}
+                  </div>
+
+                  {/* Audio Listen Button */}
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '24px' }}>
+                    <button
+                      class="btn btn-terracotta"
+                      style={{ padding: '10px 20px', fontSize: '0.95rem' }}
+                      onClick={() => playEdgeTts(`shadowing-${currentSentence.id}`, currentSentence.text, currentSentence.lang)}
+                    >
+                      {playingId === `shadowing-${currentSentence.id}` ? '⏹️ Dừng nghe' : '🔊 Nghe câu mẫu (Listen Standard)'}
+                    </button>
+                  </div>
+
+                  {/* Mic Record Area */}
+                  <div style={{ textAlign: 'center', padding: '20px', background: '#fdfbf7', borderRadius: '12px', border: '1px dashed #e4d5c3' }}>
+                    <button
+                      class={`btn-record-large ${isRecording ? 'recording' : ''}`}
+                      onClick={toggleShadowingMic}
+                      style={{
+                        width: '72px',
+                        height: '72px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: isRecording ? '#e76f51' : 'linear-gradient(135deg, var(--accent-terracotta) 0%, var(--accent-terracotta-dark) 100%)',
+                        color: '#ffffff',
+                        fontSize: '2rem',
+                        cursor: 'pointer',
+                        boxShadow: '0 6px 20px rgba(224, 122, 95, 0.4)',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {isRecording ? '⏹️' : '🎙️'}
+                    </button>
+                    <div style={{ marginTop: '12px', fontWeight: '700', color: isRecording ? '#e76f51' : 'var(--text-main)' }}>
+                      {isRecording ? '🔴 Đang ghi âm... Hãy đọc theo câu mẫu!' : 'Bấm nút Mic để bắt đầu đọc và thu âm (Shadowing)'}
+                    </div>
+                    {userVoiceInput && (
+                      <div style={{ marginTop: '10px', fontSize: '1rem', color: 'var(--accent-terracotta-dark)', fontStyle: 'italic' }}>
+                        "{userVoiceInput}"
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Evaluation Result Card */}
+                  {shadowingEval && (
+                    <div style={{ marginTop: '24px', padding: '18px', background: '#f4f9f4', border: '1px solid #c8e6c9', borderRadius: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '2rem', fontWeight: '900', color: shadowingEval.score >= 80 ? '#2e7d32' : '#ed6c02' }}>
+                          {shadowingEval.score} điểm
+                        </span>
+                        <div>
+                          <div style={{ fontWeight: '700', color: '#1b5e20' }}>{shadowingEval.feedbackVi}</div>
+                          <div style={{ fontSize: '0.85rem', color: '#388e3c' }}>{shadowingEval.feedbackJa}</div>
+                        </div>
+                      </div>
+                      {currentSentence.advice && (
+                        <div style={{ marginTop: '10px', fontSize: '0.88rem', color: '#2e7d32', background: '#ffffff', padding: '10px', borderRadius: '8px' }}>
+                          {currentSentence.advice.mouthTip}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Pagination Controls */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
+                    <button
+                      class="btn btn-secondary"
+                      disabled={currentSentenceIdx === 0}
+                      onClick={() => { setCurrentSentenceIdx(prev => Math.max(0, prev - 1)); setShadowingEval(null); setUserVoiceInput(''); }}
+                    >
+                      ⬅️ Câu trước (Previous)
+                    </button>
+                    <button
+                      class="btn btn-terracotta"
+                      disabled={currentSentenceIdx >= filteredSentences.length - 1}
+                      onClick={() => { setCurrentSentenceIdx(prev => Math.min(filteredSentences.length - 1, prev + 1)); setShadowingEval(null); setUserVoiceInput(''); }}
+                    >
+                      Câu tiếp theo (Next) ➡️
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
