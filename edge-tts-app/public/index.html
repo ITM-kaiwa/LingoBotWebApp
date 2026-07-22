@@ -504,14 +504,14 @@
         }
       }, [chatMessages, onboardingStep, liveTranscript, activeTab, isThinking]);
 
-      // Onboarding Initial Step 0: Gemini API Key Prompt (Mandatory, No Skip)
+      // Onboarding Initial Step 0: Gemini API Key Prompt (Mandatory, No Skip, with Furigana)
       const [chatMessages, setChatMessages] = useState([
         {
           id: 'welcome-api-key',
           sender: 'ai',
           lang: 'bilingual',
           type: 'onboarding_api_key',
-          text: `🔑 Google Gemini API Key Setup / Google Gemini APIキーの設定:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu (Bắt buộc):\n🇯🇵 こんにちは！ご使用前に Google Gemini APIキー（例: AIzaSy...）を下のチャット入力欄に入力してください（※設定必須）:`,
+          text: `🔑 Google Gemini API Key Setup / Google Gemini APIキーの設定（せってい）:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu (Bắt buộc):\n🇯🇵 こんにちは！ご使用前（しようまえ）に Google Gemini APIキー（例: AIzaSy...）を下（した）のチャット入力欄（にゅうりょくらん）に入力（にゅうりょく）してください（※設定必須（せっていひっす））:`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -522,7 +522,14 @@
       // Render.com Backend API URL configuration for GitHub Pages deployment
       const RENDER_BACKEND_URL = window.location.hostname.includes('github.io') ? 'https://lingobotwebapp.onrender.com' : '';
 
-      // Edge TTS Player (Toggle stop if pressed again while playing)
+      // Helper: Strip Furigana text in parentheses before passing to TTS so it reads only plain Kanji text
+      const stripFurigana = (str) => {
+        if (!str) return '';
+        return str.replace(/([\u4E00-\u9FFF\u3005]+)\s*[\（\(][\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+[\）\)]/g, '$1')
+                  .replace(/[\（\(][\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+[\）\)]/g, '');
+      };
+
+      // Edge TTS Player (Toggle stop if pressed again while playing, strips furigana for pure audio)
       const playEdgeTts = async (id, text, language) => {
         // Toggle Stop if clicking the currently playing message
         if (playingId === id) {
@@ -543,6 +550,8 @@
         }
         setPlayingId(null);
 
+        const cleanAudioText = stripFurigana(text);
+
         let blobUrl = audioBlobCache.current[id];
         if (!blobUrl) {
           setLoadingId(id);
@@ -550,7 +559,7 @@
             const res = await fetch(`${RENDER_BACKEND_URL}/api/tts`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text, language })
+              body: JSON.stringify({ text: cleanAudioText, language })
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const blob = await res.blob();
