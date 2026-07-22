@@ -1259,11 +1259,11 @@
                     <div key={msg.id} class={`chat-bubble ${msg.sender} ${msg.isError ? 'error-bubble' : ''}`}>
                       <div style={{ whiteSpace: 'pre-line' }}><FuriganaText text={msg.text} /></div>
                       <div class="chat-bubble-meta">
-                        <span>{msg.sender === 'ai' ? `🤖 LingoBot ${msg.modelName ? `(${msg.modelName})` : ''}` : `👤 User (${LANG_META[uiLang]?.name})`}</span>
+                        <span>{msg.sender === 'ai' ? `🤖 LingoBot ${msg.modelName ? `(${msg.modelName})` : ''}` : `👤 User`}</span>
                         <span>{msg.time}</span>
                       </div>
 
-                      {/* Step 1 Interactive Onboarding Choice Chips (UI Language) */}
+                      {/* Onboarding UI language selection chips */}
                       {msg.type === 'onboarding_ui' && onboardingStep === 'ui_lang' && (
                         <div style={{ marginTop: '14px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                           <button class="btn btn-terracotta" onClick={() => handleSelectUiLang('vi-VN')}>
@@ -1278,54 +1278,47 @@
                         </div>
                       )}
 
-                      {/* Step 2 Interactive Onboarding Choice Chips (Target Learning Language) */}
+                      {/* Onboarding Target language selection chips */}
                       {msg.type === 'onboarding_target' && onboardingStep === 'target_lang' && (
                         <div style={{ marginTop: '14px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                          <button class="btn btn-sage" onClick={() => handleSelectTargetLang('vi-VN')}>
-                            🇻🇳 Tiếng Việt (Vietnamese)
+                          <button class="btn btn-terracotta" onClick={() => handleSelectTargetLang('ja-JP')}>
+                            <FuriganaText text="🇯🇵 日本語（にほんご）" />
                           </button>
-                          <button class="btn btn-sage" onClick={() => handleSelectTargetLang('ja-JP')}>
-                            <FuriganaText text="🇯🇵 日本語（にほんご） (Japanese)" />
+                          <button class="btn btn-terracotta" onClick={() => handleSelectTargetLang('vi-VN')}>
+                            🇻🇳 Tiếng Việt
                           </button>
-                          <button class="btn btn-sage" onClick={() => handleSelectTargetLang('en-US')}>
-                            🇺🇸 English (US English)
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Error Log Download Button */}
-                      {msg.isError && msg.errorLogText && (
-                        <div class="chat-bubble-actions" style={{ marginTop: '10px' }}>
-                          <button
-                            class="btn btn-secondary"
-                            style={{ padding: '6px 14px', fontSize: '0.82rem', background: '#ffffff', color: '#cf1322', border: '1px solid #ff4d4f' }}
-                            onClick={() => downloadTextFile(`gemini_error_log_${Date.now()}.txt`, msg.errorLogText)}
-                          >
-                            📥 Tải nhật ký lỗi / ログをダウンロード (.txt)
+                          <button class="btn btn-terracotta" onClick={() => handleSelectTargetLang('en-US')}>
+                            🇺🇸 English
                           </button>
                         </div>
                       )}
 
-                      {/* Standard AI Message Action Buttons */}
-                      {msg.sender === 'ai' && !msg.type && !msg.isError && (
-                        <div class="chat-bubble-actions">
-                          {/* 🔊 Play Voice Button */}
+                      {/* Advice Card */}
+                      {msg.advice && (
+                        <div class="advice-card-embedded" style={{ marginTop: '12px' }}>
+                          <div class="advice-title">💡 {msg.advice.category}</div>
+                          {msg.advice.betterList && (
+                            <div style={{ marginTop: '6px' }}>
+                              {msg.advice.betterList.map((bText, idx) => (
+                                <div key={idx} style={{ color: '#2a9d8f', fontWeight: '700', fontSize: '0.95rem' }}>
+                                  <FuriganaText text={bText} />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div class="advice-explanation"><FuriganaText text={msg.advice.explanation} /></div>
+                        </div>
+                      )}
+
+                      {/* Audio Controls */}
+                      {msg.sender === 'ai' && !msg.isError && msg.type !== 'onboarding_api_key' && (
+                        <div class="chat-audio-controls">
                           <button
-                            class={`btn btn-terracotta ${isPlaying ? 'playing' : ''}`}
-                            style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+                            class={`btn-play-sm ${isPlaying ? 'playing' : ''}`}
+                            onClick={() => playEdgeTts(msg.id, msg.text, targetLang)}
                             disabled={isLoading}
-                            onClick={() => playEdgeTts(msg.id, msg.text, msg.lang || targetLang)}
                           >
-                            {isLoading ? dict.generating : isPlaying ? dict.stopVoice : dict.playVoice}
-                          </button>
-
-                          {/* ⬇️ Download MP3 Button */}
-                          <button
-                            class="btn btn-secondary"
-                            style={{ padding: '6px 14px', fontSize: '0.82rem' }}
-                            onClick={() => downloadMp3(msg.id, msg.text, msg.lang || targetLang, `lingobot_${msg.id}.mp3`)}
-                          >
-                            {dict.downloadMp3}
+                            {isLoading ? '⏳ Loading...' : isPlaying ? '⏹️ Dừng' : '🔊 Phát âm'}
                           </button>
                         </div>
                       )}
@@ -1333,378 +1326,36 @@
                   );
                 })}
                 {isThinking && (
-                  <div class="chat-bubble ai thinking-bubble" style={{ alignSelf: 'flex-start', background: '#ffffff', border: '1px solid var(--border-warm)', borderRadius: 'var(--radius-lg)', padding: '14px 18px', boxShadow: 'var(--shadow-sm)', margin: '4px 0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-terracotta-dark)', fontWeight: 600, fontSize: '0.92rem' }}>
-                      <span style={{ fontSize: '1.2rem' }}>⏳</span>
-                      <span>
-                        {uiLang === 'ja-JP' ? '🤖 ちょっと待ってください...（AIが考え中）' :
-                         uiLang === 'vi-VN' ? '🤖 Vui lòng chờ một chút... (AI đang suy nghĩ)' :
-                         uiLang === 'en-US' ? '🤖 Please wait a moment... (AI is thinking)' :
-                         '🤖 Vui lòng chờ một chút... / ちょっと待ってください...'}
-                      </span>
-                    </div>
+                  <div class="chat-bubble ai thinking-bubble">
+                    <span>🤔 {dict.thinking}</span>
                   </div>
                 )}
-                <div ref={messagesEndRef} style={{ float: 'left', clear: 'both' }} />
+                <div ref={messagesEndRef} />
               </div>
 
-              {/* Chat Input & End Lesson Bar */}
-              <div style={{ padding: '20px 24px', borderTop: '1px solid var(--border-warm)', background: 'rgba(255, 253, 249, 0.95)', display: 'flex', gap: '12px', alignItems: 'center' }}>
+              {/* Chat Input Footer */}
+              <div class="chat-input-area">
                 <input
-                  id="chat-text-input-field"
                   ref={textInputRef}
                   type="text"
-                  class="form-input"
-                  placeholder={dict.inputPlaceholder}
+                  class="chat-input"
+                  placeholder={dict.placeholder}
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      const val = e.target.value.trim();
-                      if (val) {
-                        e.target.value = '';
-                        handleUserChat(val);
-                      }
+                      handleSendMessage();
                     }
                   }}
                 />
-
-                <button
-                  class="btn btn-terracotta"
-                  style={{ padding: '12px 18px', whiteSpace: 'nowrap' }}
-                  onClick={() => {
-                    const el = document.getElementById('chat-text-input-field');
-                    if (el && el.value.trim()) {
-                      handleUserChat(el.value);
-                      el.value = '';
-                    }
-                  }}
-                >
-                  {dict.send}
-                </button>
-
-                <button
-                  class={`mic-button ${isRecording ? 'recording' : ''}`}
-                  style={{ width: '50px', height: '50px', fontSize: '1.2rem' }}
-                  title="Speak to AI"
-                  onClick={() => {
-                    toggleRecording(targetLang, (finalText) => {
-                      handleUserChat(finalText);
-                    });
-                  }}
-                >
-                  {isRecording ? '🛑' : '🎙️'}
-                </button>
-
-                <button
-                  class="btn btn-end-lesson"
-                  style={{ padding: '12px 18px', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
-                  onClick={() => setShowPdfModal(true)}
-                >
-                  {dict.endLesson}
+                <button class="btn-send" onClick={() => handleSendMessage()}>
+                  ➔
                 </button>
               </div>
             </div>
           )}
 
-          {/* SECONDARY SHADOWING MODE */}
-          {activeTab === 'shadowing' && (
-            <div class="shadowing-layout">
-              {/* Sidebar Library */}
-              <div class="glass-panel sentence-sidebar">
-                <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)', marginBottom: '8px' }}>
-                  📚 {dict.shadowingTab} Library ({filteredSentences.length})
-                </div>
-
-                {/* Level / Category Filter Chips */}
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                  {[
-                    { id: 'all', label: 'すべて / All' },
-                    { id: 'ja-beginner', label: '🌱 初級' },
-                    { id: 'ja-intermediate', label: '🌿 中級' },
-                    { id: 'ja-advanced', label: '🌳 上級' },
-                    { id: 'en-business', label: '🇺🇸 Eng' },
-                    { id: 'vi-daily', label: '🇻🇳 Việt' }
-                  ].map(cat => (
-                    <button
-                      key={cat.id}
-                      class="badge-sm"
-                      style={{
-                        cursor: 'pointer',
-                        border: selectedCategory === cat.id ? '1px solid var(--accent-terracotta)' : '1px solid var(--border-warm)',
-                        background: selectedCategory === cat.id ? 'var(--accent-terracotta)' : '#ffffff',
-                        color: selectedCategory === cat.id ? '#ffffff' : 'var(--text-main)',
-                        padding: '4px 8px',
-                        fontSize: '0.72rem',
-                        fontWeight: 600
-                      }}
-                      onClick={() => setSelectedCategory(cat.id)}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div class="sentence-list">
-                  {filteredSentences.map((sent) => {
-                    const globalIdx = SAMPLE_SENTENCES.indexOf(sent);
-                    const isSelected = globalIdx === currentSentenceIdx;
-                    return (
-                      <div
-                        key={sent.id}
-                        class={`sentence-item ${isSelected ? 'active' : ''}`}
-                        onClick={() => {
-                          setCurrentSentenceIdx(globalIdx);
-                          setEvalResult(null);
-                          setLiveTranscript('');
-                        }}
-                      >
-                        <div class="sentence-item-text">
-                          <FuriganaText text={sent.text} />
-                        </div>
-                        <div class="sentence-item-meta">
-                          <span class="badge-sm badge-sage" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>{sent.levelLabel || sent.lang}</span>
-                          <span>{LANG_META[sent.lang]?.flag}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Practice Card */}
-              <div class="glass-panel practice-card">
-                <div class="target-sentence-box">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <div class="target-label">
-                      ✨ Target Sentence ({LANG_META[currentSentence.lang]?.name})
-                    </div>
-                    <span class="badge badge-sage" style={{ fontSize: '0.8rem' }}>{currentSentence.levelLabel || currentSentence.lang}</span>
-                  </div>
-
-                  <div class="target-text" style={{ fontSize: '1.25rem', lineHeight: '1.7' }}>
-                    <FuriganaText text={currentSentence.text} />
-                  </div>
-                  
-                  {currentSentence.phonetic && (
-                    <div style={{ marginTop: '8px', fontSize: '0.88rem', fontFamily: 'var(--font-mono)', color: 'var(--text-dim)' }}>
-                      IPA / 読み: {currentSentence.phonetic}
-                    </div>
-                  )}
-
-                  <div style={{ marginTop: '10px', fontSize: '0.95rem', color: 'var(--text-muted)' }}>
-                    Translation: {currentSentence.translation}
-                  </div>
-                </div>
-
-                {/* Controls Bar */}
-                <div class="action-controls">
-                  <button
-                    class={`btn btn-terracotta ${playingId === `sent-${currentSentence.id}` ? 'playing' : ''}`}
-                    style={{ padding: '14px 24px' }}
-                    disabled={loadingId === `sent-${currentSentence.id}`}
-                    onClick={() => playEdgeTts(`sent-${currentSentence.id}`, currentSentence.text, currentSentence.lang)}
-                  >
-                    {loadingId === `sent-${currentSentence.id}` ? dict.generating : playingId === `sent-${currentSentence.id}` ? dict.stopVoice : dict.playVoice}
-                  </button>
-
-                  <button
-                    class="btn btn-secondary"
-                    style={{ padding: '14px 20px' }}
-                    onClick={() => downloadMp3(`sent-${currentSentence.id}`, currentSentence.text, currentSentence.lang, `model_${currentSentence.lang}.mp3`)}
-                  >
-                    {dict.downloadMp3}
-                  </button>
-
-                  <button
-                    class={`mic-button ${isRecording ? 'recording' : ''}`}
-                    title="Click to speak"
-                    onClick={() => {
-                      toggleRecording(currentSentence.lang, (finalText) => {
-                        const res = evaluatePronunciation(currentSentence.text, finalText);
-                        setEvalResult(res);
-                      });
-                    }}
-                  >
-                    {isRecording ? '🛑' : '🎙️'}
-                  </button>
-                </div>
-
-                {/* Live Transcript Output */}
-                <div class="live-transcript-container">
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', marginBottom: '6px' }}>
-                    🎙️ Recognized Speech (Web Speech STT)
-                  </div>
-                  <div class={liveTranscript ? 'transcript-final' : 'transcript-interim'}>
-                    {liveTranscript || (isRecording ? 'Listening... Speak clearly into mic' : 'Click mic button above and read aloud')}
-                  </div>
-                </div>
-
-                {/* Evaluation Card & Pronunciation Advice */}
-                {evalResult && (
-                  <div>
-                    <div class="score-result-panel">
-                      <div class="score-header">
-                        <div>
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                            Accuracy Score
-                          </div>
-                          <div style={{ fontSize: '1.3rem', fontWeight: 700, color: evalResult.gradeColor }}>
-                            {evalResult.grade}
-                          </div>
-                        </div>
-                        <div class="score-badge" style={{ color: evalResult.gradeColor }}>
-                          {evalResult.score}%
-                        </div>
-                      </div>
-
-                      <div class="word-diff-container" style={{ marginTop: '12px' }}>
-                        {evalResult.diff.map((item, i) => (
-                          <span key={i} class={`diff-word diff-${item.type}`}>
-                            {item.word} {item.said ? `(said: ${item.said})` : ''}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Pronunciation & Mouth Position Advice Guide */}
-                    <div class="pronunciation-advice-box">
-                      <div class="pronunciation-advice-title">
-                        👄 正しい発音 ＆ 口の形のアドバイス (Pronunciation & Mouth Position Guide)
-                      </div>
-                      <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', lineHeight: 1.5 }}>
-                        <div><strong>正解の読み方 (IPA):</strong> <code style={{ color: 'var(--accent-terracotta-dark)', fontFamily: 'var(--font-mono)' }}>{currentSentence.phonetic}</code></div>
-                        <div style={{ marginTop: '6px' }}><strong>発音アドバイス (Advice):</strong> {currentSentence.advice?.ja || currentSentence.advice?.vi}</div>
-                        <div style={{ marginTop: '4px', color: 'var(--text-muted)' }}>{currentSentence.advice?.mouthTip}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* PDF LESSON SUMMARY MODAL */}
-          {showPdfModal && (
-            <div class="pdf-modal-overlay">
-              <div class="pdf-modal-card">
-                <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-warm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fdfbf7' }}>
-                  <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent-terracotta-dark)' }}>
-                    📄 {dict.pdfTitle}
-                  </div>
-                  <button class="btn btn-secondary" style={{ padding: '6px 12px' }} onClick={() => setShowPdfModal(false)}>✕</button>
-                </div>
-
-                {/* Printable PDF Content Section */}
-                <div class="pdf-report-content" id="pdf-report-element">
-                  <div class="pdf-report-header">
-                    <div>
-                      <div class="pdf-report-title">🤖 LingoBotWebApp</div>
-                      <div style={{ fontSize: '0.9rem', color: '#5e5045', marginTop: '4px' }}>
-                        Lesson Summary Report / Báo cáo tóm tắt bài học
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right', fontSize: '0.85rem', color: '#8e7c6d' }}>
-                      <div>Date: {new Date().toLocaleDateString()}</div>
-                      <div>Time: {new Date().toLocaleTimeString()}</div>
-                    </div>
-                  </div>
-
-                  {/* Summary Stats */}
-                  <div class="pdf-section" style={{ background: '#fcf9f4', padding: '16px', borderRadius: '12px', border: '1px solid #e8ded0' }}>
-                    <div class="pdf-section-title">📊 Lesson Overview</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', textAlign: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>UI Language</div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#e07a5f' }}>{LANG_META[uiLang]?.name}</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>Target Language</div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#2a9d8f' }}>{LANG_META[targetLang]?.name}</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '0.8rem', color: '#8e7c6d' }}>AI Model</div>
-                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#2d231d' }}>{activeConnectedModel || 'Gemini AI'}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Conversation Transcripts */}
-                  <div class="pdf-section">
-                    <div class="pdf-section-title">💬 Conversation History</div>
-                    {chatMessages.map((msg, i) => (
-                      <div key={i} class="pdf-chat-item">
-                        <div style={{ fontWeight: 700, fontSize: '0.85rem', color: msg.sender === 'ai' ? '#e07a5f' : '#2a9d8f' }}>
-                          {msg.sender === 'ai' ? '🤖 LingoBot AI' : '👤 User'}:
-                        </div>
-                        <div style={{ marginTop: '4px', whiteSpace: 'pre-line' }}>{msg.text}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Detailed Expression & Grammar Advice Section */}
-                  <div class="pdf-section" style={{ borderTop: '2px solid var(--accent-amber)', paddingTop: '16px' }}>
-                    <div class="pdf-section-title">💡 レッスン振り返りアドバイス ＆ 表現の改善ポイント / Expression & Grammar Advice</div>
-                    {chatMessages.filter(m => 
-                      m.sender === 'user' && 
-                      !m.type && 
-                      !m.text.startsWith('🔑') && 
-                      !m.text.startsWith('[使用言語') && 
-                      !m.text.startsWith('[目標言語')
-                    ).map((m, idx) => {
-                      const adviceItem = generateExpressionAdvice(m.text, targetLang, uiLang);
-                      return (
-                        <div key={idx} class="pdf-advice-item" style={{ background: '#ffffff', border: '1px solid #e8ded0', borderLeft: '4px solid #e07a5f', borderRadius: '12px', padding: '16px', marginBottom: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', background: 'rgba(224, 122, 95, 0.12)', color: '#e07a5f' }}>
-                              📌 {adviceItem.category}
-                            </span>
-                            <span style={{ fontSize: '0.78rem', color: '#8e7c6d' }}>#会話分析 {idx + 1}</span>
-                          </div>
-
-                          <div class="user-said" style={{ color: '#cf1322', fontWeight: 600, fontSize: '0.92rem', marginBottom: '6px' }}>
-                            🗣️ 実際の発話 / Your Input: "{m.text}"
-                          </div>
-                          
-                          <div class="better-say" style={{ color: '#2a9d8f', fontWeight: 700, fontSize: '0.98rem', marginBottom: '10px', background: 'rgba(42, 157, 143, 0.08)', padding: '10px 14px', borderRadius: '8px' }}>
-                            <div style={{ marginBottom: '4px' }}>✨ おすすめの洗練された表現 / Recommended Expression:</div>
-                            {adviceItem.betterList ? (
-                              <ul style={{ margin: '4px 0 0 18px', padding: 0 }}>
-                                {adviceItem.betterList.map((expr, eIdx) => (
-                                  <li key={eIdx} style={{ listStyleType: 'disc', marginTop: '2px' }}>{expr}</li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <div>{adviceItem.better}</div>
-                            )}
-                          </div>
-                          
-                          <div class="pdf-advice-detail" style={{ fontSize: '0.88rem', color: '#4a3e35', lineHeight: 1.6 }}>
-                            <div style={{ marginBottom: '4px' }}><strong>📝 解説 ＆ 改善ポイント:</strong> {adviceItem.explanation}</div>
-                            <div style={{ marginBottom: '4px' }}><strong>💡 表現の活用ポイント:</strong> {adviceItem.usage}</div>
-                            <div><strong>🌟 応用実践例文:</strong> <em>"{adviceItem.example}"</em> <span style={{ color: '#8e7c6d' }}>({adviceItem.exampleTrans})</span></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Feedback */}
-                  <div class="pdf-section" style={{ borderTop: '1px dashed #e8ded0', paddingTop: '16px' }}>
-                    <div class="pdf-section-title">💡 Tutor Feedback</div>
-                    <div style={{ fontSize: '0.92rem', color: '#5e5045', lineHeight: 1.6 }}>
-                      Congratulations on completing your practice session on <strong>LingoBotWebApp</strong>! 
-                      Combining active speech practice with instant native audio feedback accelerates fluency. Keep practicing daily!
-                    </div>
-                  </div>
-                </div>
-
-                {/* PDF Action Buttons */}
-                <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-warm)', background: '#fdfbf7', display: 'flex', justify: 'flex-end', gap: '12px' }}>
-                  <button class="btn btn-secondary" onClick={() => window.print()}>{dict.print}</button>
-                  <button class="btn btn-terracotta" onClick={handleExportPdf}>{dict.downloadPdf}</button>
-                </div>
-              </div>
-            </div>
           {/* SYSTEM DIAGNOSTIC LOGS MODAL */}
           {showLogModal && (
             <div class="modal-overlay" onClick={() => setShowLogModal(false)}>
@@ -1764,7 +1415,8 @@
                     <button
                       class="btn btn-terracotta"
                       style={{ fontSize: '0.82rem', padding: '6px 14px' }}
-                      onClick={() => downloadTextFile(`lingobot_diagnostic_log_${Date.now()}.txt`, systemLogs.join('\n'))}
+                      onClick={() => downloadTextFile(`lingobot_diagnostic_log_${Date.now()}.txt`, systemLogs.join('
+'))}
                     >
                       📥 ログをダウンロード (.txt)
                     </button>
