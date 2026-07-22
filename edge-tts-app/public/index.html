@@ -413,6 +413,30 @@
       return { score, grade, gradeColor, diff };
     }
 
+    // Helper component to render Kanji with Furigana Ruby tags: 漢字（かんじ） -> <ruby>漢字<rt>かんじ</rt></ruby>
+    function FuriganaText({ text }) {
+      if (!text) return null;
+      // Match pattern: Kanji words followed by furigana in parentheses, e.g., 漢字（かんじ） or 空港(くうこう)
+      const parts = text.split(/([\u4E00-\u9FFF\u3005]+\s*[\（\(][\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+[\）\)])/g);
+
+      return (
+        <span>
+          {parts.map((part, index) => {
+            const match = part.match(/^([\u4E00-\u9FFF\u3005]+)\s*[\（\(]([\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+)[\）\)]$/);
+            if (match) {
+              return (
+                <ruby key={index} style={{ rubyPosition: 'over' }}>
+                  {match[1]}
+                  <rt style={{ fontSize: '0.68em', color: 'var(--accent-terracotta-dark)', fontWeight: '600' }}>{match[2]}</rt>
+                </ruby>
+              );
+            }
+            return <span key={index}>{part}</span>;
+          })}
+        </span>
+      );
+    }
+
     // MAIN LINGOBOT APP
     function App() {
       // Onboarding & Language State
@@ -480,14 +504,14 @@
         }
       }, [chatMessages, onboardingStep, liveTranscript, activeTab, isThinking]);
 
-      // Onboarding Initial Step 0: Gemini API Key Prompt
+      // Onboarding Initial Step 0: Gemini API Key Prompt (Mandatory, No Skip)
       const [chatMessages, setChatMessages] = useState([
         {
           id: 'welcome-api-key',
           sender: 'ai',
           lang: 'bilingual',
           type: 'onboarding_api_key',
-          text: `🔑 Google Gemini API Key Setup / Google Gemini APIキーの設定:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu:\n🇯🇵 こんにちは！ご使用前に Google Gemini APIキー（例: AIzaSy...）を下のチャット入力欄に入力してください：`,
+          text: `🔑 Google Gemini API Key Setup / Google Gemini APIキーの設定:\n\n🇻🇳 Chào bạn! Vui lòng nhập Google Gemini API Key (ví dụ: AIzaSy...) vào khung chat bên dưới để bắt đầu (Bắt buộc):\n🇯🇵 こんにちは！ご使用前に Google Gemini APIキー（例: AIzaSy...）を下のチャット入力欄に入力してください（※設定必須）:`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -498,15 +522,26 @@
       // Render.com Backend API URL configuration for GitHub Pages deployment
       const RENDER_BACKEND_URL = window.location.hostname.includes('github.io') ? 'https://lingobotwebapp.onrender.com' : '';
 
-      // Edge TTS Player
+      // Edge TTS Player (Toggle stop if pressed again while playing)
       const playEdgeTts = async (id, text, language) => {
+        // Toggle Stop if clicking the currently playing message
         if (playingId === id) {
-          if (activeAudioRef.current) activeAudioRef.current.pause();
+          if (activeAudioRef.current) {
+            activeAudioRef.current.pause();
+            activeAudioRef.current.currentTime = 0;
+            activeAudioRef.current = null;
+          }
           setPlayingId(null);
           return;
         }
 
-        if (activeAudioRef.current) activeAudioRef.current.pause();
+        // Stop any currently playing audio before starting new audio
+        if (activeAudioRef.current) {
+          activeAudioRef.current.pause();
+          activeAudioRef.current.currentTime = 0;
+          activeAudioRef.current = null;
+        }
+        setPlayingId(null);
 
         let blobUrl = audioBlobCache.current[id];
         if (!blobUrl) {
@@ -536,7 +571,7 @@
         audio.onended = () => { setPlayingId(null); activeAudioRef.current = null; };
         audio.onerror = () => { setPlayingId(null); activeAudioRef.current = null; };
 
-        audio.play().catch(e => setPlayingId(null));
+        audio.play().catch(e => { setPlayingId(null); activeAudioRef.current = null; });
       };
 
       // Download MP3
@@ -570,20 +605,33 @@
         document.body.removeChild(a);
       };
 
-      // Handle Step 0 Choice: Gemini API Key
+      // Handle Step 0 Choice: Gemini API Key (Mandatory - No Skip)
       const handleSubmitApiKey = (inputKey) => {
         const cleanKey = inputKey ? inputKey.trim() : '';
-        const isSkipped = !cleanKey || cleanKey.toLowerCase() === 'skip';
+        const isInvalid = !cleanKey || cleanKey.toLowerCase() === 'skip';
 
-        if (!isSkipped) {
-          setGeminiApiKey(cleanKey);
+        if (isInvalid) {
+          const warnMsg = {
+            id: 'warn-key-' + Date.now(),
+            sender: 'ai',
+            isError: true,
+            lang: 'bilingual',
+            text: `⚠️ Vui lòng nhập Google Gemini API Key để tiếp tục. (API Key là bắt buộc, không thể bỏ qua)\n⚠️ 継続するには Google Gemini APIキーを入力してください。（※APIキーの入力は必須です。スキップはできません）`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setChatMessages(prev => [...prev, warnMsg]);
+          scrollToBottom();
+          focusTextInput();
+          return;
         }
+
+        setGeminiApiKey(cleanKey);
         setOnboardingStep('ui_lang');
 
         const userMsg = {
           id: 'user-key-' + Date.now(),
           sender: 'user',
-          text: !isSkipped ? `🔑 [API Key]: ${cleanKey.slice(0, 6)}...` : `⏭️ [API Key]: Skipped / スキップ`,
+          text: `🔑 [API Key]: ${cleanKey.slice(0, 6)}...`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
@@ -726,9 +774,10 @@
 
           const systemPrompt = `You are LingoBot, a warm, encouraging AI conversation partner in LingoBotWebApp. ` +
             `The user's interface language is ${uiName} and their target learning language is ${targetName}. ` +
-            `CRITICAL RULE: Always write COMPLETE, fully formed sentences with proper punctuation (. ! ?). Never end mid-sentence or cut off phrases. ` +
+            `CRITICAL RULE: Always write COMPLETE, fully formed sentences with proper punctuation (. ! ?). Never end mid-sentence. ` +
+            (targetLang === 'ja-JP' ? `CRITICAL RULE FOR JAPANESE: When writing in Japanese, ALWAYS write furigana in parentheses immediately after EVERY Kanji word, for example: 空港（くうこう） or 荷物（にもつ） or お預（あず）かり or 手続（てつづ）き so language learners can easily read the pronunciation! ` : '') +
             `Always reply naturally, interactively, and concisely (1 to 3 complete sentences) in ${targetName} so the user can practice listening and speaking. ` +
-            `If the user orders food, requests pizza/drinks, or asks for a scenario, roleplay as a friendly conversation partner in that scenario!`;
+            `If the user orders food, requests items, or asks for a scenario, roleplay as a friendly conversation partner in that scenario!`;
 
           const contents = [
             { role: 'user', parts: [{ text: systemPrompt }] },
@@ -1010,20 +1059,11 @@
                   const isLoading = loadingId === msg.id;
                   return (
                     <div key={msg.id} class={`chat-bubble ${msg.sender} ${msg.isError ? 'error-bubble' : ''}`}>
-                      <div style={{ whiteSpace: 'pre-line' }}>{msg.text}</div>
+                      <div style={{ whiteSpace: 'pre-line' }}><FuriganaText text={msg.text} /></div>
                       <div class="chat-bubble-meta">
                         <span>{msg.sender === 'ai' ? `🤖 LingoBot ${msg.modelName ? `(${msg.modelName})` : ''}` : `👤 User (${LANG_META[uiLang]?.name})`}</span>
                         <span>{msg.time}</span>
                       </div>
-
-                      {/* Step 0 Interactive Onboarding Choice Chips (API Key Skip) */}
-                      {msg.type === 'onboarding_api_key' && onboardingStep === 'api_key' && (
-                        <div style={{ marginTop: '14px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                          <button class="btn btn-secondary" onClick={() => handleSubmitApiKey('skip')}>
-                            ⏭️ Bỏ qua / スキップ (Skip API Key)
-                          </button>
-                        </div>
-                      )}
 
                       {/* Step 1 Interactive Onboarding Choice Chips (UI Language) */}
                       {msg.type === 'onboarding_ui' && onboardingStep === 'ui_lang' && (
