@@ -424,348 +424,42 @@
           ja: '複文長文のため、「対応できるよう」の直前でしっかり呼吸を整えるのがポイントです。',
           mouthTip: '👄 口の形・コツ: 口を大きく開けてハッキリ発音します。'
         }
-          };
-        }
-        // Handing over items (e.g. "こちらです", "これです", "はい")
-        else if (trimmed.includes('こちらです') || trimmed.includes('これです')) {
-          return {
-            category: isUiVi ? "Trao đồ tự nhiên / 提示・手渡しの表現" : "自然な手渡し・提示の表現",
-            betterList: [
-              "「はい、こちらでお願いします。」",
-              "「はい、どうぞご覧ください。」"
-            ],
-            explanation: isUiVi ? "Nói 'はい、こちらでお願いします' khi đưa đồ cho nhân viên rất tự nhiên."
-                                 : "「はい、こちらです」も自然で十分完璧な表現です！手渡す際に「こちらでお願いします」や「はい、どうぞ」と添えると、より親切でスムーズなやり取りになります。",
-            usage: isUiVi ? "Mẫu câu: [Vật] + でお願いします."
-                           : "【自然な手渡し】「こちらでお願いします」「はい、どうぞ」が日常会話に最適です。",
-            example: "はい、パスポートと搭乗券です。よろしくお願いします。",
-            exampleTrans: isUiVi ? "Vâng, đây là hộ chiếu và thẻ lên máy bay ạ." : "（手渡す際の自然な例文）"
-          };
-        }
-        // Gratitude & Closing (e.g. "ありがとう", "感謝")
-        else if (trimmed.includes('ありがとう') || trimmed.includes('感謝')) {
-          return {
-            category: isUiVi ? "Cảm ơn tự nhiên / お礼の表現" : "自然なお礼と締めくくりの言葉",
-            betterList: [
-              "「ありがとうございました。よろしくお願いします。」",
-              "「ご対応いただき、ありがとうございました！」"
-            ],
-            explanation: isUiVi ? "Kết hợp 'ありがとうございました' với 'よろしくお願いします' tạo cảm giác rất chu đáo."
-                                 : "「はい、どうもありがとうございました」で十分完璧なお礼です！最後に「よろしくお願いします」と一言添えると、荷物を預ける際のやり取りとして非常に爽やかです。",
-            usage: isUiVi ? "Mẫu câu: ありがとうございました + よろしくお願いします."
-                           : "【自然なお礼】「ありがとうございました。よろしくお願いします」が心地よい会話を作ります。",
-            example: "ご対応ありがとうございました。それでは、よろしくお願いします。",
-            exampleTrans: isUiVi ? "Cảm ơn bạn đã hỗ trợ. Nhờ bạn giúp tôi nhé." : "（やり取りの終わりのお礼例文）"
-          };
-        }n lại ở "見えるが", nhấn mạnh cụm từ trừu tượng "実現可能性の観点から".',
-          ja: '「見えるが」で批判的・冷静なトーンに切り替え、「疑問が残る」で簡潔に断定します。',
-          mouthTip: '👄 口の形・コツ: 「かっきてき」の促音「っ」の溜めを正確にキープします。'
-        }
-      },
-      {
-        id: 24,
-        category: 'ja-advanced',
-        levelLabel: '🌳 上級',
-        lang: 'ja-JP',
-        text: '多様（たよう）な価値観（かちかん）を尊重（そんちょう）しつつ、共通（きょうつう）の目標（もくひょう）に向（む）かって結集（けっしゅう）することが不可欠（ふかけつ）です。',
-        phonetic: 'たようなかちかんをそんちょうしつつ、きょうつうのもくひょうにむかってけっしゅうすることがふかけつです。',
-        translation: 'Điều thiết yếu là phải đoàn kết hướng tới mục tiêu chung trong khi vẫn tôn trọng các giá trị đa dạng.',
-        advice: {
-          vi: 'Cấu trúc đồng thời "~しつつ", ngắt câu mềm mại để giữ năng lượng cho "不可欠です".',
-          ja: '「〜しつつ」で文脈を繋ぎ、「結集することが不可欠です」を力強く説得力を持って発音します。',
-          mouthTip: '👄 口の形・コツ: 「けっしゅう」「ふかけつ」の「け」音の歯切れの良さを意識します。'
-        }
-      },
-      {
-        id: 25,
-        category: 'ja-advanced',
-        levelLabel: '🌳 上級',
-        lang: 'ja-JP',
-        text: '長年（ながねん）の研究成果（けんきゅうせいか）が実（み）を結（むす）び、業界（ぎょうかい）に大（おお）きな変革（へんかく）をもたらす技術（ぎじゅつ）が誕生（たんじょう）した。',
-        phonetic: 'ながねんのけんきゅうせいかがみをおすび、ぎょうかいにおおきなへんかくをもたらすぎじゅつがたんじょうした。',
-        translation: 'Thành quả nghiên cứu nhiều năm đã đơm hoa kết trái, mang lại sự ra đời của công nghệ tạo nên bước ngoặt lớn trong ngành.',
-        advice: {
-          vi: 'Thành ngữ "実を結び" (đơm hoa kết trái), mang sắc thái trang trọng ca ngợi thành tựu.',
-          ja: '慣用表現「実を結び」の祝意のイントネーションから、「誕生した」の力強い着地へ導きます。',
-          mouthTip: '👄 口の形・コツ: 「へんかく」「たんじょう」の鼻濁音・長音を綺麗に響かせます。'
-        }
-      },
-      {
-        id: 26,
-        category: 'ja-advanced',
-        levelLabel: '🌳 上級',
-        lang: 'ja-JP',
-        text: '短期的な利益（りえき）のみを追求（ついきゅう）する姿勢（しせい）は、長期的な企業（きぎょう）の信頼（しんらい）を損（そこ）なう恐（おそ）れがあります。',
-        phonetic: 'たんきてきなりえきのみをついきゅうするしせいは、ちょうきてきなきぎょうのしんらいをそこなうおそれがあります。',
-        translation: 'Thái độ chỉ chạy theo lợi ích ngắn hạn có nguy cơ làm tổn hại đến uy tín lâu dài của doanh nghiệp.',
-        advice: {
-          vi: 'Phát âm tương phản giữa "短期的" và "長期的", nhấn mạnh cụm cảnh báo "損なう恐れがあります".',
-          ja: '対比構造「短期的」対「長期的」のメリハリをつけ、警鐘を鳴らすトーンで発音します。',
-          mouthTip: '👄 口の形・コツ: 「そこなう」の「そ」は口をすぼめず息を前歯から吐き出します。'
-        }
-      },
-      {
-        id: 27,
-        category: 'ja-advanced',
-        levelLabel: '🌳 上級',
-        lang: 'ja-JP',
-        text: 'グローバル化（か）が進展（しんてん）する中で、地域（ちいき）の文化（ぶんか）や歴史（れきし）を正（ただ）しく継承（けいしょう）していくことが問（と）われている。',
-        phonetic: 'ぐろーばるかがしんてんするなかで、ちいきのぶんかやれきしをただしくけいしょうしていくことがとわれている。',
-        translation: 'Trong bối cảnh toàn cầu hóa đang tiến triển, việc tiếp nối đúng đắn văn hóa và lịch sử địa phương đang là một thách thức đặt ra.',
-        advice: {
-          vi: 'Văn phong báo chí / luận thuyết, chú ý ngắt nhịp ở "進展する中で".',
-          ja: '「進展する中で」で大きな前提を提示し、「問われている」で重厚な問いかけを表現します。',
-          mouthTip: '👄 口の形・コツ: 「けいしょう」の「けい」は「けー」と伸ばしすぎず拍を保ちます。'
-        }
-      },
-      {
-        id: 28,
-        category: 'ja-advanced',
-        levelLabel: '🌳 上級',
-        lang: 'ja-JP',
-        text: '不確実性（ふかくじつせい）の高い現代社会（げんだいしゃかい）においては、先（さき）を見通（みとお）す洞察力（どうさつりょく）と迅速（じんそく）な決断力（けつだんりょく）が欠（か）かせない。',
-        phonetic: 'ふかくじつせいのたかいげんだいしゃかいにおいては、さきをみとおすどうさつりょくとじんそくなけつだんりょくがかせない。',
-        translation: 'Trong xã hội hiện đại đầy biến động, năng lực nhìn xa trông rộng và sự quyết đoán nhanh chóng là không thể thiếu.',
-        advice: {
-          vi: 'Phát âm mượt cụm danh từ "洞察力と迅速な決断力", giữ nhịp thở ổn định.',
-          ja: '四字熟語的な表現「洞察力」「決断力」をはっきりと対比させ、説得力を高めます。',
-          mouthTip: '👄 口の形・コツ: 「どうさつりょく」「けつだんりょく」の「りょく」のラ行を舌先で素早く弾きます。'
-        }
-      },
-      {
-        id: 29,
-        category: 'ja-advanced',
-        levelLabel: '🌳 上級',
-        lang: 'ja-JP',
-        text: '持続可能（じぞくかのう）な社会（しゃかい）の実現（じつげん）に向けて、環境負荷（かんきょうふか）の低減（ていげん）に真摯（しんし）に取り組み（とりくみ）でまいります。',
-        phonetic: 'じぞくかのうなしゃかいのじつげんにむけて、かんきょうふかのていげんにしんしにとりくんでまいります。',
-        translation: 'Hướng tới việc thực hiện một xã hội phát triển bền vững, chúng tôi sẽ chân thành nỗ lực giảm thiểu tác động đến môi trường.',
-        advice: {
-          vi: 'Tuyên bố cam kết của doanh nghiệp (SDGs), phát âm khiêm nhường và trang trọng "取り組んでまいります".',
-          ja: '企業理念の公式宣誓文。「真摯に取り組んでまいります」で真心のこもった丁寧さを出します。',
-          mouthTip: '👄 口の形・コツ: 「しんし」の無声化と「まいります」の謙譲表現を端正に発音します。'
-        }
-      },
-      {
-        id: 30,
-        category: 'ja-advanced',
-        levelLabel: '🌳 上級',
-        lang: 'ja-JP',
-        text: '概念（がいねん）の定義（ていぎ）を明確（めいかく）に整理（せいり）しないまま議論（ぎろん）を重ねても、平行線（へいこうせん）をたどるに過（す）ぎない。',
-        phonetic: 'がいねんのていぎをめいかくにせいりしないままぎろんをかさねても、へいこうせんをたどるにすぎない。',
-        translation: 'Dù có thảo luận nhiều lần mà không làm rõ định nghĩa của các khái niệm thì cũng chỉ rơi vào bế tắc mà thôi.',
-        advice: {
-          vi: 'Quán ngữ "平行線をたどる" (rơi vào bế tắc / đi theo đường song song), ngắt câu ở "重ねても".',
-          ja: '論理的な批判文。「平行線をたどるに過ぎない」でクールに結論を述べます。',
-          mouthTip: '👄 口の形・コツ: 「がいねん」「ていぎ」「めいかく」「せいり」と二字熟語のテンポを崩さず唱えます。'
-        }
-      },
-
-      // --- 4. 英語 & ベトナム語のサンプル ---
-      {
-        id: 31,
-        category: 'en-business',
-        levelLabel: '🇺🇸 English',
-        lang: 'en-US',
-        text: "We need to optimize our workflow to deliver the project on schedule.",
-        phonetic: "wiː niːd tuː ˈɒptɪmaɪz ˈaʊə ˈwɜːkfləʊ tuː dɪˈlɪvə ðə ˈprɒdʒɛkt ɒn ˈʃɛdjuːl",
-        translation: "Chúng ta cần tối ưu hóa quy trình làm việc / スケジュール通りに最適化する必要があります。",
-        advice: {
-          vi: "Tập trung bật rõ âm 'p' trong 'optimize' và giữ âm 'w' tròn môi trong 'workflow'.",
-          ja: "「optimize」の 'p' は唇を密着させてから息を弾ませ、「workflow」の 'w' は唇を丸めて発音します。",
-          mouthTip: "👄 口の形・コツ: 『optimize』は頭音 'op' をしっかり大きく縦に開け、『deliver』の 'v' は上歯で下唇を軽く押さえます。"
-        }
-      },
-      {
-        id: 32,
-        category: 'vi-daily',
-        levelLabel: '🇻🇳 Tiếng Việt',
-        lang: 'vi-VN',
-        text: "Chào mừng bạn đến với LingoBotWebApp! Hãy bắt đầu luyện tập hội thoại ngay hôm nay.",
-        phonetic: "Chao mung ban den voi LingoBotWebApp! Hay bat dau luyen tap hoi thoai ngay hom nay.",
-        translation: "Welcome to LingoBotWebApp! Start practicing conversation today.",
-        advice: {
-          vi: "Chú ý thanh hỏi trong 'hỏi' và thanh nặng trong 'luyện tập' phát âm dứt khoát.",
-          ja: "ベトナム語の「Chào mừng（チャオ・ムン）」は頭音 'ch' を軽く息を破裂させて発音します。",
-          mouthTip: "👄 口の形・コツ: 'bắt đầu' の 'b' は日本語の「バ」行と同様に唇を密着させて発声します。"
-        }
       }
     ];
 
-    // Multi-Language Target & UI Aware Expression & Grammar Advice Generator (Non-repetitive)
-    function generateExpressionAdvice(text, targetLang, uiLang) {
-      const trimmed = text ? text.trim() : '';
-      const lower = trimmed.toLowerCase();
-      const tLangPrefix = (targetLang || 'en').split('-')[0];
-      const isUiVi = (uiLang || 'ja').startsWith('vi');
+    // --- CONTEXT ADVICE GENERATOR ---
+    function generateContextAdvice(userInput, uiLang, targetLang) {
+      if (!userInput) return null;
+      const trimmed = userInput.trim();
+      const isUiVi = uiLang.startsWith('vi');
+      const tLangPrefix = targetLang.split('-')[0];
 
-      // 1. TARGET LANGUAGE: JAPANESE (ja-JP) - Natural Customer-side Polite Phrasing (丁寧語)
       if (tLangPrefix === 'ja') {
-        // Scenario / Setting setup message (e.g. "空港での会話にしましょう", "レストラン")
-        if (trimmed.includes('会話にしましょう') || trimmed.includes('シチュエーション') || trimmed.includes('設定') || trimmed.includes('テーマ')) {
-          return {
-            category: isUiVi ? "Thiết lập tình huống / 場面設定の提示" : "会話場面・役割設定の提示",
-            betterList: [
-              "「今日は空港カウンターのシチュエーションで練習させてください。」",
-              "「空港でのチェックインのやり取りでお願いします。」"
-            ],
-            explanation: isUiVi ? "Khi bắt đầu một kịch bản luyện tập, hãy nêu rõ tình huống để AI nhập vai chính xác."
-                                 : "会話練習のスタート時に「〜のシチュエーションでお願いします」や「〜の場面で練習させてください」と明確に伝えると、AIパートナーもスムーズに役に入りやすくなります。",
-            usage: isUiVi ? "Mẫu câu: [Tình huống] + でお願いします."
-                           : "【設定のコツ】「〜の場面で」「〜役でお願いします」と具体的に伝えると効果的です。",
-            example: "今日は空港の荷物預け入れの場面で会話練習をお願いします。",
-            exampleTrans: isUiVi ? "Hôm nay xin hãy cùng luyện tập ở kịch bản gửi hành lý ở sân bay." : "（自然なシチュエーション提示の例文）"
-          };
-        }
-        // Special requests with reasons (e.g. "ギターなんです", "貸していただけますか", "お願い")
-        else if (trimmed.includes('ギター') || trimmed.includes('楽器') || trimmed.includes('貸して') || trimmed.includes('特別')) {
-          return {
-            category: isUiVi ? "Yêu cầu đặc biệt kèm lý do / 理由を伴うお願い" : "理由を伴う自然なお願い表現",
-            betterList: [
-              "「実はギターがありまして、専用ケースはお借りできますか？」",
-              "「壊れやすい楽器なので、ケースの貸出は可能でしょうか？」"
-            ],
-            explanation: isUiVi ? "Nêu lý do trước (dụng cụ dễ vỡ) rồi hỏi 'ケースはお借りできますか？' rất tự nhiên."
-                                 : "「〜なんです」で状況・理由を話してから「〜はお借りできますか？」「〜は可能でしょうか？」と尋ねるのは、相手に配慮した非常にスムーズで自然な丁寧語です。",
-            usage: isUiVi ? "Mẫu câu: [Lý do] + なので、[Yêu cầu] + は可能でしょうか？"
-                           : "【柔らかい依頼】「〜なので、〜は可能でしょうか？」「〜はお借りできますか？」を活用しましょう。",
-            example: "実は大切な楽器なので、専用のケースをお借りすることはできますか？",
-            exampleTrans: isUiVi ? "Thật ra đây là nhạc cụ quan trọng, tôi có thể mượn hộp chuyên dụng được không ạ?" : "（理由を添えた丁寧な依頼例文）"
-          };
-        }
-        // Payment methods & questions (e.g. "wire transfer", "qr code", "credit card", "pay")
-        else if (lower.includes('transfer') || lower.includes('qr') || lower.includes('code') || lower.includes('card') || lower.includes('pay')) {
-          return {
-            category: isUiVi ? "Hỏi về phương thức thanh toán" : "支払い方法・キャッシュレスの自然な質問",
-            betterList: [
-              "\"Do you accept QR code payments for wire transfers?\"",
-              "\"Can I pay via QR code transfer?\""
-            ],
-            explanation: isUiVi ? "Dùng 'Do you accept [phương thức]?' hoặc 'Can I pay via [phương thức]?' rất tự nhiên."
-                                 : "支払い方法を確認する際、\"Could I use...?\" も通じますが、\"Can I pay via QR code?\" や \"Do you accept QR code payments?\" の方が英語圏でより直接的で自然な尋ね方になります。",
-            usage: "Pattern: Can I pay via [Payment Method]? / Do you accept [Payment Method]?",
-            example: "Can I pay for this postcard using a QR code wire transfer?",
-            exampleTrans: isUiVi ? "Tôi có thể chuyển khoản thanh toán bưu thiếp này bằng mã QR được không ạ?" : "この絵はがきをQRコード送金で支払うことはできますか？"
-          };
-        }
-        // Handing over items (e.g. "here you go", "here it is")
-        else if (lower.includes('here you go') || lower.includes('here it is') || lower.includes('here')) {
-          return {
-            category: isUiVi ? "Trao đồ tự nhiên (Handing over items)" : "手渡し・支払いの完璧な日常フレーズ",
-            betterList: [
-              "\"Here you go. (完璧です！)\"",
-              "\"Here is the payment. / Here are the documents.\""
-            ],
-            explanation: isUiVi ? "'Here you go' là mẫu câu chuẩn và hoàn hảo nhất khi đưa tiền hoặc giấy tờ!"
-                                 : "\"Here you go.\" は手渡しの際の完璧で最も自然な表現です！具体的に品物を指して \"Here is the payment.\" や \"Here is the money.\" と言っても親切です。",
-            usage: "Pattern: Here you go. / Here is [item].",
-            example: "Here you go. Thank you for your help!",
-            exampleTrans: isUiVi ? "Của bạn đây ạ. Cảm ơn bạn đã giúp đỡ!" : "はい、どうぞ。ご親切にありがとうございました！"
-          };
-        }
-        // Gratitude & Greetings (e.g. "thank you", "you too", "thanks")
-        else if (lower.includes('thank') || lower.includes('you, too') || lower.includes('bye')) {
-          return {
-            category: isUiVi ? "Lời cảm ơn & Chào tạm biệt" : "感謝とやり取りの締めくくり挨拶",
-            betterList: [
-              "\"Thank you so much! Have a wonderful day!\"",
-              "\"Thanks for your help! You have a great day, too!\""
-            ],
-            explanation: isUiVi ? "Nói 'Thank you so much! Have a nice day!' rất lịch sự và thân thiện."
-                                 : "\"Thank you very much. You, too\" も伝わりますが、英語圏では \"Thank you! Have a great day!\" と返すと、お互いにとても気持ちの良い挨拶の締めくくりになります。",
-            usage: "Pattern: Thank you! Have a great day, too!",
-            example: "Thank you so much for your assistance. Have a wonderful day!",
-            exampleTrans: isUiVi ? "Cảm ơn bạn rất nhiều vì đã hỗ trợ. Chúc bạn một ngày tốt lành!" : "丁寧にご対応いただきありがとうございました。良い一日を！"
-          };
-        }
-        // General English Input
-        else {
-          return {
-            category: isUiVi ? "Mở rộng hội thoại tiếng Anh" : "自然な英語表現の発展ポイント",
-            betterList: [
-              `"Regarding this, ${trimmed}."`,
-              `"I would like to mention that ${trimmed}."`
-            ],
-            explanation: isUiVi ? "Kết nối các câu ngắn bằng các cụm từ đệm như 'Regarding this...' giúp câu văn mạch lạc."
-                                 : "単文をそのまま言うだけでなく、\"Regarding this,...\" や \"I would like to mention that...\" などの接続表現を頭に添えると、より知的な英語表現になります。",
-            usage: "Pattern: Regarding [topic], [sentence].",
-            example: `Regarding my request, ${trimmed}.`,
-            exampleTrans: isUiVi ? "Về yêu cầu của tôi, ..." : "（文脈を整えて伝える英文例）"
-          };
-        }
+        return {
+          category: isUiVi ? "Giao tiếp tiếng Nhật tự nhiên" : "日常対話の自然なまとめ",
+          betterList: [
+            `「『${trimmed}』ですね。よろしくお願いします。」`,
+            `「『${trimmed}』でお願いします。」`
+          ],
+          explanation: isUiVi ? "Chỉ cần dùng thể 丁寧語 tự nhiên." : "自然な丁寧語（〜です・〜ます調）で十分です。",
+          usage: "語尾に「よろしくお願いします」を添えるとスムーズです。",
+          example: `はい、${trimmed}。よろしくお願いします。`,
+          exampleTrans: "（自然な日常会話の例文）"
+        };
+      } else {
+        return {
+          category: isUiVi ? "Mở rộng hội thoại tiếng Anh" : "自然な英語表現の発展ポイント",
+          betterList: [
+            `"Regarding this, ${trimmed}."`
+          ],
+          explanation: "Connecting short sentences naturally.",
+          usage: "Pattern: Regarding [topic], [sentence].",
+          example: `Regarding my request, ${trimmed}.`,
+          exampleTrans: "（文脈を整えて伝える英文例）"
+        };
       }
     }
 
-    // Pronunciation Levenshtein Evaluator
-    function evaluatePronunciation(targetText, recognizedText) {
-      const norm = str => str.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?'"“”]/g, '').replace(/\s+/g, ' ').trim();
-      const tWords = norm(targetText).split(' ').filter(Boolean);
-      const rWords = norm(recognizedText).split(' ').filter(Boolean);
-      if (tWords.length === 0) return { score: 100, diff: [] };
-
-      const n = tWords.length, m = rWords.length;
-      const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
-      for (let i = 0; i <= n; i++) dp[i][0] = i;
-      for (let j = 0; j <= m; j++) dp[0][j] = j;
-
-      for (let i = 1; i <= n; i++) {
-        for (let j = 1; j <= m; j++) {
-          if (tWords[i - 1] === rWords[j - 1]) dp[i][j] = dp[i - 1][j - 1];
-          else dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + 1);
-        }
-      }
-
-      let i = n, j = m, diff = [], correctCount = 0;
-      while (i > 0 || j > 0) {
-        if (i > 0 && j > 0 && tWords[i - 1] === rWords[j - 1]) {
-          diff.unshift({ type: 'correct', word: tWords[i - 1] });
-          correctCount++; i--; j--;
-        } else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) {
-          diff.unshift({ type: 'missing', word: tWords[i - 1], said: rWords[j - 1] });
-          i--; j--;
-        } else if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) {
-          diff.unshift({ type: 'missing', word: tWords[i - 1] });
-          i--;
-        } else {
-          diff.unshift({ type: 'extra', word: rWords[j - 1] });
-          j--;
-        }
-      }
-
-      const score = Math.max(0, Math.round((correctCount / tWords.length) * 100));
-      let grade = 'Cần luyện tập / Needs Practice', gradeColor = '#e63946';
-      if (score >= 90) { grade = 'Xuất sắc / Excellent'; gradeColor = '#2a9d8f'; }
-      else if (score >= 75) { grade = 'Rất tốt / Very Good'; gradeColor = '#e07a5f'; }
-      else if (score >= 50) { grade = 'Khá tốt / Good Attempt'; gradeColor = '#f4a261'; }
-
-      return { score, grade, gradeColor, diff };
-    }
-
-    // Helper component to render Kanji with Furigana Ruby tags: 漢字（かんじ） -> <ruby>漢字<rt>かんじ</rt></ruby>
-    function FuriganaText({ text }) {
-      if (!text) return null;
-      // Match pattern: Kanji words followed by furigana in parentheses, e.g., 漢字（かんじ） or 空港(くうこう)
-      const parts = text.split(/([\u4E00-\u9FFF\u3005]+\s*[\（\(][\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+[\）\)])/g);
-
-      return (
-        <span>
-          {parts.map((part, index) => {
-            const match = part.match(/^([\u4E00-\u9FFF\u3005]+)\s*[\（\(]([\u3040-\u309F\u30A0-\u30FFa-zA-Z\s]+)[\）\)]$/);
-            if (match) {
-              return (
-                <ruby key={index} style={{ rubyPosition: 'over' }}>
-                  {match[1]}
-                  <rt style={{ fontSize: '0.68em', color: 'var(--accent-terracotta-dark)', fontWeight: '600' }}>{match[2]}</rt>
-                </ruby>
-              );
-            }
-            return <span key={index}>{part}</span>;
-          })}
-        </span>
-      );
-    }
-
-    // MAIN LINGOBOT APP
     function App() {
       // Onboarding & Language State
       const [onboardingStep, setOnboardingStep] = useState('api_key'); // 'api_key' | 'ui_lang' | 'target_lang' | 'complete'
