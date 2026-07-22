@@ -15,28 +15,28 @@ import google.generativeai as genai
 app = Flask(__name__)
 CORS(app)
 
-VOICE_MODEL_CATALOG = {
-    'neural2-b': {
+GOOGLE_TTS_CATALOG = {
+    'neural2-b': { # Google Neural2 Female Voice
         'ja-JP': 'ja-JP-Neural2-B',
         'vi-VN': 'vi-VN-Wavenet-A',
         'en-US': 'en-US-Neural2-F'
     },
-    'neural2-c': {
+    'neural2-c': { # Google Neural2 Male Voice
         'ja-JP': 'ja-JP-Neural2-C',
         'vi-VN': 'vi-VN-Wavenet-B',
         'en-US': 'en-US-Neural2-D'
     },
-    'journey': {
+    'journey': { # Google Journey Conversational Voice
         'ja-JP': 'ja-JP-Neural2-D',
         'vi-VN': 'vi-VN-Wavenet-A',
         'en-US': 'en-US-Journey-F'
     },
-    'wavenet': {
+    'wavenet': { # Google WaveNet Deep Natural Voice
         'ja-JP': 'ja-JP-Wavenet-B',
-        'vi-VN': 'vi-VN-Wavenet-A',
+        'vi-VN': 'vi-VN-Wavenet-B',
         'en-US': 'en-US-Wavenet-F'
     },
-    'standard': {
+    'standard': { # Google Standard Voice
         'ja-JP': 'ja-JP-Standard-B',
         'vi-VN': 'vi-VN-Standard-A',
         'en-US': 'en-US-Standard-B'
@@ -58,17 +58,13 @@ def resolve_lang_code(lang_str: str) -> str:
     if l.startswith('vi'): return 'vi-VN'
     return 'en-US'
 
-def resolve_voice_name(model_key: str, lang_code: str) -> str:
-    model_dict = VOICE_MODEL_CATALOG.get(model_key, VOICE_MODEL_CATALOG['neural2-b'])
-    return model_dict.get(lang_code, model_dict.get('en-US'))
-
-def call_google_tts_api(text: str, lang_code: str, voice_name: str, api_key: str) -> bytes:
+def call_google_cloud_tts_api(text: str, lang_code: str, google_voice_name: str, api_key: str) -> bytes:
     url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={api_key}"
     payload = {
         "input": { "text": text },
         "voice": {
             "languageCode": lang_code,
-            "name": voice_name
+            "name": google_voice_name
         },
         "audioConfig": {
             "audioEncoding": "MP3",
@@ -87,28 +83,32 @@ def call_google_tts_api(text: str, lang_code: str, voice_name: str, api_key: str
             return base64.b64decode(res_data["audioContent"])
     return None
 
-def generate_google_cloud_tts_hierarchical(text: str, language: str, voice_model_key: str = 'neural2-b', api_key: str = None) -> (bytes, str):
+def generate_google_cloud_tts(text: str, language: str, voice_model_key: str = 'neural2-b', api_key: str = None) -> (bytes, str, str):
     lang_code = resolve_lang_code(language)
+    model_key = voice_model_key.lower()
+
+    cat_entry = GOOGLE_TTS_CATALOG.get(model_key, GOOGLE_TTS_CATALOG['neural2-b'])
+    target_google_voice = cat_entry.get(lang_code, cat_entry['en-US'])
+
     clean_key = (api_key or os.getenv('GEMINI_API_KEY') or '').strip()
 
-    primary_voice_name = resolve_voice_name(voice_model_key, lang_code)
     if clean_key:
         try:
-            audio_bytes = call_google_tts_api(text, lang_code, primary_voice_name, clean_key)
+            audio_bytes = call_google_cloud_tts_api(text, lang_code, target_google_voice, clean_key)
             if audio_bytes and len(audio_bytes) > 200:
-                print(f"[Tier 1 TTS Success] Voice: {primary_voice_name}", flush=True)
-                return audio_bytes, 'tier1'
-        except Exception as t1_err:
-            print(f"[Tier 1 TTS Warning] ({primary_voice_name}): {str(t1_err)} -> Trying Tier 2", flush=True)
+                print(f"[Google Cloud TTS Direct API Success] Voice Model: {target_google_voice}", flush=True)
+                return audio_bytes, 'google-cloud-tts', target_google_voice
+        except Exception as gc_err:
+            print(f"[Google Cloud TTS Direct API Warning] ({target_google_voice}): {str(gc_err)} -> Trying Google Cloud Standard Model", flush=True)
 
-        standard_voice_name = resolve_voice_name('standard', lang_code)
+        standard_google_voice = GOOGLE_TTS_CATALOG['standard'].get(lang_code, 'en-US-Standard-B')
         try:
-            audio_bytes_std = call_google_tts_api(text, lang_code, standard_voice_name, clean_key)
+            audio_bytes_std = call_google_cloud_tts_api(text, lang_code, standard_google_voice, clean_key)
             if audio_bytes_std and len(audio_bytes_std) > 200:
-                print(f"[Tier 2 Standard Voice Fallback Success] Voice: {standard_voice_name}", flush=True)
-                return audio_bytes_std, 'tier2_standard'
-        except Exception as t2_err:
-            print(f"[Tier 2 Standard Voice Warning]: {str(t2_err)} -> Trying gTTS", flush=True)
+                print(f"[Google Cloud Standard Voice Fallback Success] Voice: {standard_google_voice}", flush=True)
+                return audio_bytes_std, 'google-cloud-standard', standard_google_voice
+        except Exception as std_err:
+            print(f"[Google Cloud Standard Voice Warning]: {str(std_err)} -> Trying gTTS", flush=True)
 
     short_lang = lang_code.split('-')[0]
     temp_path = None
@@ -122,10 +122,8 @@ def generate_google_cloud_tts_hierarchical(text: str, language: str, voice_model
             audio_bytes_gtts = f.read()
 
         if audio_bytes_gtts and len(audio_bytes_gtts) > 200:
-            print(f"[Tier 2 gTTS Fallback Success] Lang: {short_lang}", flush=True)
-            return audio_bytes_gtts, 'tier2_gtts'
-    except Exception as gtts_err:
-        print(f"[gTTS Fallback Error]: {str(gtts_err)}", flush=True)
+            print(f"[gTTS Fallback Success] Lang: {short_lang}", flush=True)
+            return audio_bytes_gtts, 'gtts-fallback', 'gTTS-Standard'
     finally:
         if temp_path and os.path.exists(temp_path):
             try:
@@ -133,7 +131,7 @@ def generate_google_cloud_tts_hierarchical(text: str, language: str, voice_model
             except Exception:
                 pass
 
-    return None, 'failed'
+    return None, 'failed', 'none'
 
 @app.route('/api/tts', methods=['POST'])
 def tts_endpoint():
@@ -147,9 +145,9 @@ def tts_endpoint():
         if not text:
             return jsonify({'error': 'Parameter "text" is required.'}), 400
 
-        print(f"[Google Cloud TTS Request] Model: '{voice_model_key}' | Lang: '{language}' | Text: '{text[:30]}...'", flush=True)
+        print(f"[Google Cloud TTS Request] ModelKey: '{voice_model_key}' | Lang: '{language}' | Text: '{text[:30]}...'", flush=True)
 
-        mp3_bytes, tier_used = generate_google_cloud_tts_hierarchical(text, language, voice_model_key, api_key)
+        mp3_bytes, engine_used, voice_used = generate_google_cloud_tts(text, language, voice_model_key, api_key)
 
         if not mp3_bytes:
             return jsonify({'error': 'Failed to generate MP3 audio from Google Cloud TTS.'}), 500
@@ -164,7 +162,8 @@ def tts_endpoint():
             download_name='lingobot_google_voice.mp3'
         )
         response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['X-TTS-Tier'] = tier_used
+        response.headers['X-TTS-Engine'] = engine_used
+        response.headers['X-TTS-Voice'] = voice_used
         return response
 
     except Exception as e:
@@ -264,5 +263,5 @@ def serve_static(path):
     return send_from_directory('public', 'index.html')
 
 if __name__ == '__main__':
-    print("🚀 Vocalise Edge AI Server starting on http://localhost:5100 (3-Tier Google Cloud TTS)")
+    print("🚀 Vocalise Edge AI Server starting on http://localhost:5100 (100% Dedicated Google Cloud TTS)")
     app.run(host='0.0.0.0', port=5100, debug=False)
